@@ -5,11 +5,24 @@ import RequestConfirmation from './components/RequestConfirmation';
 import MatchList from './components/MatchList';
 import TripDetails from './components/TripDetails';
 import RouteOptimizer from './components/RouteOptimizer';
+import AuthModal from './components/AuthModal';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { createTripRequest, getTripMatches, getTripDetails } from './services/api';
-import { PlusCircle, ListOrdered, Route as RouteIcon, Info, MapPin, Navigation, ArrowRight } from 'lucide-react';
+import {
+  PlusCircle,
+  ListOrdered,
+  Route as RouteIcon,
+  Info,
+  MapPin,
+  Navigation,
+  ArrowRight,
+  UserCheck,
+  LogIn
+} from 'lucide-react';
 import './App.css';
 
-export default function App() {
+function MainApp() {
+  const { user, isAuthenticated, openAuthModal } = useAuth();
   const [activeTab, setActiveTab] = useState('CREATE'); // 'CREATE' | 'MY_REQUESTS' | 'OPTIMIZER'
   const [viewState, setViewState] = useState('FORM'); // 'FORM' | 'CONFIRMATION' | 'MATCHES' | 'DETAILS'
   
@@ -91,6 +104,7 @@ export default function App() {
   return (
     <div className="app-layout">
       <Header />
+      <AuthModal />
 
       <main className="main-content container">
         {/* Navigation Tabs */}
@@ -115,13 +129,28 @@ export default function App() {
           </button>
         </div>
 
-        {/* Info Banner */}
-        <div className="banner banner-info margin-bottom-24">
-          <Info size={18} className="banner-icon" />
-          <div>
-            <strong>Módulo de Carga de Solicitudes:</strong> Sistema para crear y registrar solicitudes de transporte compartido. Las solicitudes guardadas quedan en estado de búsqueda hasta agruparse en una combi.
+        {/* User Greeting / Auth Status Bar */}
+        {isAuthenticated ? (
+          <div className="banner banner-auth-success margin-bottom-24">
+            <UserCheck size={18} className="banner-icon text-emerald" />
+            <div>
+              Sesión activa como <strong>{user.name}</strong> ({user.email}). Tus solicitudes y reservas quedarán vinculadas a tu cuenta.
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="banner banner-auth-prompt margin-bottom-24">
+            <Info size={18} className="banner-icon text-indigo" />
+            <div className="flex-between flex-grow">
+              <span>Para gestionar tus reservas y acceder a tarifas compartidas personalizadas, iniciá sesión en tu cuenta.</span>
+              <button
+                className="btn-link-action"
+                onClick={() => openAuthModal('LOGIN')}
+              >
+                <LogIn size={14} /> Iniciar Sesión
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Tab 1: Crear / Confirmación / Ver Matches / Ver Detalles */}
         {activeTab === 'CREATE' && (
@@ -228,5 +257,13 @@ export default function App() {
         </div>
       </footer>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <MainApp />
+    </AuthProvider>
   );
 }
