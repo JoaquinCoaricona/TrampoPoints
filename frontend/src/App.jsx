@@ -7,6 +7,7 @@ import TripDetails from './components/TripDetails';
 import RouteOptimizer from './components/RouteOptimizer';
 import AuthModal from './components/AuthModal';
 import AdminPanel from './components/AdminPanel';
+import DriverModule from './components/driver/DriverModule';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { createTripRequest, getTripMatches, getTripDetails, getAllTripRequests, processGroupingAlgorithm } from './services/api';
 import {
@@ -62,6 +63,7 @@ function MainApp() {
   const { user, isAuthenticated, openAuthModal } = useAuth();
   const isAdmin = user?.role === 'ADMIN';
 
+  const [isDriverMode, setIsDriverMode] = useState(false);
   const [activeTab, setActiveTab] = useState('CREATE'); // 'ADMIN' | 'CREATE' | 'MY_REQUESTS' | 'OPTIMIZER'
   const [viewState, setViewState] = useState('FORM'); // 'FORM' | 'CONFIRMATION' | 'MATCHES' | 'DETAILS'
   
@@ -212,177 +214,186 @@ function MainApp() {
 
   return (
     <div className="app-layout">
-      <Header />
+      <Header
+        onToggleDriverMode={() => setIsDriverMode(!isDriverMode)}
+        isDriverModeActive={isDriverMode}
+      />
       <AuthModal />
 
       <main className="main-content container">
-        {/* Navigation Tabs */}
-        <div className="nav-tabs-container margin-bottom-24">
-          {isAdmin && (
-            <button
-              className={`tab-btn tab-btn-admin ${activeTab === 'ADMIN' ? 'active' : ''}`}
-              onClick={() => setActiveTab('ADMIN')}
-            >
-              <ShieldCheck size={16} /> Panel Administrador ({allRequests.length})
-            </button>
-          )}
-
-          <button
-            className={`tab-btn ${activeTab === 'CREATE' ? 'active' : ''}`}
-            onClick={() => { setActiveTab('CREATE'); setViewState('FORM'); }}
-          >
-            <PlusCircle size={16} /> Crear Solicitud
-          </button>
-
-          <button
-            className={`tab-btn ${activeTab === 'MY_REQUESTS' ? 'active' : ''}`}
-            onClick={() => setActiveTab('MY_REQUESTS')}
-          >
-            <ListOrdered size={16} /> Mis Solicitudes ({userRequests.length})
-          </button>
-
-          <button
-            className={`tab-btn ${activeTab === 'OPTIMIZER' ? 'active' : ''}`}
-            onClick={() => setActiveTab('OPTIMIZER')}
-          >
-            <RouteIcon size={16} /> Probar API Optimización
-          </button>
-        </div>
-
-        {/* User Greeting / Auth Status Bar */}
-        {isAuthenticated ? (
-          <div className={`banner ${isAdmin ? 'banner-amber' : 'banner-auth-success'} margin-bottom-24`}>
-            {isAdmin ? (
-              <ShieldCheck size={18} className="banner-icon text-amber" />
-            ) : (
-              <UserCheck size={18} className="banner-icon text-emerald" />
-            )}
-            <div>
-              Sesión activa como <strong>{user.name}</strong> ({user.email}). {isAdmin ? 'Tenés permisos de Administrador para gestionar todas las solicitudes del sistema.' : 'Tus solicitudes creadas quedarán vinculadas a tu cuenta.'}
-            </div>
-          </div>
+        {isDriverMode ? (
+          <DriverModule onExit={() => setIsDriverMode(false)} />
         ) : (
-          <div className="banner banner-auth-prompt margin-bottom-24">
-            <Info size={18} className="banner-icon text-indigo" />
-            <div className="flex-between flex-grow">
-              <span>Ingresá a tu cuenta para gestionar reservas. Probá ingresar como Pasajero o como Administrador.</span>
+          <>
+            {/* Navigation Tabs */}
+            <div className="nav-tabs-container margin-bottom-24">
+              {isAdmin && (
+                <button
+                  className={`tab-btn tab-btn-admin ${activeTab === 'ADMIN' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('ADMIN')}
+                >
+                  <ShieldCheck size={16} /> Panel Administrador ({allRequests.length})
+                </button>
+              )}
+
               <button
-                className="btn-link-action"
-                onClick={() => openAuthModal('LOGIN')}
-              >
-                <LogIn size={14} /> Iniciar Sesión
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Pestaña Administrador */}
-        {isAdmin && activeTab === 'ADMIN' && (
-          <AdminPanel
-            allRequests={allRequests}
-            onRunAlgorithm={handleRunGroupingAlgorithm}
-            onUpdateStatus={handleUpdateStatusByAdmin}
-            onDeleteRequest={handleDeleteRequestByAdmin}
-            onViewMatches={handleViewRequestMatches}
-          />
-        )}
-
-        {/* Tab 1: Crear / Confirmación / Ver Matches / Ver Detalles */}
-        {activeTab === 'CREATE' && (
-          <div>
-            {viewState === 'FORM' && (
-              <TripRequestForm onSubmit={handleCreateRequest} loading={loading} />
-            )}
-
-            {viewState === 'CONFIRMATION' && (
-              <RequestConfirmation
-                requestData={lastCreatedRequest}
-                onCreateAnother={() => setViewState('FORM')}
-                onViewMyRequests={() => setActiveTab(isAdmin ? 'ADMIN' : 'MY_REQUESTS')}
-              />
-            )}
-
-            {viewState === 'MATCHES' && (
-              <MatchList
-                requestId={currentRequestId}
-                matches={matches}
-                onSelectTrip={handleSelectTrip}
-                onReset={handleResetForm}
-              />
-            )}
-
-            {viewState === 'DETAILS' && (
-              <TripDetails
-                tripData={selectedTrip}
-                onBack={() => setViewState('MATCHES')}
-              />
-            )}
-          </div>
-        )}
-
-        {/* Tab 2: Mis Solicitudes */}
-        {activeTab === 'MY_REQUESTS' && (
-          <div className="card glass-card">
-            <div className="card-header flex-between">
-              <h2>Mis Solicitudes de Viaje Cargadas</h2>
-              <button 
-                className="btn-primary"
+                className={`tab-btn ${activeTab === 'CREATE' ? 'active' : ''}`}
                 onClick={() => { setActiveTab('CREATE'); setViewState('FORM'); }}
               >
-                <PlusCircle size={16} /> + Nueva Solicitud
+                <PlusCircle size={16} /> Crear Solicitud
+              </button>
+
+              <button
+                className={`tab-btn ${activeTab === 'MY_REQUESTS' ? 'active' : ''}`}
+                onClick={() => setActiveTab('MY_REQUESTS')}
+              >
+                <ListOrdered size={16} /> Mis Solicitudes ({userRequests.length})
+              </button>
+
+              <button
+                className={`tab-btn ${activeTab === 'OPTIMIZER' ? 'active' : ''}`}
+                onClick={() => setActiveTab('OPTIMIZER')}
+              >
+                <RouteIcon size={16} /> Probar API Optimización
               </button>
             </div>
 
-            {userRequests.length === 0 ? (
-              <div className="empty-state padding-32 text-center">
-                <h3>No has cargado solicitudes de viaje todavía.</h3>
-                <p>Crea tu primera solicitud indicando origen, destino y hora deseada.</p>
-                <button 
-                  className="btn-primary margin-top-16"
-                  onClick={() => { setActiveTab('CREATE'); setViewState('FORM'); }}
-                >
-                  Cargar Primera Solicitud
-                </button>
+            {/* User Greeting / Auth Status Bar */}
+            {isAuthenticated ? (
+              <div className={`banner ${isAdmin ? 'banner-amber' : 'banner-auth-success'} margin-bottom-24`}>
+                {isAdmin ? (
+                  <ShieldCheck size={18} className="banner-icon text-amber" />
+                ) : (
+                  <UserCheck size={18} className="banner-icon text-emerald" />
+                )}
+                <div>
+                  Sesión activa como <strong>{user.name}</strong> ({user.email}). {isAdmin ? 'Tenés permisos de Administrador para gestionar todas las solicitudes del sistema.' : 'Tus solicitudes creadas quedarán vinculadas a tu cuenta.'}
+                </div>
               </div>
             ) : (
-              <div className="requests-list flex-column gap-16 margin-top-16">
-                {userRequests.map((req) => (
-                  <div key={req.requestId} className="request-card-item card glass-card">
-                    <div className="flex-between">
-                      <span className="badge badge-subtle">ID Solicitud: {req.requestId}</span>
-                      <span className="badge badge-success">Estado: {req.status}</span>
-                    </div>
-
-                    <div className="request-route-summary margin-top-12">
-                      <div>
-                        <strong><MapPin size={14} className="text-emerald" /> Origen:</strong> {req.origin?.address}
-                      </div>
-                      <div>
-                        <strong><Navigation size={14} className="text-indigo" /> Destino:</strong> {req.destination?.address}
-                      </div>
-                      <div>
-                        <strong>Hora Salida:</strong> {new Date(req.departureTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} hs
-                      </div>
-                    </div>
-
-                    <div className="margin-top-16 flex-between align-center">
-                      <span className="text-muted text-xs">Cargada por {req.userName} a las {req.createdAt} hs</span>
-                      <button
-                        className="btn-secondary flex-center gap-4"
-                        onClick={() => handleViewRequestMatches(req)}
-                      >
-                        Ver Recorrido del Viaje <ArrowRight size={14} />
-                      </button>
-                    </div>
-                  </div>
-                ))}
+              <div className="banner banner-auth-prompt margin-bottom-24">
+                <Info size={18} className="banner-icon text-indigo" />
+                <div className="flex-between flex-grow">
+                  <span>Ingresá a tu cuenta para gestionar reservas. Probá ingresar como Pasajero o como Administrador.</span>
+                  <button
+                    className="btn-link-action"
+                    onClick={() => openAuthModal('LOGIN')}
+                  >
+                    <LogIn size={14} /> Iniciar Sesión
+                  </button>
+                </div>
               </div>
             )}
-          </div>
-        )}
 
-        {/* Tab 3: Ruta Optimizer */}
-        {activeTab === 'OPTIMIZER' && <RouteOptimizer />}
+            {/* Pestaña Administrador */}
+            {isAdmin && activeTab === 'ADMIN' && (
+              <AdminPanel
+                allRequests={allRequests}
+                onRunAlgorithm={handleRunGroupingAlgorithm}
+                onUpdateStatus={handleUpdateStatusByAdmin}
+                onDeleteRequest={handleDeleteRequestByAdmin}
+                onViewMatches={handleViewRequestMatches}
+              />
+            )}
+
+            {/* Tab 1: Crear / Confirmación / Ver Matches / Ver Detalles */}
+            {activeTab === 'CREATE' && (
+              <div>
+                {viewState === 'FORM' && (
+                  <TripRequestForm onSubmit={handleCreateRequest} loading={loading} />
+                )}
+
+                {viewState === 'CONFIRMATION' && (
+                  <RequestConfirmation
+                    requestData={lastCreatedRequest}
+                    onCreateAnother={() => setViewState('FORM')}
+                    onViewMyRequests={() => setActiveTab(isAdmin ? 'ADMIN' : 'MY_REQUESTS')}
+                  />
+                )}
+
+                {viewState === 'MATCHES' && (
+                  <MatchList
+                    requestId={currentRequestId}
+                    matches={matches}
+                    onSelectTrip={handleSelectTrip}
+                    onReset={handleResetForm}
+                  />
+                )}
+
+                {viewState === 'DETAILS' && (
+                  <TripDetails
+                    tripData={selectedTrip}
+                    onBack={() => setViewState('MATCHES')}
+                  />
+                )}
+              </div>
+            )}
+
+            {/* Tab 2: Mis Solicitudes */}
+            {activeTab === 'MY_REQUESTS' && (
+              <div className="card glass-card">
+                <div className="card-header flex-between">
+                  <h2>Mis Solicitudes de Viaje Cargadas</h2>
+                  <button 
+                    className="btn-primary"
+                    onClick={() => { setActiveTab('CREATE'); setViewState('FORM'); }}
+                  >
+                    <PlusCircle size={16} /> + Nueva Solicitud
+                  </button>
+                </div>
+
+                {userRequests.length === 0 ? (
+                  <div className="empty-state padding-32 text-center">
+                    <h3>No has cargado solicitudes de viaje todavía.</h3>
+                    <p>Crea tu primera solicitud indicando origen, destino y hora deseada.</p>
+                    <button 
+                      className="btn-primary margin-top-16"
+                      onClick={() => { setActiveTab('CREATE'); setViewState('FORM'); }}
+                    >
+                      Cargar Primera Solicitud
+                    </button>
+                  </div>
+                ) : (
+                  <div className="requests-list flex-column gap-16 margin-top-16">
+                    {userRequests.map((req) => (
+                      <div key={req.requestId} className="request-card-item card glass-card">
+                        <div className="flex-between">
+                          <span className="badge badge-subtle">ID Solicitud: {req.requestId}</span>
+                          <span className="badge badge-success">Estado: {req.status}</span>
+                        </div>
+
+                        <div className="request-route-summary margin-top-12">
+                          <div>
+                            <strong><MapPin size={14} className="text-emerald" /> Origen:</strong> {req.origin?.address}
+                          </div>
+                          <div>
+                            <strong><Navigation size={14} className="text-indigo" /> Destino:</strong> {req.destination?.address}
+                          </div>
+                          <div>
+                            <strong>Hora Salida:</strong> {new Date(req.departureTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} hs
+                          </div>
+                        </div>
+
+                        <div className="margin-top-16 flex-between align-center">
+                          <span className="text-muted text-xs">Cargada por {req.userName} a las {req.createdAt} hs</span>
+                          <button
+                            className="btn-secondary flex-center gap-4"
+                            onClick={() => handleViewRequestMatches(req)}
+                          >
+                            Ver Recorrido del Viaje <ArrowRight size={14} />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Tab 3: Ruta Optimizer */}
+            {activeTab === 'OPTIMIZER' && <RouteOptimizer />}
+          </>
+        )}
       </main>
 
       <footer className="app-footer margin-top-48">

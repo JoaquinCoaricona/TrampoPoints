@@ -2,7 +2,7 @@ import React from 'react';
 import { Bus, LogIn, LogOut, ShieldCheck, User } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
-export default function Header() {
+export default function Header({ onToggleDriverMode, isDriverModeActive }) {
   const { user, isAuthenticated, logout, openAuthModal } = useAuth();
 
   const getUserInitials = (name) => {
@@ -20,7 +20,11 @@ export default function Header() {
   return (
     <header className="app-header">
       <div className="header-container">
-        <div className="brand">
+        <div
+          className="brand"
+          onClick={() => isDriverModeActive && onToggleDriverMode && onToggleDriverMode()}
+          style={{ cursor: isDriverModeActive ? 'pointer' : 'default' }}
+        >
           <div className="logo-badge">
             <Bus className="icon-bus" size={26} />
           </div>
@@ -31,6 +35,16 @@ export default function Header() {
         </div>
 
         <div className="header-actions flex-center gap-12">
+          {/* Driver Mode Button */}
+          <button
+            className={`btn-driver-mode ${isDriverModeActive ? 'driver-mode-active' : ''}`}
+            onClick={onToggleDriverMode}
+            title={isDriverModeActive ? 'Salir del Modo Chofer' : 'Ingresar al Módulo del Chofer'}
+          >
+            <Bus size={16} />
+            <span>{isDriverModeActive ? 'Modo Chofer (Activo)' : 'MODO CHOFER'}</span>
+          </button>
+
           <div className="header-status hide-mobile">
             <div className="status-badge">
               <span className="dot pulse"></span>
