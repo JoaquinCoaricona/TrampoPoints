@@ -1,10 +1,13 @@
 package com.trampopoints.controller;
 
 import com.trampopoints.dto.*;
+import com.trampopoints.model.TripRequest;
 import com.trampopoints.service.TripService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/trips")
@@ -26,6 +29,16 @@ public class TripController {
     public ResponseEntity<TripRequestResponseDto> createTripRequest(@RequestBody TripRequestDto requestDto) {
         TripRequestResponseDto response = tripService.createTripRequest(requestDto);
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 1b. Obtener todas las solicitudes (panel de administración)
+     * GET /api/trips/requests/all
+     */
+    @GetMapping("/requests/all")
+    public ResponseEntity<List<TripRequest>> getAllRequests() {
+        List<TripRequest> requests = tripService.getAllRequests();
+        return ResponseEntity.ok(requests);
     }
 
     /**

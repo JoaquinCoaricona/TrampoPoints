@@ -747,6 +747,90 @@
 .gap-12 { gap: 12px; }
 .gap-16 { gap: 16px; }
 
+/* Admin & Role Styles */
+.banner-amber {
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  color: #fde68a;
+}
+
+.badge-amber {
+  background: rgba(245, 158, 11, 0.2);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  color: #fbbf24;
+}
+
+.text-gradient-amber {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.tab-btn-admin {
+  background: rgba(245, 158, 11, 0.15) !important;
+  color: #fbbf24 !important;
+  border: 1px solid rgba(245, 158, 11, 0.3) !important;
+}
+
+.tab-btn-admin.active {
+  background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+  color: white !important;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4) !important;
+}
+
+.avatar-admin {
+  background: linear-gradient(135deg, #f59e0b, #b45309) !important;
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.4) !important;
+}
+
+.border-amber {
+  border-color: rgba(245, 158, 11, 0.4) !important;
+}
+
+.grid-2-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 600px) {
+  .grid-2-col {
+    grid-template-columns: 1fr;
+  }
+}
+
+.padding-left-36 {
+  padding-left: 36px !important;
+}
+
+.search-icon-inside {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.btn-icon-danger {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #f87171;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-icon-danger:hover {
+  background: rgba(239, 68, 68, 0.3);
+  color: white;
+}
+
+.padding-4-8 {
+  padding: 4px 8px !important;
+}
+
+
 /* ========================================================
    AUTHENTICATION & USER PROFILE STYLES
    ======================================================== */

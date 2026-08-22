@@ -1,7 +1,6 @@
 import React from 'react';
-import { Bus, LogIn, LogOut } from 'lucide-react';
+import { Bus, LogIn, LogOut, ShieldCheck, User } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-
 
 export default function Header() {
   const { user, isAuthenticated, logout, openAuthModal } = useAuth();
@@ -16,6 +15,8 @@ export default function Header() {
       .toUpperCase();
   };
 
+  const isAdmin = user?.role === 'ADMIN';
+
   return (
     <header className="app-header">
       <div className="header-container">
@@ -25,13 +26,13 @@ export default function Header() {
           </div>
           <div className="brand-text">
             <h1>TrampoPoints</h1>
-            <span className="subtitle">Viajes Compartidos en Combi</span>
+            <span className="subtitle">Plataforma de Viajes Compartidos</span>
           </div>
         </div>
 
-        <div className="header-actions">
-          <div className="header-status">
-            <div className="status-badge hide-mobile">
+        <div className="header-actions flex-center gap-12">
+          <div className="header-status hide-mobile">
+            <div className="status-badge">
               <span className="dot pulse"></span>
               <span>Sistema Activo</span>
             </div>
@@ -39,14 +40,25 @@ export default function Header() {
 
           {/* User Auth Section */}
           {isAuthenticated ? (
-            <div className="user-profile-header">
-              <div className="user-info-pill">
-                <div className="user-avatar" title={user.email}>
+            <div className="user-profile-header flex-center gap-8">
+              <div className="user-info-pill flex-center gap-8">
+                <div className={`user-avatar ${isAdmin ? 'avatar-admin' : ''}`} title={user.email}>
                   {getUserInitials(user.name)}
                 </div>
-                <div className="user-text-details hide-mobile">
-                  <span className="user-name">{user.name}</span>
-                  <span className="user-email">{user.email}</span>
+                <div className="user-text-details hide-mobile flex-column">
+                  <div className="flex-center gap-6">
+                    <span className="user-name">{user.name}</span>
+                    {isAdmin ? (
+                      <span className="badge badge-amber text-xs flex-center gap-2">
+                        <ShieldCheck size={12} /> ADMIN
+                      </span>
+                    ) : (
+                      <span className="badge badge-subtle text-xs flex-center gap-2">
+                        <User size={12} /> PASAJERO
+                      </span>
+                    )}
+                  </div>
+                  <span className="user-email text-xs text-muted">{user.email}</span>
                 </div>
               </div>
               <button
@@ -75,4 +87,3 @@ export default function Header() {
     </header>
   );
 }
-

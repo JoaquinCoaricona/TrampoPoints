@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 import TripRequestForm from './components/TripRequestForm';
 import RequestConfirmation from './components/RequestConfirmation';
@@ -6,6 +6,7 @@ import MatchList from './components/MatchList';
 import TripDetails from './components/TripDetails';
 import RouteOptimizer from './components/RouteOptimizer';
 import AuthModal from './components/AuthModal';
+import AdminPanel from './components/AdminPanel';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { createTripRequest, getTripMatches, getTripDetails } from './services/api';
 import {
@@ -17,21 +18,84 @@ import {
   Navigation,
   ArrowRight,
   UserCheck,
-  LogIn
+  LogIn,
+  ShieldCheck
 } from 'lucide-react';
 import './App.css';
 
+const LOCAL_STORAGE_REQUESTS_KEY = 'trampopoints_requests_store';
+
+const SEEDED_DEMO_REQUESTS = [
+  {
+    requestId: 'req-101',
+    userName: 'Juan Pérez',
+    userEmail: 'juan@email.com',
+    origin: { latitude: -34.6037, longitude: -58.3816, address: 'Obelisco (Av. 9 de Julio)' },
+    destination: { latitude: -34.5895, longitude: -58.3974, address: 'Palermo Soho' },
+    departureTime: '2026-08-22T08:30:00',
+    status: 'CONFIRMED',
+    createdAt: '08:15'
+  },
+  {
+    requestId: 'req-102',
+    userName: 'María González',
+    userEmail: 'maria@email.com',
+    origin: { latitude: -34.5614, longitude: -58.4563, address: 'Belgrano (Juramento y Cabildo)' },
+    destination: { latitude: -34.4580, longitude: -58.9142, address: 'Pilar Centro' },
+    departureTime: '2026-08-22T09:00:00',
+    status: 'SEARCHING',
+    createdAt: '08:20'
+  },
+  {
+    requestId: 'req-103',
+    userName: 'Carlos Rodríguez',
+    userEmail: 'carlos@email.com',
+    origin: { latitude: -34.4719, longitude: -58.5283, address: 'Estación San Isidro' },
+    destination: { latitude: -34.6083, longitude: -58.3712, address: 'Plaza de Mayo / Microcentro' },
+    departureTime: '2026-08-22T08:45:00',
+    status: 'SEARCHING',
+    createdAt: '08:25'
+  }
+];
+
 function MainApp() {
   const { user, isAuthenticated, openAuthModal } = useAuth();
-  const [activeTab, setActiveTab] = useState('CREATE'); // 'CREATE' | 'MY_REQUESTS' | 'OPTIMIZER'
+  const isAdmin = user?.role === 'ADMIN';
+
+  const [activeTab, setActiveTab] = useState('CREATE'); // 'ADMIN' | 'CREATE' | 'MY_REQUESTS' | 'OPTIMIZER'
   const [viewState, setViewState] = useState('FORM'); // 'FORM' | 'CONFIRMATION' | 'MATCHES' | 'DETAILS'
   
   const [loading, setLoading] = useState(false);
-  const [myRequests, setMyRequests] = useState([]); // Lista de solicitudes creadas por el usuario
+  const [allRequests, setAllRequests] = useState([]); // Almacén global de solicitudes (persistido)
   const [lastCreatedRequest, setLastCreatedRequest] = useState(null);
   const [currentRequestId, setCurrentRequestId] = useState(null);
   const [matches, setMatches] = useState([]);
   const [selectedTrip, setSelectedTrip] = useState(null);
+
+  // Cargar solicitudes desde LocalStorage al iniciar
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(LOCAL_STORAGE_REQUESTS_KEY);
+      if (stored) {
+        setAllRequests(JSON.parse(stored));
+      } else {
+        setAllRequests(SEEDED_DEMO_REQUESTS);
+        localStorage.setItem(LOCAL_STORAGE_REQUESTS_KEY, JSON.stringify(SEEDED_DEMO_REQUESTS));
+      }
+    } catch {
+      setAllRequests(SEEDED_DEMO_REQUESTS);
+    }
+  }, []);
+
+  // Guardar en LocalStorage cada vez que cambien las solicitudes
+  const saveRequestsToStorage = (updatedRequests) => {
+    setAllRequests(updatedRequests);
+    try {
+      localStorage.setItem(LOCAL_STORAGE_REQUESTS_KEY, JSON.stringify(updatedRequests));
+    } catch (e) {
+      console.warn('Error guardando solicitudes en LocalStorage:', e);
+    }
+  };
 
   // 1. Crear una solicitud de viaje (POST /api/trips/requests)
   const handleCreateRequest = async (formData) => {
@@ -42,6 +106,8 @@ function MainApp() {
 
       const newRequestItem = {
         requestId: newReqId,
+        userName: user?.name || 'Pasajero Invitado',
+        userEmail: user?.email || 'invitado@trampopoints.com',
         origin: formData.origin,
         destination: formData.destination,
         departureTime: formData.departureTime,
@@ -50,11 +116,13 @@ function MainApp() {
         createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
 
-      setMyRequests(prev => [newRequestItem, ...prev]);
+      const updatedList = [newRequestItem, ...allRequests];
+      saveRequestsToStorage(updatedList);
+
       setLastCreatedRequest(newRequestItem);
       setCurrentRequestId(newReqId);
 
-      // Mostrar pantalla de confirmación de solicitud cargada (sin mostrar mapas aún)
+      // Pantalla de confirmación de solicitud cargada
       setViewState('CONFIRMATION');
     } catch (err) {
       console.error('Error al procesar la solicitud de viaje:', err);
@@ -93,6 +161,17 @@ function MainApp() {
     }
   };
 
+  // Controles de Administrador
+  const handleUpdateStatusByAdmin = (requestId, newStatus) => {
+    const updated = allRequests.map(r => r.requestId === requestId ? { ...r, status: newStatus } : r);
+    saveRequestsToStorage(updated);
+  };
+
+  const handleDeleteRequestByAdmin = (requestId) => {
+    const updated = allRequests.filter(r => r.requestId !== requestId);
+    saveRequestsToStorage(updated);
+  };
+
   const handleResetForm = () => {
     setViewState('FORM');
     setCurrentRequestId(null);
@@ -100,6 +179,11 @@ function MainApp() {
     setMatches([]);
     setSelectedTrip(null);
   };
+
+  // Filtrar las solicitudes propias del usuario logueado
+  const userRequests = allRequests.filter(r =>
+    !user || r.userEmail === user.email || r.userEmail === 'invitado@trampopoints.com'
+  );
 
   return (
     <div className="app-layout">
@@ -109,39 +193,54 @@ function MainApp() {
       <main className="main-content container">
         {/* Navigation Tabs */}
         <div className="nav-tabs-container margin-bottom-24">
+          {isAdmin && (
+            <button
+              className={`tab-btn tab-btn-admin ${activeTab === 'ADMIN' ? 'active' : ''}`}
+              onClick={() => setActiveTab('ADMIN')}
+            >
+              <ShieldCheck size={16} /> Panel Administrador ({allRequests.length})
+            </button>
+          )}
+
           <button
             className={`tab-btn ${activeTab === 'CREATE' ? 'active' : ''}`}
             onClick={() => { setActiveTab('CREATE'); setViewState('FORM'); }}
           >
-            <PlusCircle size={16} /> Crear Solicitud de Viaje
+            <PlusCircle size={16} /> Crear Solicitud
           </button>
+
           <button
             className={`tab-btn ${activeTab === 'MY_REQUESTS' ? 'active' : ''}`}
             onClick={() => setActiveTab('MY_REQUESTS')}
           >
-            <ListOrdered size={16} /> Mis Solicitudes ({myRequests.length})
+            <ListOrdered size={16} /> Mis Solicitudes ({userRequests.length})
           </button>
+
           <button
             className={`tab-btn ${activeTab === 'OPTIMIZER' ? 'active' : ''}`}
             onClick={() => setActiveTab('OPTIMIZER')}
           >
-            <RouteIcon size={16} /> Probar API de Optimización
+            <RouteIcon size={16} /> Probar API Optimización
           </button>
         </div>
 
         {/* User Greeting / Auth Status Bar */}
         {isAuthenticated ? (
-          <div className="banner banner-auth-success margin-bottom-24">
-            <UserCheck size={18} className="banner-icon text-emerald" />
+          <div className={`banner ${isAdmin ? 'banner-amber' : 'banner-auth-success'} margin-bottom-24`}>
+            {isAdmin ? (
+              <ShieldCheck size={18} className="banner-icon text-amber" />
+            ) : (
+              <UserCheck size={18} className="banner-icon text-emerald" />
+            )}
             <div>
-              Sesión activa como <strong>{user.name}</strong> ({user.email}). Tus solicitudes y reservas quedarán vinculadas a tu cuenta.
+              Sesión activa como <strong>{user.name}</strong> ({user.email}). {isAdmin ? 'Tenés permisos de Administrador para gestionar todas las solicitudes del sistema.' : 'Tus solicitudes creadas quedarán vinculadas a tu cuenta.'}
             </div>
           </div>
         ) : (
           <div className="banner banner-auth-prompt margin-bottom-24">
             <Info size={18} className="banner-icon text-indigo" />
             <div className="flex-between flex-grow">
-              <span>Para gestionar tus reservas y acceder a tarifas compartidas personalizadas, iniciá sesión en tu cuenta.</span>
+              <span>Ingresá a tu cuenta para gestionar reservas. Probá ingresar como Pasajero o como Administrador.</span>
               <button
                 className="btn-link-action"
                 onClick={() => openAuthModal('LOGIN')}
@@ -150,6 +249,16 @@ function MainApp() {
               </button>
             </div>
           </div>
+        )}
+
+        {/* Pestaña Administrador */}
+        {isAdmin && activeTab === 'ADMIN' && (
+          <AdminPanel
+            allRequests={allRequests}
+            onUpdateStatus={handleUpdateStatusByAdmin}
+            onDeleteRequest={handleDeleteRequestByAdmin}
+            onViewMatches={handleViewRequestMatches}
+          />
         )}
 
         {/* Tab 1: Crear / Confirmación / Ver Matches / Ver Detalles */}
@@ -163,7 +272,7 @@ function MainApp() {
               <RequestConfirmation
                 requestData={lastCreatedRequest}
                 onCreateAnother={() => setViewState('FORM')}
-                onViewMyRequests={() => setActiveTab('MY_REQUESTS')}
+                onViewMyRequests={() => setActiveTab(isAdmin ? 'ADMIN' : 'MY_REQUESTS')}
               />
             )}
 
@@ -198,7 +307,7 @@ function MainApp() {
               </button>
             </div>
 
-            {myRequests.length === 0 ? (
+            {userRequests.length === 0 ? (
               <div className="empty-state padding-32 text-center">
                 <h3>No has cargado solicitudes de viaje todavía.</h3>
                 <p>Crea tu primera solicitud indicando origen, destino y hora deseada.</p>
@@ -211,7 +320,7 @@ function MainApp() {
               </div>
             ) : (
               <div className="requests-list flex-column gap-16 margin-top-16">
-                {myRequests.map((req) => (
+                {userRequests.map((req) => (
                   <div key={req.requestId} className="request-card-item card glass-card">
                     <div className="flex-between">
                       <span className="badge badge-subtle">ID Solicitud: {req.requestId}</span>
@@ -220,10 +329,10 @@ function MainApp() {
 
                     <div className="request-route-summary margin-top-12">
                       <div>
-                        <strong><MapPin size={14} className="text-emerald" /> Origen:</strong> {req.origin.address}
+                        <strong><MapPin size={14} className="text-emerald" /> Origen:</strong> {req.origin?.address}
                       </div>
                       <div>
-                        <strong><Navigation size={14} className="text-indigo" /> Destino:</strong> {req.destination.address}
+                        <strong><Navigation size={14} className="text-indigo" /> Destino:</strong> {req.destination?.address}
                       </div>
                       <div>
                         <strong>Hora Salida:</strong> {new Date(req.departureTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} hs
@@ -231,7 +340,7 @@ function MainApp() {
                     </div>
 
                     <div className="margin-top-16 flex-between align-center">
-                      <span className="text-muted text-xs">Cargada a las {req.createdAt} hs</span>
+                      <span className="text-muted text-xs">Cargada por {req.userName} a las {req.createdAt} hs</span>
                       <button
                         className="btn-secondary flex-center gap-4"
                         onClick={() => handleViewRequestMatches(req)}

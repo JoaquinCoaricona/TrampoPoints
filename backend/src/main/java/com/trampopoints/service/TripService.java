@@ -213,4 +213,9 @@ public class TripService {
                 stops
         );
     }
+
+    public List<TripRequest> getAllRequests() {
+        return new ArrayList<>(requestsMap.values());
+    }
 }
+

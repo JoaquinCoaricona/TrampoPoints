@@ -12,7 +12,8 @@ import {
   AlertCircle,
   Sparkles,
   Loader2,
-  Bus
+  Bus,
+  ShieldCheck
 } from 'lucide-react';
 
 export default function AuthModal() {
@@ -63,23 +64,28 @@ export default function AuthModal() {
       } else {
         await register(name, email, password);
       }
-      // Limpiar formulario al cerrar
       setName('');
       setEmail('');
       setPassword('');
     } catch {
       // El error ya queda establecido en el context
     } finally {
-
       setSubmitting(false);
     }
   };
 
-  const handleUseDemoCredentials = () => {
+  const handleUseDemoUser = () => {
     setError(null);
     setAuthModalMode('LOGIN');
     setEmail('juan@email.com');
     setPassword('password123');
+  };
+
+  const handleUseDemoAdmin = () => {
+    setError(null);
+    setAuthModalMode('LOGIN');
+    setEmail('admin@trampopoints.com');
+    setPassword('admin123');
   };
 
   return (
@@ -136,16 +142,30 @@ export default function AuthModal() {
           </button>
         </div>
 
-        {/* Demo Fast Access Button */}
+        {/* Demo Fast Access Buttons */}
         {isLogin && (
-          <div className="demo-credentials-box">
+          <div className="demo-credentials-box flex-column gap-8 margin-bottom-16">
             <button
               type="button"
-              className="btn-demo-quick"
-              onClick={handleUseDemoCredentials}
+              className="btn-demo-quick flex-between align-center"
+              onClick={handleUseDemoUser}
             >
-              <Sparkles size={15} className="demo-icon" />
-              <span>Autocompletar con Usuario Demo (<strong>juan@email.com</strong>)</span>
+              <span className="flex-center gap-6">
+                <Sparkles size={15} className="demo-icon text-indigo" />
+                <span>Demo Pasajero: <strong>juan@email.com</strong></span>
+              </span>
+              <span className="badge badge-subtle text-xs">Rol: USER</span>
+            </button>
+            <button
+              type="button"
+              className="btn-demo-quick flex-between align-center border-amber"
+              onClick={handleUseDemoAdmin}
+            >
+              <span className="flex-center gap-6">
+                <ShieldCheck size={15} className="text-amber" />
+                <span>Demo Admin: <strong>admin@trampopoints.com</strong></span>
+              </span>
+              <span className="badge badge-amber text-xs font-bold">Rol: ADMIN</span>
             </button>
           </div>
         )}
