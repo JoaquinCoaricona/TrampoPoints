@@ -34,9 +34,6 @@ export default function Header() {
       <header className="app-header">
         <div className="header-container">
           <Link to={isDriver ? '/driver' : '/'} className="brand-link flex-center gap-12">
-            <div className="logo-badge">
-              <Bus className="icon-bus" size={24} />
-            </div>
             <div className="brand-text">
               <h1>
                 Tramo<span className="text-neon-green">Points</span>

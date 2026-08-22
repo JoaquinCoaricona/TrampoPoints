@@ -1,22 +1,27 @@
 :root {
-  /* Paleta Oficial TrampoPoints */
-  --bg-carbon-900: #080C10;
-  --bg-carbon-800: #0B1015;
-  --bg-carbon-700: #0D1218;
-  --bg-carbon-600: #111820;
+  /* Paleta Oficial TrampoPoints - Negro Profundo, Verde Neón y Violeta Eléctrico */
+  --bg-carbon-950: #05080C;
+  --bg-carbon-900: #070B0F;
+  --bg-carbon-850: #0A0F14;
+  --bg-carbon-800: #0D131A;
+  --bg-carbon-700: #121820;
+  --bg-carbon-600: #18202A;
   
   --neon-green: #19E6A0;
   --neon-green-hover: #20DFA0;
-  --neon-green-glow: rgba(25, 230, 160, 0.25);
+  --neon-green-subtle: rgba(25, 230, 160, 0.08);
+  --neon-green-border: rgba(25, 230, 160, 0.25);
   
   --electric-violet: #7C4DFF;
   --electric-violet-hover: #8B5CF6;
-  --electric-violet-glow: rgba(124, 77, 255, 0.25);
+  --electric-violet-subtle: rgba(124, 77, 255, 0.08);
+  --electric-violet-border: rgba(124, 77, 255, 0.25);
 
-  --bg-dark: #080C10;
-  --bg-card: #0D1218;
-  --border-glass: rgba(255, 255, 255, 0.07);
-  --border-subtle: rgba(255, 255, 255, 0.06);
+  --bg-dark: #05080C;
+  --bg-card: #0A0F14;
+  --border-hairline: rgba(255, 255, 255, 0.06);
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-focus: rgba(25, 230, 160, 0.4);
 
   --text-main: #F8FAFC;
   --text-muted: #94A3B8;
@@ -32,11 +37,19 @@
   --radius-md: 10px;
   --radius-sm: 6px;
 
-  --shadow-subtle: 0 10px 30px -10px rgba(0, 0, 0, 0.7);
-  --shadow-green-glow: 0 0 20px rgba(25, 230, 160, 0.25);
-  --shadow-violet-glow: 0 0 20px rgba(124, 77, 255, 0.25);
-
   --font-family: 'Inter', system-ui, -apple-system, sans-serif;
+
+  /* Escala Armónica de Espaciado */
+  --space-4: 4px;
+  --space-8: 8px;
+  --space-12: 12px;
+  --space-16: 16px;
+  --space-20: 20px;
+  --space-24: 24px;
+  --space-32: 32px;
+  --space-40: 40px;
+  --space-48: 48px;
+  --space-64: 64px;
 }
 
 * {
@@ -46,16 +59,26 @@
 }
 
 body {
-  background-color: var(--bg-carbon-900);
+  background-color: var(--bg-carbon-950);
   background-image: 
-    radial-gradient(ellipse 60% 40% at 50% 0%, rgba(124, 77, 255, 0.08) 0%, transparent 80%),
-    radial-gradient(ellipse 40% 30% at 80% 90%, rgba(25, 230, 160, 0.04) 0%, transparent 70%);
+    radial-gradient(ellipse 70% 50% at 50% -10%, rgba(124, 77, 255, 0.05) 0%, transparent 80%),
+    radial-gradient(ellipse 50% 30% at 90% 100%, rgba(25, 230, 160, 0.03) 0%, transparent 70%);
   background-attachment: fixed;
   color: var(--text-main);
   font-family: var(--font-family);
+  line-height: 1.6;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  line-height: 1.25;
+  color: var(--text-main);
+}
+
+p {
+  line-height: 1.6;
 }
 
 button {

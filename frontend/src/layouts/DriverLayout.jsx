@@ -36,21 +36,8 @@ export default function DriverLayout() {
       <Header />
 
       <main className="driver-main-container container">
-        {/* Driver Top Banner */}
-        <div className="driver-header-strip flex-between align-center">
-          <div className="driver-title-chip flex-center gap-8">
-            <Bus size={18} className="text-neon-green" />
-            <span className="driver-title-text">Portal Oficial del Chofer</span>
-            <span className="driver-live-dot pulse"></span>
-          </div>
-
-          <div className="driver-system-status hide-mobile">
-            <span className="text-xs text-muted">Red de Minibuses • Conexión Segura</span>
-          </div>
-        </div>
-
         {/* Driver Navigation Bar with NavLinks */}
-        <nav className="driver-navbar" aria-label="Navegación del Chofer">
+        <nav className="driver-navbar margin-bottom-32" aria-label="Navegación del Chofer">
           <NavLink
             to="/driver"
             end

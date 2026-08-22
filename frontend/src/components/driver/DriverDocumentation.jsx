@@ -4,17 +4,13 @@ import {
   ShieldCheck,
   AlertTriangle,
   CheckCircle2,
-  XCircle,
   Clock,
   Plus,
   Trash2,
   Edit,
   Loader2,
-  Calendar,
-  Building,
   X,
-  Save,
-  Sparkles
+  Save
 } from 'lucide-react';
 import {
   getDocumentations,
@@ -58,14 +54,14 @@ export default function DriverDocumentation({ onUpdateSuccess }) {
   const handleOpenAddModal = () => {
     setEditingDoc(null);
     setDocType('SEGURO');
-    setTitle('Seguro de Pasajeros y Resp. Civil');
+    setTitle('Seguro Obligatorio y Resp. Civil');
     setDocNumber('');
-    setIssuer('Compañía Aseguradora');
+    setIssuer('La Segunda Seguros');
     setIssueDate(new Date().toISOString().split('T')[0]);
     const nextYear = new Date();
     nextYear.setFullYear(nextYear.getFullYear() + 1);
     setExpirationDate(nextYear.toISOString().split('T')[0]);
-    setNotes('');
+    setNotes('Cobertura integral para transporte interurbano de pasajeros');
     setShowModal(true);
   };
 
@@ -125,32 +121,32 @@ export default function DriverDocumentation({ onUpdateSuccess }) {
     switch (status) {
       case 'VALID':
         return (
-          <span className="chip-status-clean status-valid flex-center gap-4">
-            <CheckCircle2 size={13} className="text-neon-green" /> Vigente
+          <span className="doc-status-tag text-neon-green flex-center gap-6">
+            <CheckCircle2 size={13} /> Vigente
           </span>
         );
       case 'EXPIRING_SOON':
         return (
-          <span className="chip-status-clean status-expiring flex-center gap-4">
-            <Clock size={13} className="text-electric-violet" /> Por Vencer
+          <span className="doc-status-tag text-electric-violet flex-center gap-6">
+            <Clock size={13} /> Por Vencer
           </span>
         );
       case 'EXPIRED':
         return (
-          <span className="chip-status-clean status-expired flex-center gap-4">
-            <AlertTriangle size={13} className="text-rose" /> Vencido
+          <span className="doc-status-tag text-rose flex-center gap-6">
+            <AlertTriangle size={13} /> Vencido
           </span>
         );
       default:
-        return <span className="chip-status-clean">{status}</span>;
+        return <span className="doc-status-tag">{status}</span>;
     }
   };
 
   if (loading) {
     return (
-      <div className="driver-docs-skeleton flex-column gap-20">
-        <div className="skeleton-box shimmer-wave" style={{ height: '90px', borderRadius: '14px' }} />
-        <div className="skeleton-box shimmer-wave" style={{ height: '320px', borderRadius: '14px' }} />
+      <div className="driver-subpage-container flex-column gap-32">
+        <div className="skeleton-box shimmer-wave" style={{ height: '80px', borderRadius: '10px' }} />
+        <div className="skeleton-box shimmer-wave" style={{ height: '300px', borderRadius: '10px' }} />
       </div>
     );
   }
@@ -160,107 +156,105 @@ export default function DriverDocumentation({ onUpdateSuccess }) {
 
   return (
     <div className="driver-subpage-container">
-      {/* Header section (Clean, no heavy card) */}
-      <div className="subpage-header flex-between align-center flex-wrap gap-12 margin-bottom-24">
-        <div>
-          <span className="subpage-eyebrow text-neon-green flex-center gap-6">
-            <FileCheck size={14} /> Requisitos Legales & Habilitaciones
-          </span>
-          <h1 className="subpage-title">Documentación del Chofer</h1>
-          <p className="subpage-subtitle">
-            Mantené al día tus pólizas de seguro, VTV/RTO y licencia profesional para operar viajes en la plataforma.
-          </p>
+      {/* Top Header & New Doc Button */}
+      <header className="docs-summary-header flex-between align-center flex-wrap gap-24 margin-bottom-40">
+        <div className="flex-column gap-6">
+          <span className="section-eyebrow text-neon-green">Habilitaciones & Cumplimiento</span>
+          <h1 className="docs-page-title">Documentación del Chofer</h1>
+          <div className="docs-counts-line text-sm text-muted">
+            <strong className="text-main">{validCount}</strong> documentos al día ·{' '}
+            <strong className={expiredCount > 0 ? 'text-rose' : 'text-muted'}>{expiredCount}</strong> vencidos · Unidad autorizada para circular
+          </div>
         </div>
 
         <button
           type="button"
-          className="btn-primary-neon flex-center gap-6"
+          className="btn-primary-neon flex-center gap-8"
           onClick={handleOpenAddModal}
         >
-          <Plus size={16} /> + Cargar Nuevo Documento
+          <Plus size={16} /> Cargar Nuevo Documento
         </button>
-      </div>
+      </header>
 
-      {/* Summary strip */}
-      <div className="profile-metrics-strip margin-bottom-28">
-        <div className="metric-strip-item">
-          <span className="metric-strip-label">Documentos Totales</span>
-          <strong className="metric-strip-value">{docs.length}</strong>
-        </div>
-        <div className="metric-strip-item">
-          <span className="metric-strip-label">Habilitados & Vigentes</span>
-          <strong className="metric-strip-value text-neon-green">{validCount}</strong>
-        </div>
-        <div className="metric-strip-item">
-          <span className="metric-strip-label">Requieren Atención</span>
-          <strong className={`metric-strip-value ${expiredCount > 0 ? 'text-rose' : 'text-muted'}`}>
-            {expiredCount}
-          </strong>
-        </div>
-        <div className="metric-strip-item">
-          <span className="metric-strip-label">Estado de Flota</span>
-          <strong className="metric-strip-value text-neon-green">● Habilitada</strong>
-        </div>
-      </div>
+      <div className="hairline-divider margin-bottom-40" />
 
       {error && (
-        <div className="alert-banner-red margin-bottom-20">
+        <div className="alert-banner-red margin-bottom-32">
           <span>{error}</span>
         </div>
       )}
 
-      {/* Clean Documents Table / List */}
-      <div className="docs-clean-list">
+      {/* Structured Document List (Left-to-Right Scan) */}
+      <div className="docs-structured-list flex-column">
         {docs.length === 0 ? (
-          <div className="empty-state-clean text-center padding-32">
-            <FileCheck size={32} className="text-muted margin-bottom-12" />
+          <div className="empty-state-clean text-center padding-48 flex-column align-center gap-12">
+            <FileCheck size={36} className="text-muted" />
             <h3>No tenés documentos cargados</h3>
-            <p className="text-muted text-xs margin-top-4">Cargá tu primer seguro o VTV haciendo clic en "+ Cargar Nuevo Documento".</p>
+            <p className="text-muted text-sm max-w-400">
+              Cargá tu primer seguro de pasajeros o VTV haciendo clic en el botón superior.
+            </p>
           </div>
         ) : (
           docs.map((doc) => (
-            <div key={doc.id} className="doc-row-clean flex-between align-center flex-wrap gap-16">
-              <div className="doc-info-main flex-center gap-16">
-                <div className="doc-type-icon-wrap">
-                  <ShieldCheck size={20} className="text-neon-green" />
+            <div key={doc.id} className="doc-entry-row flex-between align-start flex-wrap gap-24">
+              {/* Left Column: Icon + Document details with distinct lines */}
+              <div className="doc-details-col flex-start gap-32">
+                <div className="doc-shield-icon">
+                  <ShieldCheck size={24} className="text-neon-green" />
                 </div>
-                <div className="flex-column gap-2">
-                  <div className="flex-center gap-8">
-                    <strong className="doc-title-text">{doc.title}</strong>
+                <div className="flex-column gap-12">
+                  {/* Name + Status Tag */}
+                  <div className="flex-center gap-16 flex-wrap margin-bottom-4">
+                    <h3 className="doc-title-text">{doc.title}</h3>
                     {getStatusChip(doc.status)}
                   </div>
-                  <div className="doc-meta-subtext flex-center gap-12 text-xs text-muted">
-                    {doc.docNumber && <span><strong>N°:</strong> {doc.docNumber}</span>}
-                    {doc.issuer && <span><strong>Emisor:</strong> {doc.issuer}</span>}
-                    {doc.expirationDate && (
-                      <span className="text-neon-green">
-                        <strong>Vence:</strong> {new Date(doc.expirationDate).toLocaleDateString()}
-                      </span>
-                    )}
+
+                  {/* Issuer & Policy Number */}
+                  <div className="doc-issuer-line text-sm text-muted flex-center gap-16 flex-wrap">
+                    {doc.issuer && <span>Emisor: <strong className="text-main">{doc.issuer}</strong></span>}
+                    {doc.docNumber && <span>· Póliza / N°: <strong className="text-main">{doc.docNumber}</strong></span>}
                   </div>
-                  {doc.notes && <p className="doc-notes-text text-xs text-muted">{doc.notes}</p>}
+
+                  {/* Notes / Description */}
+                  {doc.notes && (
+                    <p className="doc-notes-text text-sm text-muted">
+                      {doc.notes}
+                    </p>
+                  )}
                 </div>
               </div>
 
-              <div className="doc-actions-wrap flex-center gap-8">
-                <button
-                  type="button"
-                  className="btn-icon-action btn-edit-doc"
-                  onClick={() => handleOpenEditModal(doc)}
-                  title="Editar documento"
-                  aria-label="Editar documento"
-                >
-                  <Edit size={16} />
-                </button>
-                <button
-                  type="button"
-                  className="btn-icon-action btn-delete-doc"
-                  onClick={() => handleDeleteDoc(doc.id)}
-                  title="Eliminar documento"
-                  aria-label="Eliminar documento"
-                >
-                  <Trash2 size={16} />
-                </button>
+              {/* Right Column: Expiration Date & Actions */}
+              <div className="doc-meta-actions-col flex-center gap-24 align-self-center">
+                {doc.expirationDate && (
+                  <div className="doc-vencimiento-box text-right flex-column gap-2">
+                    <span className="text-xs text-muted block">Vencimiento</span>
+                    <span className="text-sm text-main font-semibold">
+                      {new Date(doc.expirationDate).toLocaleDateString()}
+                    </span>
+                  </div>
+                )}
+
+                <div className="flex-center gap-8">
+                  <button
+                    type="button"
+                    className="btn-icon-subtle"
+                    onClick={() => handleOpenEditModal(doc)}
+                    title="Editar documento"
+                    aria-label="Editar documento"
+                  >
+                    <Edit size={16} />
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-icon-subtle btn-delete-subtle"
+                    onClick={() => handleDeleteDoc(doc.id)}
+                    title="Eliminar documento"
+                    aria-label="Eliminar documento"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
               </div>
             </div>
           ))
@@ -270,25 +264,22 @@ export default function DriverDocumentation({ onUpdateSuccess }) {
       {/* Modal Add / Edit Document */}
       {showModal && (
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
-          <div className="modal-container glass-card doc-modal-card" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-container doc-modal-card" onClick={(e) => e.stopPropagation()}>
             <button className="modal-close-btn" onClick={() => setShowModal(false)} aria-label="Cerrar modal">
               <X size={20} />
             </button>
 
-            <div className="modal-header margin-bottom-20">
-              <div className="flex-center gap-10">
-                <ShieldCheck size={24} className="text-neon-green" />
-                <h2 className="modal-title">
-                  {editingDoc ? 'Editar Documento' : 'Cargar Nuevo Documento'}
-                </h2>
-              </div>
-              <p className="modal-subtitle text-xs text-muted margin-top-4">
-                Ingresá los datos de la póliza, VTV o habilitación municipal.
-              </p>
+            <div className="modal-header flex-column gap-6 margin-bottom-28">
+              <span className="section-eyebrow text-neon-green">
+                {editingDoc ? 'Modificar Registro' : 'Nueva Habilitación'}
+              </span>
+              <h2 className="modal-title">
+                {editingDoc ? 'Editar Documento' : 'Cargar Nuevo Documento'}
+              </h2>
             </div>
 
             <form onSubmit={handleSaveDoc} className="clean-doc-form">
-              <div className="form-group margin-bottom-16">
+              <div className="form-group flex-column gap-8 margin-bottom-20">
                 <label className="form-label">Tipo de Documento</label>
                 <select
                   className="form-input form-select"
@@ -304,7 +295,7 @@ export default function DriverDocumentation({ onUpdateSuccess }) {
                 </select>
               </div>
 
-              <div className="form-group margin-bottom-16">
+              <div className="form-group flex-column gap-8 margin-bottom-20">
                 <label className="form-label">Título o Descripción</label>
                 <input
                   type="text"
@@ -316,9 +307,9 @@ export default function DriverDocumentation({ onUpdateSuccess }) {
                 />
               </div>
 
-              <div className="form-grid-2cols margin-bottom-16">
-                <div className="form-group">
-                  <label className="form-label">Número de Póliza / Registro</label>
+              <div className="form-grid-2cols margin-bottom-20">
+                <div className="form-group flex-column gap-8">
+                  <label className="form-label">Número de Registro / Póliza</label>
                   <input
                     type="text"
                     className="form-input"
@@ -329,21 +320,21 @@ export default function DriverDocumentation({ onUpdateSuccess }) {
                   />
                 </div>
 
-                <div className="form-group">
+                <div className="form-group flex-column gap-8">
                   <label className="form-label">Entidad Emisora</label>
                   <input
                     type="text"
                     className="form-input"
                     value={issuer}
                     onChange={(e) => setIssuer(e.target.value)}
-                    placeholder="Ej. Federación Patronal / CNRT"
+                    placeholder="Ej. La Segunda Seguros"
                     required
                   />
                 </div>
               </div>
 
-              <div className="form-grid-2cols margin-bottom-16">
-                <div className="form-group">
+              <div className="form-grid-2cols margin-bottom-20">
+                <div className="form-group flex-column gap-8">
                   <label className="form-label">Fecha de Emisión</label>
                   <input
                     type="date"
@@ -353,7 +344,7 @@ export default function DriverDocumentation({ onUpdateSuccess }) {
                   />
                 </div>
 
-                <div className="form-group">
+                <div className="form-group flex-column gap-8">
                   <label className="form-label">Fecha de Vencimiento</label>
                   <input
                     type="date"
@@ -365,18 +356,18 @@ export default function DriverDocumentation({ onUpdateSuccess }) {
                 </div>
               </div>
 
-              <div className="form-group margin-bottom-24">
-                <label className="form-label">Observaciones o Cobertura</label>
+              <div className="form-group flex-column gap-8 margin-bottom-32">
+                <label className="form-label">Observaciones</label>
                 <textarea
                   className="form-input form-textarea"
                   rows={2}
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Ej. Cobertura hasta $50.000.000 por pasajero y terceros transportados"
+                  placeholder="Ej. Cobertura completa por pasajero y terceros transportados"
                 />
               </div>
 
-              <div className="modal-actions flex-between">
+              <div className="modal-actions flex-between align-center">
                 <button
                   type="button"
                   className="btn-secondary"
@@ -387,7 +378,7 @@ export default function DriverDocumentation({ onUpdateSuccess }) {
                 </button>
                 <button
                   type="submit"
-                  className="btn-primary-neon flex-center gap-6"
+                  className="btn-primary-neon flex-center gap-8"
                   disabled={saving}
                 >
                   {saving ? (

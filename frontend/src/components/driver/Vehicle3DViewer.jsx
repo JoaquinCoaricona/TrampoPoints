@@ -107,7 +107,7 @@ export default function Vehicle3DViewer({ vehicle, onVehicleChange }) {
 
     // 1. Scene
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x080C10);
+    scene.background = new THREE.Color(0x05080C);
     sceneRef.current = scene;
 
     // 2. Camera
@@ -129,7 +129,7 @@ export default function Vehicle3DViewer({ vehicle, onVehicleChange }) {
 
     // 4. Studio Lighting Rig
     // A. Soft Ambient Hemisphere Light (Electric violet sky & dark carbon ground)
-    const hemiLight = new THREE.HemisphereLight(0xa78bfa, 0x080c10, 0.75);
+    const hemiLight = new THREE.HemisphereLight(0xa78bfa, 0x05080c, 0.75);
     scene.add(hemiLight);
 
     // B. Key Studio Directional Light (Soft top-front highlight)
@@ -157,10 +157,11 @@ export default function Vehicle3DViewer({ vehicle, onVehicleChange }) {
     // 5. Studio Floor Grid & Contact Shadow Plane
     const floorGeom = new THREE.PlaneGeometry(40, 40);
     const floorMat = new THREE.MeshStandardMaterial({
-      color: 0x080C10,
+      color: 0x05080C,
       roughness: 0.85,
       metalness: 0.15
     });
+
 
     const floor = new THREE.Mesh(floorGeom, floorMat);
     floor.rotation.x = -Math.PI / 2;
@@ -462,7 +463,7 @@ export default function Vehicle3DViewer({ vehicle, onVehicleChange }) {
                 </div>
                 <strong className="model-full-name">{preset.model}</strong>
                 <div className="model-btn-footer">
-                  <span>👥 {preset.capacity} Asientos</span>
+                  <span>{preset.capacity} Asientos</span>
                   <span className="model-type-chip">{preset.type}</span>
                 </div>
               </button>
@@ -488,7 +489,7 @@ export default function Vehicle3DViewer({ vehicle, onVehicleChange }) {
 
         {/* Interaction Hint */}
         <div className="showroom-interaction-hint">
-          <span>🖱️ Click + arrastrá para rotar 360° • Rueda del mouse para Zoom</span>
+          <span>Click + arrastrá para rotar 360° • Rueda del mouse para Zoom</span>
         </div>
 
         {/* Floating Spec Badges */}
@@ -518,21 +519,22 @@ export default function Vehicle3DViewer({ vehicle, onVehicleChange }) {
           <div className="controls-group flex-center gap-6">
             <span className="control-label text-xs text-muted">Cámara:</span>
             <button type="button" className="btn-control-chip" onClick={() => setCameraPreset('HERO')}>
-              🏎️ Frente 3/4
+              Perspectiva 3/4
             </button>
             <button type="button" className="btn-control-chip" onClick={() => setCameraPreset('SIDE')}>
-              🚐 Lateral
+              Lateral
             </button>
             <button type="button" className="btn-control-chip" onClick={() => setCameraPreset('FRONT')}>
-              💡 Frente
+              Frente
             </button>
             <button type="button" className="btn-control-chip" onClick={() => setCameraPreset('REAR')}>
-              🔙 Trasera
+              Trasera
             </button>
             <button type="button" className="btn-control-chip" onClick={() => setCameraPreset('TOP')}>
-              📐 Isométrica
+              Superior
             </button>
           </div>
+
 
           {/* Interactive Toggles */}
           <div className="controls-group flex-center gap-8">

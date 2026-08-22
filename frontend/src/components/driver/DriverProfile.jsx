@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Mail, Phone, Image, CheckCircle, Save, Loader2, Award, Shield, CheckCircle2, Sparkles } from 'lucide-react';
+import { User, Mail, Phone, Image, Save, Loader2, ShieldCheck, CheckCircle2, Star, Award, TrendingUp } from 'lucide-react';
 import { getDriverProfile, updateDriverProfile } from '../../services/driverService';
 
 export default function DriverProfile({ onUpdateSuccess }) {
@@ -52,77 +52,110 @@ export default function DriverProfile({ onUpdateSuccess }) {
 
   if (loading) {
     return (
-      <div className="driver-profile-skeleton flex-column gap-20">
-        <div className="skeleton-box shimmer-wave" style={{ height: '90px', borderRadius: '14px' }} />
-        <div className="skeleton-box shimmer-wave" style={{ height: '340px', borderRadius: '14px' }} />
+      <div className="driver-subpage-container flex-column gap-32">
+        <div className="skeleton-box shimmer-wave" style={{ height: '120px', borderRadius: '12px' }} />
+        <div className="skeleton-box shimmer-wave" style={{ height: '280px', borderRadius: '12px' }} />
       </div>
     );
   }
 
   return (
     <div className="driver-subpage-container">
-      {/* Header section (clean, no heavy card) */}
-      <div className="subpage-header flex-between align-center flex-wrap gap-12 margin-bottom-24">
-        <div>
-          <span className="subpage-eyebrow text-electric-violet flex-center gap-6">
-            <User size={14} /> Configuración de Cuenta
-          </span>
-          <h1 className="subpage-title">Mi Perfil de Chofer</h1>
-          <p className="subpage-subtitle">
-            Administrá tu información de contacto y habilitación profesional en TrampoPoints.
-          </p>
-        </div>
-
-        <div className="badge-verified-clean">
-          <Shield size={15} className="text-neon-green" />
-          <span>Cuenta Verificada</span>
-        </div>
-      </div>
-
       {/* Success / Error Alerts */}
       {savedSuccess && (
-        <div className="alert-banner-green margin-bottom-20 flex-between">
-          <span className="flex-center gap-8">
-            <CheckCircle2 size={18} className="text-neon-green" />
-            ¡Datos del perfil actualizados correctamente en el servidor!
+        <div className="alert-banner-green margin-bottom-32 flex-between">
+          <span className="flex-center gap-10">
+            <CheckCircle2 size={18} className="text-neon-green flex-shrink-0" />
+            <span>Datos del perfil actualizados correctamente.</span>
           </span>
         </div>
       )}
 
       {error && (
-        <div className="alert-banner-red margin-bottom-20">
+        <div className="alert-banner-red margin-bottom-32">
           <span>{error}</span>
         </div>
       )}
 
-      {/* Profile Metrics Bar (Minimalist Strip) */}
-      <div className="profile-metrics-strip margin-bottom-28">
-        <div className="metric-strip-item">
-          <span className="metric-strip-label">Calificación</span>
-          <strong className="metric-strip-value text-electric-violet">
-            ⭐ {profile?.ratingAverage?.toFixed(1) || '4.8'} <span className="text-muted text-xs">/ 5</span>
-          </strong>
+      {/* 1. Header Identity & Verification */}
+      <header className="profile-hero-header flex-between align-center flex-wrap gap-24 margin-bottom-36">
+        <div className="flex-center gap-20">
+          <div className="profile-avatar-large">
+            {profile?.name ? profile.name[0] : 'C'}
+          </div>
+          <div className="flex-column gap-12">
+            <div className="flex-center gap-12 flex-wrap">
+              <h1 className="profile-name-headline">{profile?.name} {profile?.lastName}</h1>
+              <div className="badge-verified-clean">
+                <ShieldCheck size={14} className="text-neon-green" />
+                <span>Chofer Verificado</span>
+              </div>
+            </div>
+            <div className="margin-top-8">
+              <span className="text-sm text-muted">{profile?.email} · Rol Chofer Profesional</span>
+            </div>
+          </div>
         </div>
-        <div className="metric-strip-item">
-          <span className="metric-strip-label">Opiniones</span>
-          <strong className="metric-strip-value">{profile?.totalRatings || 103}</strong>
+      </header>
+
+      {/* 2. Distinct Metric Blocks (Calificación, Viajes, Estado) */}
+      <div className="profile-metrics-band flex-between align-center flex-wrap gap-24 margin-bottom-40">
+        <div className="profile-metric-cell flex-column gap-4">
+          <span className="section-eyebrow text-electric-violet">Calificación Promedio</span>
+          <div className="flex-center gap-10 margin-top-2">
+            <span className="metric-large-num text-electric-violet">
+              {profile?.ratingAverage?.toFixed(1) || '4.8'}
+            </span>
+            <div className="flex-column gap-2">
+              <div className="flex-center gap-3">
+                <Star size={14} className="text-electric-violet" fill="#7C4DFF" />
+                <span className="text-xs text-main font-semibold">Excelente</span>
+              </div>
+              <span className="text-xs text-muted">{profile?.totalRatings || 103} opiniones</span>
+            </div>
+          </div>
         </div>
-        <div className="metric-strip-item">
-          <span className="metric-strip-label">Viajes Realizados</span>
-          <strong className="metric-strip-value">{profile?.tripsCompleted || 42}</strong>
+
+        <div className="metric-vertical-separator" />
+
+        <div className="profile-metric-cell flex-column gap-4">
+          <span className="section-eyebrow text-muted">Viajes Realizados</span>
+          <div className="flex-column gap-2 margin-top-2">
+            <span className="metric-large-num text-main">
+              {profile?.tripsCompleted || 42}
+            </span>
+            <span className="text-xs text-muted">viajes completados</span>
+          </div>
         </div>
-        <div className="metric-strip-item">
-          <span className="metric-strip-label">Estado</span>
-          <strong className="metric-strip-value text-neon-green">● Activo</strong>
+
+        <div className="metric-vertical-separator" />
+
+        <div className="profile-metric-cell flex-column gap-4">
+          <span className="section-eyebrow text-muted">Estado de Cuenta</span>
+          <div className="flex-column gap-4 margin-top-2">
+            <span className="text-sm font-semibold text-neon-green flex-center gap-6">
+              <span className="dot dot-green"></span> Habilitado para viajes
+            </span>
+            <span className="text-xs text-muted">Documentación vigente</span>
+          </div>
         </div>
       </div>
 
-      {/* Form Area */}
-      <form onSubmit={handleSubmit} className="clean-profile-form">
+      <div className="hairline-divider margin-bottom-40" />
+
+      {/* 3. Personal Details Form */}
+      <form onSubmit={handleSubmit} className="profile-clean-form flex-column gap-32">
+        <div className="flex-column gap-6">
+          <span className="section-eyebrow text-neon-green">Datos Personales</span>
+          <p className="text-sm text-muted">
+            Información de contacto utilizada para la coordinación de viajes y confirmación con pasajeros.
+          </p>
+        </div>
+
         <div className="form-grid-2cols">
-          <div className="form-group">
+          <div className="form-group flex-column gap-8">
             <label className="form-label">
-              <User size={14} className="text-electric-violet" /> Nombre
+              <User size={14} className="text-muted" /> Nombre
             </label>
             <input
               type="text"
@@ -133,9 +166,9 @@ export default function DriverProfile({ onUpdateSuccess }) {
             />
           </div>
 
-          <div className="form-group">
+          <div className="form-group flex-column gap-8">
             <label className="form-label">
-              <User size={14} className="text-electric-violet" /> Apellido
+              <User size={14} className="text-muted" /> Apellido
             </label>
             <input
               type="text"
@@ -146,9 +179,9 @@ export default function DriverProfile({ onUpdateSuccess }) {
             />
           </div>
 
-          <div className="form-group">
+          <div className="form-group flex-column gap-8">
             <label className="form-label">
-              <Mail size={14} className="text-neon-green" /> Correo Electrónico
+              <Mail size={14} className="text-muted" /> Correo Electrónico
             </label>
             <input
               type="email"
@@ -159,9 +192,9 @@ export default function DriverProfile({ onUpdateSuccess }) {
             />
           </div>
 
-          <div className="form-group">
+          <div className="form-group flex-column gap-8">
             <label className="form-label">
-              <Phone size={14} className="text-electric-violet" /> Teléfono de Contacto
+              <Phone size={14} className="text-muted" /> Teléfono Celular
             </label>
             <input
               type="tel"
@@ -172,32 +205,32 @@ export default function DriverProfile({ onUpdateSuccess }) {
             />
           </div>
 
-          <div className="form-group full-width">
+          <div className="form-group full-width flex-column gap-8">
             <label className="form-label">
-              <Image size={14} className="text-neon-green" /> URL de Foto de Perfil (Avatar)
+              <Image size={14} className="text-muted" /> URL de Foto de Perfil
             </label>
             <input
               type="url"
               className="form-input"
               value={profile?.avatarUrl || ''}
               onChange={(e) => setProfile({ ...profile, avatarUrl: e.target.value })}
-              placeholder="https://..."
+              placeholder="https://ejemplo.com/foto.jpg"
             />
           </div>
         </div>
 
-        <div className="form-footer-actions flex-between align-center margin-top-24">
-          <span className="text-muted text-xs">
-            Los cambios se sincronizan en tiempo real con el backend de TrampoPoints.
+        <div className="form-footer-actions flex-between align-center margin-top-12">
+          <span className="text-muted text-sm">
+            Los cambios se reflejan inmediatamente en tu perfil de chofer.
           </span>
-          <button type="submit" className="btn-primary-neon flex-center gap-8" disabled={saving}>
+          <button type="submit" className="btn-primary-neon flex-center gap-10" disabled={saving}>
             {saving ? (
               <>
                 <Loader2 className="spinner" size={16} /> Guardando...
               </>
             ) : (
               <>
-                <Save size={16} /> Guardar Cambios del Perfil
+                <Save size={16} /> Guardar Cambios
               </>
             )}
           </button>

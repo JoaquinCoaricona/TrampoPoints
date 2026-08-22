@@ -11,9 +11,7 @@ import {
   LogIn,
   UserPlus,
   AlertCircle,
-  Sparkles,
   Loader2,
-  ShieldCheck,
   UserCheck,
   ArrowLeft
 } from 'lucide-react';
@@ -92,40 +90,29 @@ export default function LoginPage() {
     setPassword('password123');
   };
 
-  const handleUseDemoAdmin = () => {
-    setError(null);
-    setMode('LOGIN');
-    setRole('ADMIN');
-    setEmail('admin@trampopoints.com');
-    setPassword('admin123');
-  };
-
   return (
     <div className="login-page-root">
-      {/* Background ambient lighting */}
+      {/* Background subtle ambient lighting */}
       <div className="login-ambient-violet" />
       <div className="login-ambient-green" />
 
       {/* Top back button */}
       <div className="login-top-bar">
         <Link to="/" className="btn-back-landing">
-          <ArrowLeft size={16} /> Volver al Inicio
+          <ArrowLeft size={15} /> Volver al Inicio
         </Link>
       </div>
 
       <div className="login-container">
-        {/* Brand Header */}
+        {/* Clean Header (Logo icon removed as requested) */}
         <div className="login-header text-center">
-          <div className="login-logo-glow">
-            <Bus size={32} className="text-neon-green" />
-          </div>
           <h1 className="login-title">
             Trampo<span className="text-neon-green">Points</span>
           </h1>
           <p className="login-subtitle">
             {isLogin
               ? 'Accedé a tu portal de Chofer o a tu cuenta de Pasajero'
-              : 'Unite a la red de transporte compartido en combis y minibuses'}
+              : 'Unite a la red de transporte compartido'}
           </p>
         </div>
 
@@ -138,29 +125,29 @@ export default function LoginPage() {
               className={`login-mode-tab ${isLogin ? 'active' : ''}`}
               onClick={() => { setError(null); setMode('LOGIN'); }}
             >
-              <LogIn size={16} /> Iniciar Sesión
+              <LogIn size={15} /> Iniciar Sesión
             </button>
             <button
               type="button"
               className={`login-mode-tab ${!isLogin ? 'active' : ''}`}
               onClick={() => { setError(null); setMode('REGISTER'); }}
             >
-              <UserPlus size={16} /> Registrarse
+              <UserPlus size={15} /> Registrarse
             </button>
           </div>
 
           {/* Quick Demo Credentials */}
           {isLogin && (
-            <div className="login-demo-bar flex-column gap-8">
+            <div className="login-demo-bar">
               <span className="demo-bar-title">Acceso rápido con un clic:</span>
-              <div className="demo-buttons-grid">
+              <div className="demo-buttons-grid margin-top-8">
                 <button
                   type="button"
                   className={`btn-demo-card ${role === 'DRIVER' ? 'selected' : ''}`}
                   onClick={handleUseDemoDriver}
                 >
                   <div className="flex-center gap-6">
-                    <Bus size={15} className="text-neon-green" />
+                    <Bus size={14} className="text-neon-green" />
                     <strong>Chofer Demo</strong>
                   </div>
                   <span className="demo-email">juan.chofer@trampopoints.com</span>
@@ -172,7 +159,7 @@ export default function LoginPage() {
                   onClick={handleUseDemoPassenger}
                 >
                   <div className="flex-center gap-6">
-                    <Sparkles size={15} className="text-electric-violet" />
+                    <UserCheck size={14} className="text-electric-violet" />
                     <strong>Pasajero Demo</strong>
                   </div>
                   <span className="demo-email">juan@email.com</span>
@@ -184,17 +171,17 @@ export default function LoginPage() {
           {/* Error Alert */}
           {error && (
             <div className="login-error-banner">
-              <AlertCircle size={18} className="text-rose flex-shrink-0" />
+              <AlertCircle size={16} className="text-rose flex-shrink-0" />
               <span>{error}</span>
             </div>
           )}
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="login-form">
-            {/* Role selection */}
-            <div className="form-group margin-bottom-16">
+            {/* Clean Role selector (CHOFER / PASAJERO without extra descriptions) */}
+            <div className="form-group margin-bottom-20">
               <label className="form-label">
-                <Sparkles size={14} className="text-electric-violet" /> {isLogin ? 'Ingresar como:' : 'Tipo de Cuenta:'}
+                {isLogin ? 'Tipo de Acceso' : 'Tipo de Cuenta'}
               </label>
               <div className="role-selection-grid">
                 <button
@@ -202,11 +189,10 @@ export default function LoginPage() {
                   className={`role-option-card ${role === 'DRIVER' ? 'selected' : ''}`}
                   onClick={() => setRole('DRIVER')}
                 >
-                  <div className="flex-center gap-6">
-                    <Bus size={18} className={role === 'DRIVER' ? 'text-neon-green' : 'text-muted'} />
+                  <div className="flex-center gap-8">
+                    <Bus size={16} className={role === 'DRIVER' ? 'text-neon-green' : 'text-muted'} />
                     <strong>Chofer</strong>
                   </div>
-                  <span className="role-card-desc">Panel, combi 3D y viajes</span>
                 </button>
 
                 <button
@@ -214,11 +200,10 @@ export default function LoginPage() {
                   className={`role-option-card ${role === 'USER' ? 'selected' : ''}`}
                   onClick={() => setRole('USER')}
                 >
-                  <div className="flex-center gap-6">
-                    <UserCheck size={18} className={role === 'USER' ? 'text-electric-violet' : 'text-muted'} />
+                  <div className="flex-center gap-8">
+                    <UserCheck size={16} className={role === 'USER' ? 'text-electric-violet' : 'text-muted'} />
                     <strong>Pasajero</strong>
                   </div>
-                  <span className="role-card-desc">Buscar y reservar combis</span>
                 </button>
               </div>
             </div>
@@ -227,12 +212,12 @@ export default function LoginPage() {
             {!isLogin && (
               <div className="form-group margin-bottom-16">
                 <label className="form-label">
-                  <UserIcon size={15} className="text-electric-violet" /> Nombre Completo
+                  <UserIcon size={14} className="text-electric-violet" /> Nombre Completo
                 </label>
                 <input
                   type="text"
                   className="form-input"
-                  placeholder={role === 'DRIVER' ? 'Ej. Juan Pérez (Chofer)' : 'Ej. Juan Pérez'}
+                  placeholder={role === 'DRIVER' ? 'Ej. Juan Pérez' : 'Ej. Juan Pérez'}
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required={!isLogin}
@@ -244,7 +229,7 @@ export default function LoginPage() {
             {/* Email input */}
             <div className="form-group margin-bottom-16">
               <label className="form-label">
-                <Mail size={15} className="text-neon-green" /> Correo Electrónico
+                <Mail size={14} className="text-neon-green" /> Correo Electrónico
               </label>
               <input
                 type="email"
@@ -260,7 +245,7 @@ export default function LoginPage() {
             {/* Password input */}
             <div className="form-group margin-bottom-24">
               <label className="form-label">
-                <Lock size={15} className="text-electric-violet" /> Contraseña
+                <Lock size={14} className="text-electric-violet" /> Contraseña
               </label>
               <div className="password-input-wrapper">
                 <input
@@ -278,12 +263,12 @@ export default function LoginPage() {
                   tabIndex={-1}
                   aria-label={showPassword ? 'Ocultar contraseña' : 'Ver contraseña'}
                 >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
             </div>
 
-            {/* Submit Button */}
+            {/* Submit Button (No hardcoded emojis) */}
             <button
               type="submit"
               className="btn-primary-neon login-submit-btn"
@@ -291,15 +276,15 @@ export default function LoginPage() {
             >
               {submitting ? (
                 <span className="flex-center gap-8">
-                  <Loader2 className="spinner" size={18} />
+                  <Loader2 className="spinner" size={16} />
                   {isLogin ? 'Iniciando Sesión...' : 'Registrando Cuenta...'}
                 </span>
               ) : (
                 <span className="flex-center gap-8">
-                  {isLogin ? <LogIn size={18} /> : <UserPlus size={18} />}
+                  {isLogin ? <LogIn size={16} /> : <UserPlus size={16} />}
                   {isLogin
-                    ? (role === 'DRIVER' ? 'Ingresar al Portal del Chofer 🚐' : 'Ingresar como Pasajero 👥')
-                    : (role === 'DRIVER' ? 'Crear Cuenta de Chofer 🚐' : 'Crear Cuenta de Pasajero 👥')}
+                    ? (role === 'DRIVER' ? 'Ingresar al Portal del Chofer' : 'Ingresar como Pasajero')
+                    : (role === 'DRIVER' ? 'Crear Cuenta de Chofer' : 'Crear Cuenta de Pasajero')}
                 </span>
               )}
             </button>

@@ -5,16 +5,12 @@ import {
   Star,
   FileCheck,
   User,
-  ShieldCheck,
+  ArrowRight,
   ChevronRight,
-  Sparkles,
-  Award,
-  AlertTriangle,
+  MapPin,
   CheckCircle2,
-  XCircle,
-  Loader2,
-  TrendingUp,
-  ArrowRight
+  Clock,
+  AlertTriangle
 } from 'lucide-react';
 import { updateVehicleStatus } from '../../services/driverService';
 
@@ -25,17 +21,12 @@ export default function DriverDashboard({ dashboardData: propData, onRefresh: pr
   const onRefresh = propRefresh || outletCtx.onRefresh;
   const [updatingStatus, setUpdatingStatus] = useState(false);
 
-
   if (!dashboardData) {
     return (
-      <div className="driver-dashboard-skeleton flex-column gap-20">
-        <div className="skeleton-hero-card skeleton-box shimmer-wave" style={{ height: '140px', borderRadius: '16px' }} />
-        <div className="grid-cards-dashboard">
-          <div className="skeleton-box shimmer-wave" style={{ height: '180px', borderRadius: '14px' }} />
-          <div className="skeleton-box shimmer-wave" style={{ height: '180px', borderRadius: '14px' }} />
-          <div className="skeleton-box shimmer-wave" style={{ height: '180px', borderRadius: '14px' }} />
-        </div>
-        <div className="skeleton-box shimmer-wave" style={{ height: '220px', borderRadius: '14px' }} />
+      <div className="driver-dashboard-skeleton flex-column gap-32">
+        <div className="skeleton-box shimmer-wave" style={{ height: '80px', borderRadius: '10px' }} />
+        <div className="skeleton-box shimmer-wave" style={{ height: '240px', borderRadius: '10px' }} />
+        <div className="skeleton-box shimmer-wave" style={{ height: '160px', borderRadius: '10px' }} />
       </div>
     );
   }
@@ -55,206 +46,194 @@ export default function DriverDashboard({ dashboardData: propData, onRefresh: pr
   };
 
   return (
-    <div className="driver-dashboard-view">
-      {/* 1. Header Hero Area (Minimalist, No Heavy Box) */}
-      <div className="driver-dash-header flex-between align-center flex-wrap gap-16 margin-bottom-32">
-        <div className="driver-dash-welcome">
-          <span className="driver-eyebrow text-electric-violet flex-center gap-6">
-            <Sparkles size={14} /> Panel Principal
-          </span>
-          <h1 className="driver-hero-heading">
-            Hola, <span className="text-neon-green">{driver?.name?.split(' ')[0] || 'Chofer'}</span> 👋
+    <div className="driver-editorial-dashboard">
+      {/* 1. Header: Saludo Directo + Estado Operativo */}
+      <header className="dash-hero-header flex-between align-center flex-wrap gap-24 margin-bottom-48">
+        <div className="flex-column gap-6">
+          <h1 className="dash-greeting-title">
+            Hola, <span className="text-neon-green">{driver?.name?.split(' ')[0] || 'Chofer'}</span>
           </h1>
-          <p className="driver-hero-subtext">
-            Gestioná tu combi, revisá la vigencia de documentación y consultá la reputación de tus viajes.
-          </p>
-        </div>
-
-        {/* Status Switcher Chip */}
-        <div className="driver-status-control-strip">
-          <div className="flex-center gap-8 margin-bottom-8">
-            <span className="text-xs text-muted">Estado del vehículo:</span>
+          <div className="dash-status-indicator flex-center gap-8">
             {vehicle?.status === 'AVAILABLE' && (
-              <span className="driver-pill-available">
-                <span className="dot pulse"></span> Disponible
+              <span className="status-live-pill text-neon-green">
+                <span className="dot pulse"></span> Disponible para viajes
               </span>
             )}
             {vehicle?.status === 'UNAVAILABLE' && (
-              <span className="driver-pill-unavailable">
-                <span className="dot dot-amber"></span> En Pausa
+              <span className="status-live-pill text-amber">
+                <span className="dot dot-amber"></span> En Pausa temporal
               </span>
             )}
             {vehicle?.status === 'OUT_OF_SERVICE' && (
-              <span className="driver-pill-outofservice">
-                <span className="dot dot-red"></span> En Taller
+              <span className="status-live-pill text-rose">
+                <span className="dot dot-red"></span> En Mantenimiento
               </span>
             )}
           </div>
-
-          <div className="status-mini-toggles">
-            <button
-              type="button"
-              className={`btn-mini-status ${vehicle?.status === 'AVAILABLE' ? 'active-green' : ''}`}
-              onClick={() => handleStatusChange('AVAILABLE')}
-              disabled={updatingStatus || vehicle?.status === 'AVAILABLE'}
-            >
-              Disponible
-            </button>
-            <button
-              type="button"
-              className={`btn-mini-status ${vehicle?.status === 'UNAVAILABLE' ? 'active-amber' : ''}`}
-              onClick={() => handleStatusChange('UNAVAILABLE')}
-              disabled={updatingStatus || vehicle?.status === 'UNAVAILABLE'}
-            >
-              Pausa
-            </button>
-            <button
-              type="button"
-              className={`btn-mini-status ${vehicle?.status === 'OUT_OF_SERVICE' ? 'active-red' : ''}`}
-              onClick={() => handleStatusChange('OUT_OF_SERVICE')}
-              disabled={updatingStatus || vehicle?.status === 'OUT_OF_SERVICE'}
-            >
-              Taller
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* 2. Key Metrics Row (Clean, High Contrast, Electric Violet & Neon Green Accents) */}
-      <div className="driver-stats-strip margin-bottom-36">
-        {/* Stat 1: Reputación */}
-        <div className="dash-stat-cell" onClick={() => navigate('/driver/ratings')}>
-          <div className="stat-icon-wrap icon-violet">
-            <Star size={20} className="text-electric-violet" />
-          </div>
-          <div className="stat-content">
-            <div className="stat-big-number">
-              {ratingSummary?.ratingAverage?.toFixed(1) || '4.8'} <span className="stat-unit text-electric-violet">★</span>
-            </div>
-            <span className="stat-title">Calificación General</span>
-            <span className="stat-subdetail text-muted">{ratingSummary?.totalRatings || 103} opiniones recibidas</span>
-          </div>
-          <ChevronRight size={18} className="stat-arrow" />
         </div>
 
-        {/* Stat 2: Vehículo */}
-        <div className="dash-stat-cell" onClick={() => navigate('/driver/vehicle')}>
-          <div className="stat-icon-wrap icon-green">
-            <Bus size={20} className="text-neon-green" />
-          </div>
-          <div className="stat-content">
-            <div className="stat-big-text">
-              {vehicle?.brand || 'Mercedes-Benz'} {vehicle?.model || 'Sprinter'}
-            </div>
-            <span className="stat-title">Combi Asignada</span>
-            <span className="stat-subdetail text-neon-green">
-              👥 {vehicle?.passengerCapacity || 20} pasajeros • Patente {vehicle?.licensePlate || 'AD123TP'}
-            </span>
-          </div>
-          <ChevronRight size={18} className="stat-arrow" />
+        {/* Compact Status Segmented Switch */}
+        <div className="segmented-toggle-row">
+          <button
+            type="button"
+            className={`seg-btn ${vehicle?.status === 'AVAILABLE' ? 'active-green' : ''}`}
+            onClick={() => handleStatusChange('AVAILABLE')}
+            disabled={updatingStatus || vehicle?.status === 'AVAILABLE'}
+          >
+            Disponible
+          </button>
+          <button
+            type="button"
+            className={`seg-btn ${vehicle?.status === 'UNAVAILABLE' ? 'active-amber' : ''}`}
+            onClick={() => handleStatusChange('UNAVAILABLE')}
+            disabled={updatingStatus || vehicle?.status === 'UNAVAILABLE'}
+          >
+            Pausa
+          </button>
+          <button
+            type="button"
+            className={`seg-btn ${vehicle?.status === 'OUT_OF_SERVICE' ? 'active-red' : ''}`}
+            onClick={() => handleStatusChange('OUT_OF_SERVICE')}
+            disabled={updatingStatus || vehicle?.status === 'OUT_OF_SERVICE'}
+          >
+            Taller
+          </button>
         </div>
+      </header>
 
-        {/* Stat 3: Documentación */}
-        <div className="dash-stat-cell" onClick={() => navigate('/driver/documents')}>
-          <div className="stat-icon-wrap icon-green">
-            <FileCheck size={20} className="text-neon-green" />
-          </div>
-          <div className="stat-content">
-            <div className="stat-big-number text-neon-green">
-              {validDocsCount || 4} / {(validDocsCount || 4) + (expiredDocsCount || 0)}
-            </div>
-            <span className="stat-title">Documentos Habilitantes</span>
-            <span className="stat-subdetail text-muted">
-              {expiredDocsCount > 0 ? `${expiredDocsCount} requieren atención` : 'Toda la documentación al día'}
-            </span>
-          </div>
-          <ChevronRight size={18} className="stat-arrow" />
-        </div>
-      </div>
+      <div className="hairline-divider margin-bottom-48" />
 
-      {/* 3. Section: Accesos Rápidos Tecnológicos */}
-      <div className="dash-quick-links-section margin-bottom-36">
-        <div className="section-header-clean flex-between align-center margin-bottom-16">
-          <h2 className="section-clean-title flex-center gap-8">
-            <TrendingUp size={18} className="text-neon-green" /> Módulos de Gestión
+      {/* 2. Operación Actual (Hero Dominante de la Página) */}
+      <section className="dash-operation-spotlight margin-bottom-56">
+        <div className="operation-headline-wrap flex-column gap-10">
+          <span className="section-eyebrow text-neon-green">Unidad Asignada</span>
+          <h2 className="operation-vehicle-name">
+            {vehicle?.brand || 'Mercedes-Benz'} {vehicle?.model || 'Sprinter 516 CDI'}
           </h2>
-          <span className="text-xs text-muted">Acceso directo a configuraciones</span>
+          <div className="operation-metadata-line flex-center gap-14 text-muted flex-wrap">
+            <span className="text-main font-medium">{vehicle?.passengerCapacity || 20} pasajeros</span>
+            <span className="meta-dot">·</span>
+            <span className="text-main font-medium">Patente {vehicle?.licensePlate || 'AF 482 TP'}</span>
+            <span className="meta-dot">·</span>
+            <span>{vehicle?.color || 'Blanco Ártico'}</span>
+          </div>
+          <div className="margin-top-6">
+            <Link to="/driver/vehicle" className="inline-action-link text-neon-green flex-center gap-6">
+              <span>Personalizar y ver en 3D</span>
+              <ArrowRight size={15} />
+            </Link>
+          </div>
         </div>
 
-        <div className="driver-clean-grid">
-          <Link to="/driver/vehicle" className="clean-nav-card">
-            <div className="clean-card-icon text-neon-green">
-              <Bus size={22} />
+        {/* Integrated Metrics Row (Reputación, Viajes y Documentación integrados con la unidad) */}
+        <div className="operation-integrated-metrics flex-center gap-32 flex-wrap margin-top-28">
+          <div className="integrated-metric-item flex-center gap-10">
+            <span className="integrated-score-num text-electric-violet">
+              {ratingSummary?.ratingAverage?.toFixed(1) || '4.8'}
+            </span>
+            <div className="flex-column gap-2">
+              <div className="flex-center gap-3">
+                <Star size={14} className="text-electric-violet" fill="#7C4DFF" />
+                <span className="text-sm font-semibold text-main">Excelente</span>
+              </div>
+              <span className="text-xs text-muted">
+                {ratingSummary?.totalRatings || 103} opiniones
+              </span>
             </div>
-            <div className="clean-card-info">
-              <strong>Mi Vehículo & Showroom 3D</strong>
-              <span>Explorá y personalizá el modelo 3D de tu combi</span>
+          </div>
+
+          <div className="metric-vertical-separator" />
+
+          <div className="integrated-metric-item flex-column gap-2">
+            <span className="text-sm text-muted">Viajes Realizados</span>
+            <span className="text-lg font-extrabold text-main">
+              {driver?.tripsCompleted || 42} <span className="text-xs text-muted font-normal">completados</span>
+            </span>
+          </div>
+
+          <div className="metric-vertical-separator" />
+
+          <div className="integrated-metric-item flex-column gap-2">
+            <span className="text-sm text-muted">Documentación</span>
+            <span className="text-sm font-semibold text-neon-green flex-center gap-6">
+              <CheckCircle2 size={14} /> {validDocsCount || 4}/4 al día
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <div className="hairline-divider margin-bottom-48" />
+
+      {/* 3. Gestión (Lista Vertical con Separadores Sutiles, No Cards) */}
+      <section className="dash-management-section margin-bottom-56">
+        <span className="section-eyebrow text-muted margin-bottom-16 block">Gestión</span>
+
+        <div className="management-vertical-list">
+          <Link to="/driver/vehicle" className="mgmt-row-item flex-between align-center">
+            <div className="flex-center gap-16">
+              <Bus size={18} className="text-neon-green flex-shrink-0" />
+              <span className="mgmt-title">Mi vehículo</span>
             </div>
-            <ArrowRight size={16} className="clean-card-arrow" />
+            <ChevronRight size={18} className="mgmt-arrow text-muted" />
           </Link>
 
-          <Link to="/driver/profile" className="clean-nav-card">
-            <div className="clean-card-icon text-electric-violet">
-              <User size={22} />
+          <Link to="/driver/profile" className="mgmt-row-item flex-between align-center">
+            <div className="flex-center gap-16">
+              <User size={18} className="text-electric-violet flex-shrink-0" />
+              <span className="mgmt-title">Perfil del chofer</span>
             </div>
-            <div className="clean-card-info">
-              <strong>Perfil del Chofer</strong>
-              <span>Actualizá tus datos personales y de contacto</span>
-            </div>
-            <ArrowRight size={16} className="clean-card-arrow" />
+            <ChevronRight size={18} className="mgmt-arrow text-muted" />
           </Link>
 
-          <Link to="/driver/documents" className="clean-nav-card">
-            <div className="clean-card-icon text-neon-green">
-              <ShieldCheck size={22} />
+          <Link to="/driver/documents" className="mgmt-row-item flex-between align-center">
+            <div className="flex-center gap-16">
+              <FileCheck size={18} className="text-neon-green flex-shrink-0" />
+              <span className="mgmt-title">Documentación y habilitaciones</span>
             </div>
-            <div className="clean-card-info">
-              <strong>Documentación y Habilitaciones</strong>
-              <span>Póliza de seguro, VTV/RTO y licencia profesional</span>
-            </div>
-            <ArrowRight size={16} className="clean-card-arrow" />
+            <ChevronRight size={18} className="mgmt-arrow text-muted" />
           </Link>
 
-          <Link to="/driver/ratings" className="clean-nav-card">
-            <div className="clean-card-icon text-electric-violet">
-              <Star size={22} />
+          <Link to="/driver/ratings" className="mgmt-row-item flex-between align-center">
+            <div className="flex-center gap-16">
+              <Star size={18} className="text-electric-violet flex-shrink-0" />
+              <span className="mgmt-title">Calificaciones y reseñas</span>
             </div>
-            <div className="clean-card-info">
-              <strong>Calificaciones y Reseñas</strong>
-              <span>Monitoreá la satisfacción y comentarios de pasajeros</span>
-            </div>
-            <ArrowRight size={16} className="clean-card-arrow" />
+            <ChevronRight size={18} className="mgmt-arrow text-muted" />
           </Link>
         </div>
-      </div>
+      </section>
 
-      {/* 4. Section: Testimonios Destacados (Typography-focused, no heavy boxes) */}
+      <div className="hairline-divider margin-bottom-48" />
+
+      {/* 4. Opiniones Recientes (Flujo Editorial Continuo) */}
       {topRecommendations && topRecommendations.length > 0 && (
-        <div className="dash-testimonials-section">
-          <div className="section-header-clean flex-between align-center margin-bottom-16">
-            <h2 className="section-clean-title flex-center gap-8">
-              <Sparkles size={18} className="text-electric-violet" /> Opiniones Recientes de Pasajeros
-            </h2>
-            <Link to="/driver/recommendations" className="link-see-all text-xs text-electric-violet flex-center gap-4">
-              Ver todas ({topRecommendations.length}) <ChevronRight size={14} />
+        <section className="dash-opinions-section">
+          <div className="flex-between align-center margin-bottom-24">
+            <span className="section-eyebrow text-muted">Opiniones Recientes</span>
+            <Link to="/driver/recommendations" className="inline-action-link text-electric-violet text-sm flex-center gap-6">
+              <span>Ver todas ({topRecommendations.length})</span>
+              <ArrowRight size={14} />
             </Link>
           </div>
 
-          <div className="testimonials-quote-list">
-            {topRecommendations.slice(0, 2).map((rec) => (
-              <div key={rec.id} className="quote-item-clean">
-                <div className="quote-stars text-electric-violet">
-                  {'★'.repeat(rec.score)}{'☆'.repeat(5 - rec.score)}
-                </div>
-                <p className="quote-text">"{rec.quote}"</p>
-                <div className="quote-author-row">
-                  <span className="quote-author-name">{rec.passengerName}</span>
-                  {rec.tripRoute && <span className="quote-route-chip">• {rec.tripRoute}</span>}
+          <div className="opinions-editorial-flow flex-column gap-32">
+            {topRecommendations.slice(0, 2).map((rec, index) => (
+              <div key={rec.id || index} className="opinion-editorial-entry flex-column gap-8">
+                <blockquote className="opinion-quote-body">
+                  "{rec.quote}"
+                </blockquote>
+                <div className="opinion-author-line flex-center gap-10 text-sm">
+                  <span className="text-main font-semibold">{rec.passengerName}</span>
+                  {rec.tripRoute && (
+                    <span className="text-muted flex-center gap-6">
+                      · <MapPin size={13} className="text-neon-green" /> {rec.tripRoute}
+                    </span>
+                  )}
                 </div>
               </div>
             ))}
           </div>
-        </div>
+        </section>
       )}
     </div>
   );

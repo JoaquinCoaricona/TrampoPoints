@@ -167,7 +167,7 @@ export default function AuthModal() {
                 <Bus size={16} className="text-indigo" />
                 <span>Demo Chofer: <strong>juan.chofer@trampopoints.com</strong></span>
               </span>
-              <span className="badge badge-indigo text-xs font-bold">ACCEDER COMO CHOFER 🚐</span>
+              <span className="badge badge-indigo text-xs font-bold">ACCEDER COMO CHOFER</span>
             </button>
 
             <button
@@ -179,7 +179,7 @@ export default function AuthModal() {
                 <Sparkles size={15} className="demo-icon text-indigo" />
                 <span>Demo Pasajero: <strong>juan@email.com</strong></span>
               </span>
-              <span className="badge badge-subtle text-xs">ACCEDER COMO PASAJERO 👥</span>
+              <span className="badge badge-subtle text-xs">ACCEDER COMO PASAJERO</span>
             </button>
 
             <button
@@ -219,9 +219,8 @@ export default function AuthModal() {
               >
                 <div className="flex-center gap-6">
                   <Bus size={18} className={role === 'DRIVER' ? 'text-indigo' : 'text-muted'} />
-                  <strong>🚐 Chofer</strong>
+                  <strong>Chofer</strong>
                 </div>
-                <span className="role-card-desc">Ver panel, vehículo 3D y viajes</span>
               </button>
 
               <button
@@ -231,9 +230,8 @@ export default function AuthModal() {
               >
                 <div className="flex-center gap-6">
                   <UserCheck size={18} className={role === 'USER' ? 'text-indigo' : 'text-muted'} />
-                  <strong>👥 Pasajero / Cliente</strong>
+                  <strong>Pasajero</strong>
                 </div>
-                <span className="role-card-desc">Buscar y reservar combis</span>
               </button>
             </div>
           </div>
@@ -246,7 +244,7 @@ export default function AuthModal() {
               <input
                 type="text"
                 className="form-input"
-                placeholder={role === 'DRIVER' ? 'Ej. Juan Pérez (Chofer)' : 'Ej. Juan Pérez'}
+                placeholder="Ej. Juan Pérez"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required={!isLogin}
@@ -309,12 +307,13 @@ export default function AuthModal() {
               <span className="flex-center">
                 {isLogin ? <LogIn size={18} /> : <UserPlus size={18} />}
                 {isLogin
-                  ? (role === 'DRIVER' ? 'Ingresar como Chofer 🚐' : 'Ingresar como Pasajero / Cliente 👥')
-                  : (role === 'DRIVER' ? 'Crear Cuenta de Chofer 🚐' : 'Crear Cuenta de Pasajero 👥')}
+                  ? (role === 'DRIVER' ? 'Ingresar como Chofer' : 'Ingresar como Pasajero')
+                  : (role === 'DRIVER' ? 'Crear Cuenta de Chofer' : 'Crear Cuenta de Pasajero')}
               </span>
             )}
           </button>
         </form>
+
 
         {/* Footer switch */}
         <div className="auth-footer-switch">
