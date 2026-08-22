@@ -1,11 +1,16 @@
 const API_BASE_URL = 'http://localhost:8080/api';
 
+// Estado local para recordar la última búsqueda realizada en el frontend
+let lastTripRequestData = null;
+
 /**
  * Cliente HTTP REST para los contratos del MVP de TrampoPoints.
  */
 
 // 1. Crear solicitud de viaje (POST /api/trips/requests)
 export async function createTripRequest(data) {
+  lastTripRequestData = data; // Guardar datos de la solicitud (origen, destino, horario)
+
   try {
     const response = await fetch(`${API_BASE_URL}/trips/requests`, {
       method: 'POST',
@@ -18,10 +23,9 @@ export async function createTripRequest(data) {
     }
     return await response.json();
   } catch (error) {
-    console.warn('Backend indisponible o error en red, utilizando respuesta mock según contrato:', error);
-    // Fallback con respuesta idéntica al contrato
+    console.warn('Backend indisponible o error en red, utilizando respuesta mock dinámica:', error);
     return {
-      requestId: 'req-123',
+      requestId: 'req-' + Math.floor(Math.random() * 900 + 100),
       status: 'SEARCHING',
       message: 'Buscando pasajeros compatibles'
     };
@@ -38,17 +42,17 @@ export async function getTripMatches(requestId) {
     }
     return await response.json();
   } catch (error) {
-    console.warn('Backend indisponible, retornando coincidencia mock según contrato:', error);
+    console.warn('Backend indisponible, retornando coincidencia mock dinámica:', error);
     return {
       requestId: requestId || 'req-123',
       matches: [
         {
-          tripId: 'trip-456',
+          tripId: 'trip-' + Math.floor(Math.random() * 900 + 100),
           passengerCount: 12,
           capacity: 30,
           estimatedPrice: 1800,
           estimatedSavings: 35,
-          departureTime: '2026-08-22T08:30:00'
+          departureTime: lastTripRequestData?.departureTime || '2026-08-22T08:30:00'
         }
       ]
     };
@@ -65,44 +69,51 @@ export async function getTripDetails(tripId) {
     }
     return await response.json();
   } catch (error) {
-    console.warn('Backend indisponible, retornando detalles de viaje mock según contrato:', error);
+    console.warn('Backend indisponible, generando respuesta mock dinámica basada en la búsqueda actual:', error);
+
+    const origin = lastTripRequestData?.origin || { latitude: -34.6037, longitude: -58.3816, address: 'Obelisco' };
+    const destination = lastTripRequestData?.destination || { latitude: -34.5895, longitude: -58.3974, address: 'Palermo' };
+
+    const midLat = (origin.latitude + destination.latitude) / 2.0;
+    const midLng = (origin.longitude + destination.longitude) / 2.0;
+
     return {
       tripId: tripId || 'trip-456',
       status: 'CONFIRMED',
-      passengerCount: 12,
+      passengerCount: 14,
       capacity: 30,
       estimatedPricePerPassenger: 1800,
       estimatedSavingsPercent: 35,
-      departureTime: '2026-08-22T08:30:00',
+      departureTime: lastTripRequestData?.departureTime || '2026-08-22T08:30:00',
       route: {
         distanceMeters: 8500,
         durationSeconds: 1800,
-        polyline: 'ROUTE_POLYLINE'
+        polyline: `MOCK_POLYLINE:${origin.latitude},${origin.longitude};${midLat},${midLng};${destination.latitude},${destination.longitude}`
       },
       stops: [
         {
           stopId: 'stop-1',
           type: 'PICKUP',
           order: 1,
-          latitude: -34.6037,
-          longitude: -58.3816,
-          address: 'Obelisco'
+          latitude: origin.latitude,
+          longitude: origin.longitude,
+          address: origin.address || 'Punto de Origen'
         },
         {
           stopId: 'stop-2',
           type: 'PICKUP',
           order: 2,
-          latitude: -34.6001,
-          longitude: -58.3900,
-          address: 'Parada 2'
+          latitude: midLat,
+          longitude: midLng,
+          address: 'Parada Intermedia de Pasajeros'
         },
         {
           stopId: 'stop-3',
           type: 'DROPOFF',
           order: 3,
-          latitude: -34.5895,
-          longitude: -58.3974,
-          address: 'Palermo'
+          latitude: destination.latitude,
+          longitude: destination.longitude,
+          address: destination.address || 'Punto de Destino'
         }
       ]
     };
@@ -123,23 +134,22 @@ export async function optimizeRoute(data) {
     }
     return await response.json();
   } catch (error) {
-    console.warn('Backend indisponible, retornando optimización mock según contrato:', error);
+    console.warn('Backend indisponible, retornando optimización mock:', error);
+    const origin = data?.origin || { latitude: -34.6037, longitude: -58.3816 };
+    const destination = data?.destination || { latitude: -34.5895, longitude: -58.3974 };
+    const stops = data?.stops || [];
+
+    const orderedStops = stops.map((s, idx) => ({
+      order: idx + 1,
+      latitude: s.latitude,
+      longitude: s.longitude
+    }));
+
     return {
       distanceMeters: 8500,
       durationSeconds: 1800,
-      orderedStops: [
-        {
-          order: 1,
-          latitude: -34.6001,
-          longitude: -58.3900
-        },
-        {
-          order: 2,
-          latitude: -34.5950,
-          longitude: -58.3950
-        }
-      ],
-      polyline: 'ROUTE_POLYLINE'
+      orderedStops,
+      polyline: `MOCK_POLYLINE:${origin.latitude},${origin.longitude};${destination.latitude},${destination.longitude}`
     };
   }
 }

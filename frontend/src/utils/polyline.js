@@ -4,9 +4,16 @@
 export function decodePolyline(encoded) {
   if (!encoded) return [];
 
-  // Si no es una polyline codificada sino coordenadas en bruto, retornar vacío o procesar
-  if (encoded === "ROUTE_POLYLINE") {
-    // Coordenadas mock de fallback para la demo (Obelisco -> Recoleta -> Palermo)
+  // Soporte para polylines dinámicas en formato mock MOCK_POLYLINE:lat1,lng1;lat2,lng2...
+  if (encoded.startsWith('MOCK_POLYLINE:')) {
+    const rawPoints = encoded.replace('MOCK_POLYLINE:', '').split(';');
+    return rawPoints.map(pt => {
+      const [lat, lng] = pt.split(',').map(Number);
+      return [lat, lng];
+    }).filter(pt => !isNaN(pt[0]) && !isNaN(pt[1]));
+  }
+
+  if (encoded === 'ROUTE_POLYLINE') {
     return [
       [-34.6037, -58.3816],
       [-34.6020, -58.3850],
