@@ -11,6 +11,7 @@ public class VehicleDto {
     private Integer year;
     private String color;
     private String licensePlate;
+    private String imageUrl;
     private String vehicleType;
     private Integer passengerCapacity;
     private Integer seatCount;
@@ -22,7 +23,7 @@ public class VehicleDto {
 
     public VehicleDto() {}
 
-    public VehicleDto(String id, String driverId, String brand, String model, Integer year, String color, String licensePlate, String vehicleType, Integer passengerCapacity, Integer seatCount, String luggageCapacity, Integer approxCargoKg, Boolean allowsBulkyObjects, List<String> features, String status) {
+    public VehicleDto(String id, String driverId, String brand, String model, Integer year, String color, String licensePlate, String imageUrl, String vehicleType, Integer passengerCapacity, Integer seatCount, String luggageCapacity, Integer approxCargoKg, Boolean allowsBulkyObjects, List<String> features, String status) {
         this.id = id;
         this.driverId = driverId;
         this.brand = brand;
@@ -30,6 +31,7 @@ public class VehicleDto {
         this.year = year;
         this.color = color;
         this.licensePlate = licensePlate;
+        this.imageUrl = imageUrl;
         this.vehicleType = vehicleType;
         this.passengerCapacity = passengerCapacity;
         this.seatCount = seatCount;
@@ -94,6 +96,14 @@ public class VehicleDto {
 
     public void setLicensePlate(String licensePlate) {
         this.licensePlate = licensePlate;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 
     public String getVehicleType() {

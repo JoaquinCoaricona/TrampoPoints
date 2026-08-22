@@ -76,7 +76,9 @@ public class DriverService {
                 features,
                 "AVAILABLE"
         );
+        vehicle.setImageUrl("https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=800&auto=format&fit=crop&q=80");
         vehiclesMap.put(DEFAULT_DRIVER_ID, vehicle);
+
 
         // 3. Documentación
         List<VehicleDocumentation> docs = new ArrayList<>();
@@ -274,6 +276,7 @@ public class DriverService {
         vehicle.setYear(request.getYear());
         vehicle.setColor(request.getColor());
         vehicle.setLicensePlate(request.getLicensePlate());
+        vehicle.setImageUrl(request.getImageUrl());
         vehicle.setVehicleType(request.getVehicleType() != null ? request.getVehicleType() : "MINIBUS");
         vehicle.setPassengerCapacity(request.getPassengerCapacity() != null ? request.getPassengerCapacity() : 20);
         vehicle.setSeatCount(request.getSeatCount() != null ? request.getSeatCount() : vehicle.getPassengerCapacity());
@@ -288,6 +291,7 @@ public class DriverService {
 
         return mapToVehicleDto(vehicle);
     }
+
 
     public VehicleDto updateVehicleStatus(String status) {
         Vehicle vehicle = vehiclesMap.get(DEFAULT_DRIVER_ID);
@@ -521,6 +525,7 @@ public class DriverService {
                 vehicle.getYear(),
                 vehicle.getColor(),
                 vehicle.getLicensePlate(),
+                vehicle.getImageUrl(),
                 vehicle.getVehicleType(),
                 vehicle.getPassengerCapacity(),
                 vehicle.getSeatCount(),
@@ -531,4 +536,5 @@ public class DriverService {
                 vehicle.getStatus()
         );
     }
+
 }

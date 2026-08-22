@@ -9,6 +9,7 @@ public class SaveVehicleRequestDto {
     private Integer year;
     private String color;
     private String licensePlate;
+    private String imageUrl;
     private String vehicleType;
     private Integer passengerCapacity;
     private Integer seatCount;
@@ -20,12 +21,13 @@ public class SaveVehicleRequestDto {
 
     public SaveVehicleRequestDto() {}
 
-    public SaveVehicleRequestDto(String brand, String model, Integer year, String color, String licensePlate, String vehicleType, Integer passengerCapacity, Integer seatCount, String luggageCapacity, Integer approxCargoKg, Boolean allowsBulkyObjects, List<String> features, String status) {
+    public SaveVehicleRequestDto(String brand, String model, Integer year, String color, String licensePlate, String imageUrl, String vehicleType, Integer passengerCapacity, Integer seatCount, String luggageCapacity, Integer approxCargoKg, Boolean allowsBulkyObjects, List<String> features, String status) {
         this.brand = brand;
         this.model = model;
         this.year = year;
         this.color = color;
         this.licensePlate = licensePlate;
+        this.imageUrl = imageUrl;
         this.vehicleType = vehicleType;
         this.passengerCapacity = passengerCapacity;
         this.seatCount = seatCount;
@@ -74,6 +76,14 @@ public class SaveVehicleRequestDto {
 
     public void setLicensePlate(String licensePlate) {
         this.licensePlate = licensePlate;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 
     public String getVehicleType() {

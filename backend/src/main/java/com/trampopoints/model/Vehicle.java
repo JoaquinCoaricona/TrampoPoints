@@ -12,7 +12,9 @@ public class Vehicle {
     private Integer year;
     private String color;
     private String licensePlate;
+    private String imageUrl;
     private String vehicleType; // COMBI, MINIBUS, VAN
+
     private Integer passengerCapacity;
     private Integer seatCount;
     private String luggageCapacity; // LIGHT, MEDIUM, LARGE
@@ -106,9 +108,18 @@ public class Vehicle {
         this.licensePlate = licensePlate;
     }
 
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
     public String getVehicleType() {
         return vehicleType;
     }
+
 
     public void setVehicleType(String vehicleType) {
         this.vehicleType = vehicleType;

@@ -2015,3 +2015,446 @@
   justify-content: center;
 }
 
+/* ========================================================
+   VEHICLE 3D SHOWROOM & VISUALIZER STYLES
+   ======================================================== */
+
+.vehicle-3d-showroom-wrapper {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.85));
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+.showroom-hud-header {
+  border-bottom: 1px solid var(--border-glass);
+  padding-bottom: 12px;
+  margin-bottom: 14px;
+}
+
+@media (max-width: 768px) {
+  .showroom-hud-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+}
+
+.showroom-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  color: #fbbf24;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+.vehicle-title-spec strong {
+  color: #f8fafc;
+  font-size: 15px;
+  margin-right: 6px;
+}
+
+.showroom-mode-pills {
+  display: flex;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 3px;
+  border-radius: 8px;
+  border: 1px solid var(--border-glass);
+}
+
+.btn-mode-pill {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-mode-pill:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.btn-mode-pill.active {
+  background: linear-gradient(135deg, var(--accent-indigo), #4f46e5);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.35);
+}
+
+.btn-upload-photo {
+  color: #a5b4fc;
+}
+
+/* Stage Container */
+.showroom-stage-container {
+  position: relative;
+  background: #090d16;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.showroom-canvas-box {
+  position: relative;
+  width: 100%;
+  height: 380px;
+  cursor: grab;
+  user-select: none;
+}
+
+.showroom-canvas-box:active {
+  cursor: grabbing;
+}
+
+.showroom-3d-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.showroom-interaction-hint {
+  position: absolute;
+  bottom: 12px;
+  left: 16px;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border-glass);
+  color: #94a3b8;
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  pointer-events: none;
+}
+
+.showroom-overlay-badges {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  pointer-events: none;
+}
+
+.spec-floating-tag {
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border-glass);
+  color: #e2e8f0;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tag-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.tag-active-light {
+  background: rgba(59, 130, 246, 0.2);
+  border-color: rgba(59, 130, 246, 0.4);
+  color: #93c5fd;
+}
+
+/* Photo Parallax Mode */
+.showroom-photo-parallax-box {
+  width: 100%;
+  height: 380px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #090d16;
+  position: relative;
+  overflow: hidden;
+}
+
+.parallax-image-wrapper {
+  position: relative;
+  width: 90%;
+  max-width: 600px;
+  height: 320px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.parallax-vehicle-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.photo-scanline-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    rgba(18, 16, 16, 0) 50%,
+    rgba(0, 0, 0, 0.25) 50%
+  );
+  background-size: 100% 4px;
+  pointer-events: none;
+  opacity: 0.4;
+}
+
+.photo-corner-markers span {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-color: #6366f1;
+  border-style: solid;
+  pointer-events: none;
+}
+
+.marker-tl { top: 10px; left: 10px; border-width: 2px 0 0 2px; }
+.marker-tr { top: 10px; right: 10px; border-width: 2px 2px 0 0; }
+.marker-bl { bottom: 10px; left: 10px; border-width: 0 0 2px 2px; }
+.marker-br { bottom: 10px; right: 10px; border-width: 0 2px 2px 0; }
+
+.photo-ai-badge {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border-glass);
+  color: #cbd5e1;
+  font-size: 12px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* 3D Control Bar */
+.showroom-controls-bar {
+  background: rgba(15, 23, 42, 0.95);
+  border-top: 1px solid var(--border-glass);
+  padding: 12px 16px;
+}
+
+.btn-control-chip {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-glass);
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-control-chip:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  border-color: rgba(99, 102, 241, 0.4);
+}
+
+.btn-action-toggle {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-glass);
+  color: #cbd5e1;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-action-toggle:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: white;
+}
+
+.btn-action-toggle.active {
+  background: rgba(99, 102, 241, 0.25);
+  border-color: #818cf8;
+  color: #c7d2fe;
+}
+
+.color-swatch-circle {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+  padding: 0;
+}
+
+.color-swatch-circle:hover {
+  transform: scale(1.15);
+  border-color: #ffffff;
+}
+
+.color-swatch-circle.selected {
+  transform: scale(1.25);
+  border-color: #6366f1;
+  box-shadow: 0 0 10px rgba(99, 102, 241, 0.8);
+}
+
+.photo-preview-box {
+  width: 100%;
+  height: 180px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--border-glass);
+}
+
+.photo-preview-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ========================================================
+   ARGENTINA VEHICLE CATALOG SELECTOR STYLES
+   ======================================================== */
+
+.arg-models-catalog-bar {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+}
+
+.catalog-bar-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #cbd5e1;
+  margin-bottom: 10px;
+}
+
+.arg-models-scroll-row {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  scrollbar-width: thin;
+}
+
+.arg-model-card-btn {
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  min-width: 180px;
+  max-width: 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.22s ease;
+  position: relative;
+}
+
+.arg-model-card-btn:hover {
+  background: rgba(99, 102, 241, 0.15);
+  border-color: rgba(99, 102, 241, 0.45);
+  transform: translateY(-2px);
+}
+
+.arg-model-card-btn.selected {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(79, 70, 229, 0.35));
+  border-color: #818cf8;
+  box-shadow: 0 0 15px rgba(99, 102, 241, 0.35);
+}
+
+.model-btn-header {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.model-brand-name {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #94a3b8;
+  letter-spacing: 0.5px;
+}
+
+.selected-check-dot {
+  background: #10b981;
+  color: #0f172a;
+  font-size: 10px;
+  font-weight: 900;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.model-full-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #f8fafc;
+  line-height: 1.25;
+}
+
+.model-btn-footer {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  color: #94a3b8;
+  margin-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  padding-top: 6px;
+}
+
+.model-type-chip {
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 4px;
+  color: #cbd5e1;
+}
+
+.tag-active-door {
+  background: rgba(245, 158, 11, 0.2);
+  border-color: rgba(245, 158, 11, 0.4);
+  color: #fde68a;
+}
+
+
+

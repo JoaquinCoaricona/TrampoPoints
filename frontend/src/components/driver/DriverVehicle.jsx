@@ -18,6 +18,7 @@ import {
   Users
 } from 'lucide-react';
 import { getVehicle, saveVehicle } from '../../services/driverService';
+import Vehicle3DViewer from './Vehicle3DViewer';
 
 const AVAILABLE_FEATURES = [
   { id: 'AIRE_ACONDICIONADO', label: 'Aire Acondicionado', icon: Wind },
@@ -138,11 +139,18 @@ export default function DriverVehicle({ onUpdateSuccess }) {
           </div>
         )}
 
+        {/* Interactive 3D Vehicle Showcase */}
+        <Vehicle3DViewer
+          vehicle={vehicle}
+          onVehicleChange={(updated) => setVehicle(updated)}
+        />
+
         <form onSubmit={handleSubmit} className="vehicle-form">
           {/* Seccion 1: Datos Basicos */}
           <div className="form-section-title margin-bottom-16">
             <h3>1. Datos Básicos del Vehículo</h3>
           </div>
+
 
           <div className="form-grid margin-bottom-24">
             <div className="form-group">
@@ -224,7 +232,19 @@ export default function DriverVehicle({ onUpdateSuccess }) {
                 <option value="VAN">Van Ejecutiva (6 a 9 Pasajeros)</option>
               </select>
             </div>
+
+            <div className="form-group full-width">
+              <label className="form-label">URL de Foto Real del Vehículo (Referencia 3D)</label>
+              <input
+                type="url"
+                className="form-input"
+                value={vehicle?.imageUrl || ''}
+                onChange={(e) => setVehicle({ ...vehicle, imageUrl: e.target.value })}
+                placeholder="https://images.unsplash.com/..."
+              />
+            </div>
           </div>
+
 
           {/* Seccion 2: Capacidad y Carga */}
           <div className="form-section-title margin-bottom-16">

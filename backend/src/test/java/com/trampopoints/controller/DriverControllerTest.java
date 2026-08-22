@@ -75,6 +75,7 @@ public class DriverControllerTest {
                 2025,
                 "Gris Plata",
                 "AG 999 ZZ",
+                "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=800",
                 "MINIBUS",
                 24,
                 24,
@@ -84,6 +85,7 @@ public class DriverControllerTest {
                 Arrays.asList("AIRE_ACONDICIONADO", "WIFI", "USB"),
                 "AVAILABLE"
         );
+
 
         mockMvc.perform(post("/api/drivers/current/vehicle")
                         .contentType(MediaType.APPLICATION_JSON)
