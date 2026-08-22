@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
-import TripRequestForm from './components/TripRequestForm';
-import RequestConfirmation from './components/RequestConfirmation';
-import MatchList from './components/MatchList';
-import TripDetails from './components/TripDetails';
-import RouteOptimizer from './components/RouteOptimizer';
 import AuthModal from './components/AuthModal';
-import AdminPanel from './components/AdminPanel';
-import DriverModule from './components/driver/DriverModule';
+
+// Vistas y Páginas de la Aplicación (Estructura Modular de React)
+import LandingPage from './pages/LandingPage';
+import AdminPage from './pages/AdminPage';
+import RequestPage from './pages/RequestPage';
+import MyRequestsPage from './pages/MyRequestsPage';
+import DriverPage from './pages/DriverPage';
+import OptimizerPage from './pages/OptimizerPage';
+
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { createTripRequest, getTripMatches, getTripDetails, getAllTripRequests, processGroupingAlgorithm } from './services/api';
 import {
@@ -15,12 +17,10 @@ import {
   ListOrdered,
   Route as RouteIcon,
   Info,
-  MapPin,
-  Navigation,
-  ArrowRight,
   UserCheck,
   LogIn,
-  ShieldCheck
+  ShieldCheck,
+  ArrowLeft
 } from 'lucide-react';
 import './App.css';
 
@@ -31,56 +31,131 @@ const SEEDED_DEMO_REQUESTS = [
     requestId: 'req-101',
     userName: 'Juan Pérez',
     userEmail: 'juan@email.com',
-    origin: { latitude: -34.6037, longitude: -58.3816, address: 'Obelisco (Av. 9 de Julio)' },
-    destination: { latitude: -34.5895, longitude: -58.3974, address: 'Palermo Soho' },
+    origin: { latitude: -34.5620, longitude: -58.4560, address: 'Av. Cabildo y Juramento, Belgrano' },
+    destination: { latitude: -34.6080, longitude: -58.3720, address: 'Plaza de Mayo, Microcentro' },
     departureTime: '2026-08-22T08:30:00',
-    status: 'CONFIRMED',
+    status: 'SEARCHING',
     createdAt: '08:15'
   },
   {
     requestId: 'req-102',
     userName: 'María González',
     userEmail: 'maria@email.com',
-    origin: { latitude: -34.5614, longitude: -58.4563, address: 'Belgrano (Juramento y Cabildo)' },
-    destination: { latitude: -34.4580, longitude: -58.9142, address: 'Pilar Centro' },
-    departureTime: '2026-08-22T09:00:00',
+    origin: { latitude: -34.5635, longitude: -58.4542, address: 'Av. Cabildo y Mendoza, Belgrano' },
+    destination: { latitude: -34.6065, longitude: -58.3740, address: 'Av. de Mayo y Perú, Microcentro' },
+    departureTime: '2026-08-22T08:30:00',
     status: 'SEARCHING',
-    createdAt: '08:20'
+    createdAt: '08:16'
   },
   {
     requestId: 'req-103',
     userName: 'Carlos Rodríguez',
     userEmail: 'carlos@email.com',
-    origin: { latitude: -34.4719, longitude: -58.5283, address: 'Estación San Isidro' },
-    destination: { latitude: -34.6083, longitude: -58.3712, address: 'Plaza de Mayo / Microcentro' },
-    departureTime: '2026-08-22T08:45:00',
+    origin: { latitude: -34.5602, longitude: -58.4580, address: 'Av. Cabildo y Echeverría, Belgrano' },
+    destination: { latitude: -34.6040, longitude: -58.3755, address: 'Florida y Diagonal Norte, Microcentro' },
+    departureTime: '2026-08-22T08:30:00',
     status: 'SEARCHING',
-    createdAt: '08:25'
+    createdAt: '08:17'
+  },
+  {
+    requestId: 'req-104',
+    userName: 'Ana Martínez',
+    userEmail: 'ana@email.com',
+    origin: { latitude: -34.5650, longitude: -58.4520, address: 'Av. Cramer y Juramento, Belgrano' },
+    destination: { latitude: -34.6095, longitude: -58.3705, address: 'Paseo Colón y Belgrano, Puerto Madero' },
+    departureTime: '2026-08-22T08:30:00',
+    status: 'SEARCHING',
+    createdAt: '08:18'
+  },
+  {
+    requestId: 'req-105',
+    userName: 'Lucas Fernández',
+    userEmail: 'lucas@email.com',
+    origin: { latitude: -34.5610, longitude: -58.4530, address: 'Cuba y Sucre, Belgrano' },
+    destination: { latitude: -34.6050, longitude: -58.3730, address: 'Reconquista y Corrientes, Microcentro' },
+    departureTime: '2026-08-22T08:30:00',
+    status: 'SEARCHING',
+    createdAt: '08:19'
+  },
+  {
+    requestId: 'req-106',
+    userName: 'Sofía López',
+    userEmail: 'sofia@email.com',
+    origin: { latitude: -34.5640, longitude: -58.4575, address: 'Av. Cabildo y Olazábal, Belgrano' },
+    destination: { latitude: -34.6070, longitude: -58.3710, address: 'Balcarce y Alsina, Montserrat' },
+    departureTime: '2026-08-22T08:30:00',
+    status: 'SEARCHING',
+    createdAt: '08:20'
+  },
+  {
+    requestId: 'req-107',
+    userName: 'Diego Gómez',
+    userEmail: 'diego@email.com',
+    origin: { latitude: -34.5590, longitude: -58.4550, address: 'Av. Cabildo y Blanco Encalada, Belgrano' },
+    destination: { latitude: -34.6030, longitude: -58.3770, address: 'Lavalle y Florida, Microcentro' },
+    departureTime: '2026-08-22T08:30:00',
+    status: 'SEARCHING',
+    createdAt: '08:21'
+  },
+  {
+    requestId: 'req-108',
+    userName: 'Valentina Díaz',
+    userEmail: 'valentina@email.com',
+    origin: { latitude: -34.5628, longitude: -58.4510, address: 'Vuelta de Obligado y Juramento, Belgrano' },
+    destination: { latitude: -34.6088, longitude: -58.3735, address: 'Av. de Mayo y Bolívar, Microcentro' },
+    departureTime: '2026-08-22T08:30:00',
+    status: 'SEARCHING',
+    createdAt: '08:22'
+  },
+  {
+    requestId: 'req-109',
+    userName: 'Mateo Romero',
+    userEmail: 'mateo@email.com',
+    origin: { latitude: -34.5662, longitude: -58.4535, address: 'Av. Cabildo y Monroe, Belgrano' },
+    destination: { latitude: -34.6045, longitude: -58.3715, address: '25 de Mayo y Tucumán, Microcentro' },
+    departureTime: '2026-08-22T08:30:00',
+    status: 'SEARCHING',
+    createdAt: '08:23'
+  },
+  {
+    requestId: 'req-110',
+    userName: 'Camila Torres',
+    userEmail: 'camila@email.com',
+    origin: { latitude: -34.5615, longitude: -58.4590, address: 'Ciudad de la Paz y Juramento, Belgrano' },
+    destination: { latitude: -34.6060, longitude: -58.3760, address: 'Bartolomé Mitre y San Martín, Microcentro' },
+    departureTime: '2026-08-22T08:30:00',
+    status: 'SEARCHING',
+    createdAt: '08:24'
   }
 ];
 
 function MainApp() {
   const { user, isAuthenticated, openAuthModal } = useAuth();
   const isAdmin = user?.role === 'ADMIN';
-  const isDriver = user?.role === 'DRIVER' || user?.role === 'CHOFER';
 
-  const [activeTab, setActiveTab] = useState('CREATE'); // 'ADMIN' | 'CREATE' | 'MY_REQUESTS' | 'OPTIMIZER'
+  const [isDriverMode, setIsDriverMode] = useState(false);
+  const [activeTab, setActiveTab] = useState('LANDING'); // 'LANDING' (Pagina de ventas) o 'CREATE' | 'ADMIN' | 'MY_REQUESTS' | 'OPTIMIZER' (Sistema)
   const [viewState, setViewState] = useState('FORM'); // 'FORM' | 'CONFIRMATION' | 'MATCHES' | 'DETAILS'
   
   const [loading, setLoading] = useState(false);
-  const [allRequests, setAllRequests] = useState([]); // Almacén global de solicitudes (persistido)
+  const [allRequests, setAllRequests] = useState([]);
   const [lastCreatedRequest, setLastCreatedRequest] = useState(null);
   const [currentRequestId, setCurrentRequestId] = useState(null);
   const [matches, setMatches] = useState([]);
   const [selectedTrip, setSelectedTrip] = useState(null);
-
 
   // Cargar solicitudes desde LocalStorage al iniciar
   useEffect(() => {
     try {
       const stored = localStorage.getItem(LOCAL_STORAGE_REQUESTS_KEY);
       if (stored) {
-        setAllRequests(JSON.parse(stored));
+        const parsed = JSON.parse(stored);
+        if (parsed.length < 10) {
+          setAllRequests(SEEDED_DEMO_REQUESTS);
+          localStorage.setItem(LOCAL_STORAGE_REQUESTS_KEY, JSON.stringify(SEEDED_DEMO_REQUESTS));
+        } else {
+          setAllRequests(parsed);
+        }
       } else {
         setAllRequests(SEEDED_DEMO_REQUESTS);
         localStorage.setItem(LOCAL_STORAGE_REQUESTS_KEY, JSON.stringify(SEEDED_DEMO_REQUESTS));
@@ -90,7 +165,6 @@ function MainApp() {
     }
   }, []);
 
-  // Guardar en LocalStorage cada vez que cambien las solicitudes
   const saveRequestsToStorage = (updatedRequests) => {
     setAllRequests(updatedRequests);
     try {
@@ -100,7 +174,14 @@ function MainApp() {
     }
   };
 
-  // 1. Crear una solicitud de viaje (POST /api/trips/requests)
+  // Ingresar al sistema desde la Landing Page
+  const handleEnterAppFromLanding = (targetTab = 'CREATE') => {
+    setActiveTab(targetTab);
+    setViewState('FORM');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Crear solicitud de viaje
   const handleCreateRequest = async (formData) => {
     setLoading(true);
     try {
@@ -124,8 +205,6 @@ function MainApp() {
 
       setLastCreatedRequest(newRequestItem);
       setCurrentRequestId(newReqId);
-
-      // Pantalla de confirmación de solicitud cargada
       setViewState('CONFIRMATION');
     } catch (err) {
       console.error('Error al procesar la solicitud de viaje:', err);
@@ -134,7 +213,7 @@ function MainApp() {
     }
   };
 
-  // 2. Ver coincidencias/recorrido de una solicitud seleccionada
+  // Ver coincidencias
   const handleViewRequestMatches = async (requestItem) => {
     setLoading(true);
     setCurrentRequestId(requestItem.requestId);
@@ -150,7 +229,7 @@ function MainApp() {
     }
   };
 
-  // 3. Seleccionar un viaje de la lista y obtener sus detalles (GET /api/trips/{tripId})
+  // Seleccionar viaje
   const handleSelectTrip = async (tripId) => {
     setLoading(true);
     try {
@@ -164,6 +243,7 @@ function MainApp() {
     }
   };
 
+  // Ejecutar algoritmo de agrupamiento (Backend REST)
   const handleRunGroupingAlgorithm = async () => {
     try {
       const result = await processGroupingAlgorithm();
@@ -208,56 +288,81 @@ function MainApp() {
     setSelectedTrip(null);
   };
 
-  // Filtrar las solicitudes propias del usuario logueado
   const userRequests = allRequests.filter(r =>
     !user || r.userEmail === user.email || r.userEmail === 'invitado@trampopoints.com'
   );
 
+  // SI ESTAMOS EN LA LANDING PAGE: Se muestra la Landing Page en pantalla completa (separada del sistema)
+  if (activeTab === 'LANDING') {
+    return (
+      <div className="app-layout landing-layout">
+        <AuthModal />
+        <LandingPage
+          onEnterApp={handleEnterAppFromLanding}
+          onOpenAuthModal={() => openAuthModal('LOGIN')}
+        />
+      </div>
+    );
+  }
+
+  // SI EL USUARIO HIZO CLIC EN "QUIERO VIAJAR" O ENTRA AL SISTEMA: Se muestra el Sistema con su Header y Pestañas
   return (
-    <div className="app-layout">
-      <Header />
+    <div className="app-layout system-layout">
+      <Header
+        onToggleDriverMode={() => setIsDriverMode(!isDriverMode)}
+        isDriverModeActive={isDriverMode}
+      />
       <AuthModal />
 
-      <main className="main-content container">
-        {isDriver ? (
-          <DriverModule />
+      <main className="main-content container margin-top-20">
+        {isDriverMode ? (
+          <DriverPage onExit={() => setIsDriverMode(false)} />
         ) : (
           <>
-            {/* Navigation Tabs */}
-            <div className="nav-tabs-container margin-bottom-24">
-              {isAdmin && (
+            {/* Navegación del Sistema */}
+            <div className="nav-tabs-container margin-bottom-24 flex-between align-center flex-wrap gap-12">
+              <div className="flex-center gap-10 flex-wrap">
+                {isAdmin && (
+                  <button
+                    className={`tab-btn tab-btn-admin ${activeTab === 'ADMIN' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('ADMIN')}
+                  >
+                    <ShieldCheck size={16} /> Panel Administrador ({allRequests.length})
+                  </button>
+                )}
+
                 <button
-                  className={`tab-btn tab-btn-admin ${activeTab === 'ADMIN' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('ADMIN')}
+                  className={`tab-btn ${activeTab === 'CREATE' ? 'active' : ''}`}
+                  onClick={() => { setActiveTab('CREATE'); setViewState('FORM'); }}
                 >
-                  <ShieldCheck size={16} /> Panel Administrador ({allRequests.length})
+                  <PlusCircle size={16} /> Pedir Viaje
                 </button>
-              )}
 
+                <button
+                  className={`tab-btn ${activeTab === 'MY_REQUESTS' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('MY_REQUESTS')}
+                >
+                  <ListOrdered size={16} /> Mis Solicitudes ({userRequests.length})
+                </button>
 
+                <button
+                  className={`tab-btn ${activeTab === 'OPTIMIZER' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('OPTIMIZER')}
+                >
+                  <RouteIcon size={16} /> Probar API Optimización
+                </button>
+              </div>
+
+              {/* Botón para regresar a la Landing Page */}
               <button
-                className={`tab-btn ${activeTab === 'CREATE' ? 'active' : ''}`}
-                onClick={() => { setActiveTab('CREATE'); setViewState('FORM'); }}
+                className="btn-secondary text-xs flex-center gap-6"
+                onClick={() => setActiveTab('LANDING')}
               >
-                <PlusCircle size={16} /> Crear Solicitud
-              </button>
-
-              <button
-                className={`tab-btn ${activeTab === 'MY_REQUESTS' ? 'active' : ''}`}
-                onClick={() => setActiveTab('MY_REQUESTS')}
-              >
-                <ListOrdered size={16} /> Mis Solicitudes ({userRequests.length})
-              </button>
-
-              <button
-                className={`tab-btn ${activeTab === 'OPTIMIZER' ? 'active' : ''}`}
-                onClick={() => setActiveTab('OPTIMIZER')}
-              >
-                <RouteIcon size={16} /> Probar API Optimización
+                <ArrowLeft size={14} /> Volver a la Landing
               </button>
             </div>
 
-            {/* User Greeting / Auth Status Bar */}
+            {/* Banner de Estado de Autenticación */}
             {isAuthenticated ? (
               <div className={`banner ${isAdmin ? 'banner-amber' : 'banner-auth-success'} margin-bottom-24`}>
                 {isAdmin ? (
@@ -284,9 +389,10 @@ function MainApp() {
               </div>
             )}
 
-            {/* Pestaña Administrador */}
+            {/* VISTAS DEL SISTEMA */}
+            {/* 1. PAGINA DE ADMINISTRADOR */}
             {isAdmin && activeTab === 'ADMIN' && (
-              <AdminPanel
+              <AdminPage
                 allRequests={allRequests}
                 onRunAlgorithm={handleRunGroupingAlgorithm}
                 onUpdateStatus={handleUpdateStatusByAdmin}
@@ -295,112 +401,39 @@ function MainApp() {
               />
             )}
 
-            {/* Tab 1: Crear / Confirmación / Ver Matches / Ver Detalles */}
+            {/* 2. PAGINA DE PEDIR VIAJE / SOLICITUDES */}
             {activeTab === 'CREATE' && (
-              <div>
-                {viewState === 'FORM' && (
-                  <TripRequestForm onSubmit={handleCreateRequest} loading={loading} />
-                )}
-
-                {viewState === 'CONFIRMATION' && (
-                  <RequestConfirmation
-                    requestData={lastCreatedRequest}
-                    onCreateAnother={() => setViewState('FORM')}
-                    onViewMyRequests={() => setActiveTab(isAdmin ? 'ADMIN' : 'MY_REQUESTS')}
-                  />
-                )}
-
-                {viewState === 'MATCHES' && (
-                  <MatchList
-                    requestId={currentRequestId}
-                    matches={matches}
-                    onSelectTrip={handleSelectTrip}
-                    onReset={handleResetForm}
-                  />
-                )}
-
-                {viewState === 'DETAILS' && (
-                  <TripDetails
-                    tripData={selectedTrip}
-                    onBack={() => setViewState('MATCHES')}
-                  />
-                )}
-              </div>
+              <RequestPage
+                viewState={viewState}
+                setViewState={setViewState}
+                lastCreatedRequest={lastCreatedRequest}
+                currentRequestId={currentRequestId}
+                matches={matches}
+                selectedTrip={selectedTrip}
+                loading={loading}
+                onSubmitRequest={handleCreateRequest}
+                onSelectTrip={handleSelectTrip}
+                onResetForm={handleResetForm}
+                onViewMyRequests={() => setActiveTab(isAdmin ? 'ADMIN' : 'MY_REQUESTS')}
+              />
             )}
 
-            {/* Tab 2: Mis Solicitudes */}
+            {/* 3. PAGINA DE HISTORIAL DEL PASAJERO */}
             {activeTab === 'MY_REQUESTS' && (
-              <div className="card glass-card">
-                <div className="card-header flex-between">
-                  <h2>Mis Solicitudes de Viaje Cargadas</h2>
-                  <button 
-                    className="btn-primary"
-                    onClick={() => { setActiveTab('CREATE'); setViewState('FORM'); }}
-                  >
-                    <PlusCircle size={16} /> + Nueva Solicitud
-                  </button>
-                </div>
-
-                {userRequests.length === 0 ? (
-                  <div className="empty-state padding-32 text-center">
-                    <h3>No has cargado solicitudes de viaje todavía.</h3>
-                    <p>Crea tu primera solicitud indicando origen, destino y hora deseada.</p>
-                    <button 
-                      className="btn-primary margin-top-16"
-                      onClick={() => { setActiveTab('CREATE'); setViewState('FORM'); }}
-                    >
-                      Cargar Primera Solicitud
-                    </button>
-                  </div>
-                ) : (
-                  <div className="requests-list flex-column gap-16 margin-top-16">
-                    {userRequests.map((req) => (
-                      <div key={req.requestId} className="request-card-item card glass-card">
-                        <div className="flex-between">
-                          <span className="badge badge-subtle">ID Solicitud: {req.requestId}</span>
-                          <span className="badge badge-success">Estado: {req.status}</span>
-                        </div>
-
-                        <div className="request-route-summary margin-top-12">
-                          <div>
-                            <strong><MapPin size={14} className="text-emerald" /> Origen:</strong> {req.origin?.address}
-                          </div>
-                          <div>
-                            <strong><Navigation size={14} className="text-indigo" /> Destino:</strong> {req.destination?.address}
-                          </div>
-                          <div>
-                            <strong>Hora Salida:</strong> {new Date(req.departureTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} hs
-                          </div>
-                        </div>
-
-                        <div className="margin-top-16 flex-between align-center">
-                          <span className="text-muted text-xs">Cargada por {req.userName} a las {req.createdAt} hs</span>
-                          <button
-                            className="btn-secondary flex-center gap-4"
-                            onClick={() => handleViewRequestMatches(req)}
-                          >
-                            Ver Recorrido del Viaje <ArrowRight size={14} />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <MyRequestsPage
+                userRequests={userRequests}
+                onNewRequest={() => { setActiveTab('CREATE'); setViewState('FORM'); }}
+                onViewMatches={handleViewRequestMatches}
+              />
             )}
 
-            {/* Tab 3: Ruta Optimizer */}
-            {activeTab === 'OPTIMIZER' && <RouteOptimizer />}
+            {/* 4. PAGINA DE PRUEBA DE API DE OPTIMIZACION */}
+            {activeTab === 'OPTIMIZER' && (
+              <OptimizerPage />
+            )}
           </>
         )}
       </main>
-
-      <footer className="app-footer margin-top-48">
-        <div className="container footer-content flex-between">
-          <span>TrampoPoints MVP &copy; 2026 — Plataforma de Viajes Compartidos en Combis</span>
-          <span>Cumplimiento estricto de Contratos JSON REST</span>
-        </div>
-      </footer>
     </div>
   );
 }
