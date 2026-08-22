@@ -1,122 +1,165 @@
-import React, { useState } from 'react';
-import { MapPin, Navigation, Clock, Search, Sparkles, Loader2 } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { MapPin, Navigation, Clock, PlusCircle, CheckCircle2, Search, Loader2, Sparkles } from 'lucide-react';
 
-const KNOWN_LOCATIONS = [
-  { keywords: ['obelisco', '9 de julio'], lat: -34.6037, lng: -58.3816 },
-  { keywords: ['palermo', 'soho', 'hollywood'], lat: -34.5895, lng: -58.3974 },
-  { keywords: ['belgrano', 'cabildo', 'juramento'], lat: -34.5614, lng: -58.4563 },
-  { keywords: ['pilar', 'parque industrial'], lat: -34.4580, lng: -58.9142 },
-  { keywords: ['san isidro', 'estacion san isidro'], lat: -34.4719, lng: -58.5283 },
-  { keywords: ['microcentro', 'plaza de mayo'], lat: -34.6083, lng: -58.3712 },
-  { keywords: ['recoleta', 'cemetery'], lat: -34.5875, lng: -58.3934 },
-  { keywords: ['tigre', 'puerto de frutos'], lat: -34.4251, lng: -58.5796 },
-  { keywords: ['san telmo', 'dorrego'], lat: -34.6211, lng: -58.3731 },
-  { keywords: ['vicente lopez', 'olivos'], lat: -34.5106, lng: -58.4854 },
-  { keywords: ['la plata'], lat: -34.9214, lng: -57.9545 },
-  { keywords: ['ezeiza', 'aeropuerto'], lat: -34.8150, lng: -58.5358 }
-];
-
-const QUICK_PRESETS = [
-  {
-    name: 'Obelisco ➔ Palermo',
-    origin: { latitude: -34.6037, longitude: -58.3816, address: 'Obelisco (Av. 9 de Julio)' },
-    destination: { latitude: -34.5895, longitude: -58.3974, address: 'Palermo Soho' },
-  },
-  {
-    name: 'Belgrano ➔ Pilar',
-    origin: { latitude: -34.5614, longitude: -58.4563, address: 'Belgrano (Juramento y Cabildo)' },
-    destination: { latitude: -34.4580, longitude: -58.9142, address: 'Pilar Centro' },
-  },
-  {
-    name: 'San Isidro ➔ Microcentro',
-    origin: { latitude: -34.4719, longitude: -58.5283, address: 'Estación San Isidro' },
-    destination: { latitude: -34.6083, longitude: -58.3712, address: 'Plaza de Mayo / Microcentro' },
-  }
+const PRESET_LOCATIONS = [
+  { name: 'Obelisco (Av. 9 de Julio)', address: 'Obelisco, Av. 9 de Julio, Buenos Aires', latitude: -34.6037, longitude: -58.3816 },
+  { name: 'Palermo (Plaza Italia)', address: 'Palermo, Av. Santa Fe y Italia, Buenos Aires', latitude: -34.5895, longitude: -58.3974 },
+  { name: 'Belgrano (Cabildo y Juramento)', address: 'Belgrano, Av. Cabildo 2000, Buenos Aires', latitude: -34.5614, longitude: -58.4563 },
+  { name: 'Pilar (Centro / Parque Ind.)', address: 'Pilar Centro, Tratado del Pilar, Buenos Aires', latitude: -34.4580, longitude: -58.9142 },
+  { name: 'San Isidro (Estación)', address: 'San Isidro, Belgrano y Centenario, Buenos Aires', latitude: -34.4719, longitude: -58.5283 },
+  { name: 'Microcentro (Plaza de Mayo)', address: 'Microcentro, Plaza de Mayo, Buenos Aires', latitude: -34.6083, longitude: -58.3712 },
+  { name: 'Recoleta (Av. Las Heras)', address: 'Recoleta, Av. Las Heras y Junín, Buenos Aires', latitude: -34.5875, longitude: -58.3934 },
+  { name: 'Tigre (Puerto de Frutos)', address: 'Tigre, Puerto de Frutos, Buenos Aires', latitude: -34.4251, longitude: -58.5796 },
+  { name: 'Vicente López (Olivos)', address: 'Vicente López, Av. Maipú 2000, Buenos Aires', latitude: -34.5106, longitude: -58.4854 },
+  { name: 'Quilmes Centro', address: 'Quilmes, Peatonal Rivadavia, Buenos Aires', latitude: -34.7242, longitude: -58.2608 },
+  { name: 'San Telmo (Plaza Dorrego)', address: 'San Telmo, Plaza Dorrego, Buenos Aires', latitude: -34.6211, longitude: -58.3731 },
+  { name: 'Caballito (Plaza Primera Junta)', address: 'Caballito, Av. Rivadavia 5200, Buenos Aires', latitude: -34.6186, longitude: -58.4425 },
+  { name: 'Almagro (Av. Corrientes y Medrano)', address: 'Almagro, Av. Corrientes 3900, Buenos Aires', latitude: -34.6108, longitude: -58.4215 },
+  { name: 'Núñez (Estación / Av. del Libertador)', address: 'Núñez, Av. del Libertador 8000, Buenos Aires', latitude: -34.5461, longitude: -58.4625 },
+  { name: 'Morón (Estación Centro)', address: 'Morón Centro, Almirante Brown 800, Buenos Aires', latitude: -34.6514, longitude: -58.6186 },
+  { name: 'Aeropuerto de Ezeiza', address: 'Aeropuerto Internacional de Ezeiza, Buenos Aires', latitude: -34.8150, longitude: -58.5358 },
+  { name: 'Aeroparque Jorge Newbery', address: 'Aeroparque Jorge Newbery, Buenos Aires', latitude: -34.5592, longitude: -58.4156 },
+  { name: 'La Plata (Plaza Moreno)', address: 'La Plata, Plaza Moreno, Calle 12, Buenos Aires', latitude: -34.9214, longitude: -57.9545 }
 ];
 
 export default function TripRequestForm({ onSubmit, loading }) {
   const [origin, setOrigin] = useState({
-    latitude: -34.6037,
-    longitude: -58.3816,
-    address: 'Obelisco'
+    address: PRESET_LOCATIONS[0].address,
+    latitude: PRESET_LOCATIONS[0].latitude,
+    longitude: PRESET_LOCATIONS[0].longitude
   });
 
   const [destination, setDestination] = useState({
-    latitude: -34.5895,
-    longitude: -58.3974,
-    address: 'Palermo'
+    address: PRESET_LOCATIONS[1].address,
+    latitude: PRESET_LOCATIONS[1].latitude,
+    longitude: PRESET_LOCATIONS[1].longitude
   });
 
   const [departureTime, setDepartureTime] = useState('2026-08-22T08:30:00');
-  const [geocodingOrigin, setGeocodingOrigin] = useState(false);
-  const [geocodingDest, setGeocodingDest] = useState(false);
+  const [createdSuccess, setCreatedSuccess] = useState(false);
 
-  // Función para autogeocodificar dirección a latitud/longitud
-  const geocodeAddress = async (addressText, isOrigin) => {
-    if (!addressText || addressText.trim().length < 3) return;
+  // Estados de sugerencias y geocodificación
+  const [originQuery, setOriginQuery] = useState(PRESET_LOCATIONS[0].address);
+  const [originSuggestions, setOriginSuggestions] = useState([]);
+  const [isGeocodingOrigin, setIsGeocodingOrigin] = useState(false);
 
-    const lower = addressText.toLowerCase();
+  const [destQuery, setDestQuery] = useState(PRESET_LOCATIONS[1].address);
+  const [destSuggestions, setDestSuggestions] = useState([]);
+  const [isGeocodingDest, setIsGeocodingDest] = useState(false);
 
-    // 1. Buscar en diccionario local rápido
-    const localMatch = KNOWN_LOCATIONS.find(loc =>
-      loc.keywords.some(k => lower.includes(k))
+  const originDebounceTimer = useRef(null);
+  const destDebounceTimer = useRef(null);
+
+  // Buscar coordenadas para la dirección ingresada
+  const fetchGeocode = async (queryText, isOrigin) => {
+    if (!queryText || queryText.trim().length < 3) return;
+
+    const lower = queryText.toLowerCase().trim();
+
+    // 1. Coincidencia rápida en la lista de ubicaciones
+    const match = PRESET_LOCATIONS.find(loc =>
+      loc.name.toLowerCase().includes(lower) || loc.address.toLowerCase().includes(lower)
     );
 
-    if (localMatch) {
+    if (match) {
       if (isOrigin) {
-        setOrigin(prev => ({ ...prev, latitude: localMatch.lat, longitude: localMatch.lng }));
+        setOrigin({ address: queryText, latitude: match.latitude, longitude: match.longitude });
+        setOriginSuggestions([]);
       } else {
-        setDestination(prev => ({ ...prev, latitude: localMatch.lat, longitude: localMatch.lng }));
+        setDestination({ address: queryText, latitude: match.latitude, longitude: match.longitude });
+        setDestSuggestions([]);
       }
       return;
     }
 
-    // 2. Si no está en el diccionario, buscar en la API de geocodificación gratuita de OpenStreetMap (Nominatim)
-    if (isOrigin) setGeocodingOrigin(true);
-    else setGeocodingDest(true);
+    // 2. Geocodificación remota con Nominatim OpenStreetMap
+    if (isOrigin) setIsGeocodingOrigin(true);
+    else setIsGeocodingDest(true);
 
     try {
-      const query = encodeURIComponent(addressText + ', Argentina');
-      const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=1`);
-      const results = await response.json();
+      const encoded = encodeURIComponent(queryText + ', Argentina');
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encoded}&limit=4`);
+      const data = await res.json();
 
-      if (results && results.length > 0) {
-        const lat = parseFloat(results[0].lat);
-        const lon = parseFloat(results[0].lon);
+      if (data && data.length > 0) {
+        const topResult = data[0];
+        const lat = parseFloat(topResult.lat);
+        const lon = parseFloat(topResult.lon);
 
         if (isOrigin) {
-          setOrigin(prev => ({ ...prev, latitude: lat, longitude: lon }));
+          setOrigin({ address: queryText, latitude: lat, longitude: lon });
+          setOriginSuggestions(data);
         } else {
-          setDestination(prev => ({ ...prev, latitude: lat, longitude: lon }));
+          setDestination({ address: queryText, latitude: lat, longitude: lon });
+          setDestSuggestions(data);
         }
       }
     } catch (err) {
-      console.warn('Geocoding error:', err);
+      console.warn('Geocoding search failed, using fallback coords:', err);
     } finally {
-      if (isOrigin) setGeocodingOrigin(false);
-      else setGeocodingDest(false);
+      if (isOrigin) setIsGeocodingOrigin(false);
+      else setIsGeocodingDest(false);
     }
   };
 
-  const handleOriginAddressChange = (e) => {
-    const newAddr = e.target.value;
-    setOrigin(prev => ({ ...prev, address: newAddr }));
-    geocodeAddress(newAddr, true);
+  const handleOriginInputChange = (text) => {
+    setOriginQuery(text);
+    setOrigin(prev => ({ ...prev, address: text }));
+
+    // Filtrar sugerencias locales inmediatas
+    if (text.length >= 2) {
+      const matches = PRESET_LOCATIONS.filter(l =>
+        l.name.toLowerCase().includes(text.toLowerCase()) ||
+        l.address.toLowerCase().includes(text.toLowerCase())
+      );
+      setOriginSuggestions(matches);
+    } else {
+      setOriginSuggestions([]);
+    }
+
+    if (originDebounceTimer.current) clearTimeout(originDebounceTimer.current);
+    originDebounceTimer.current = setTimeout(() => {
+      fetchGeocode(text, true);
+    }, 500);
   };
 
-  const handleDestAddressChange = (e) => {
-    const newAddr = e.target.value;
-    setDestination(prev => ({ ...prev, address: newAddr }));
-    geocodeAddress(newAddr, false);
+  const handleDestInputChange = (text) => {
+    setDestQuery(text);
+    setDestination(prev => ({ ...prev, address: text }));
+
+    if (text.length >= 2) {
+      const matches = PRESET_LOCATIONS.filter(l =>
+        l.name.toLowerCase().includes(text.toLowerCase()) ||
+        l.address.toLowerCase().includes(text.toLowerCase())
+      );
+      setDestSuggestions(matches);
+    } else {
+      setDestSuggestions([]);
+    }
+
+    if (destDebounceTimer.current) clearTimeout(destDebounceTimer.current);
+    destDebounceTimer.current = setTimeout(() => {
+      fetchGeocode(text, false);
+    }, 500);
   };
 
-  const handleSelectPreset = (preset) => {
-    setOrigin(preset.origin);
-    setDestination(preset.destination);
+  const handleSelectPresetLocation = (preset, isOrigin) => {
+    if (isOrigin) {
+      setOriginQuery(preset.address);
+      setOrigin({ address: preset.address, latitude: preset.latitude, longitude: preset.longitude });
+      setOriginSuggestions([]);
+    } else {
+      setDestQuery(preset.address);
+      setDestination({ address: preset.address, latitude: preset.latitude, longitude: preset.longitude });
+      setDestSuggestions([]);
+    }
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    setCreatedSuccess(true);
+    setTimeout(() => setCreatedSuccess(false), 3000);
+
     onSubmit({
       origin,
       destination,
@@ -128,28 +171,38 @@ export default function TripRequestForm({ onSubmit, loading }) {
     <div className="card glass-card form-card">
       <div className="card-header">
         <div className="title-with-icon">
-          <Search className="accent-icon" size={20} />
-          <h2>Crear Solicitud de Viaje</h2>
+          <PlusCircle className="accent-icon" size={24} />
+          <h2>Generar Solicitud de Viaje Compartido</h2>
         </div>
         <p className="card-subtitle">
-          Ingresa cualquier origen y destino. El sistema detectará las coordenadas automáticamente y buscará combis cercanas.
+          Escribe cualquier dirección u origen/destino. Las coordenadas se detectarán automáticamente.
         </p>
       </div>
 
-      {/* Quick Presets */}
-      <div className="preset-container">
-        <span className="preset-label">
-          <Sparkles size={14} /> Rutas Frecuentes Demo:
+      {createdSuccess && (
+        <div className="banner banner-success margin-bottom-16 flex-center gap-8">
+          <CheckCircle2 size={18} /> Solicitud creada exitosamente. Buscando combis y agrupando viajes...
+        </div>
+      )}
+
+      {/* Botones de Selección Rápida */}
+      <div className="preset-container margin-bottom-16">
+        <span className="preset-label flex-center gap-4 text-xs font-bold">
+          <Sparkles size={14} className="text-amber" /> Lugares Frecuentes Demo:
         </span>
         <div className="preset-buttons">
-          {QUICK_PRESETS.map((preset, idx) => (
+          {PRESET_LOCATIONS.slice(0, 6).map((preset, idx) => (
             <button
               key={idx}
               type="button"
               className="btn-preset"
-              onClick={() => handleSelectPreset(preset)}
+              onClick={() => {
+                handleSelectPresetLocation(preset, true);
+                const nextDest = PRESET_LOCATIONS[(idx + 3) % PRESET_LOCATIONS.length];
+                handleSelectPresetLocation(nextDest, false);
+              }}
             >
-              {preset.name}
+              {preset.name.split(' (')[0]}
             </button>
           ))}
         </div>
@@ -158,83 +211,93 @@ export default function TripRequestForm({ onSubmit, loading }) {
       <form onSubmit={handleSubmit} className="trip-form">
         <div className="form-grid">
           {/* Origin Section */}
-          <div className="form-group">
+          <div className="form-group relative">
             <label className="form-label flex-between">
               <span><MapPin className="text-emerald" size={16} /> Punto de Origen</span>
-              {geocodingOrigin && <span className="text-muted text-xs flex-center"><Loader2 size={12} className="spinner" /> Obteniendo Coordenadas...</span>}
+              {isGeocodingOrigin && <span className="text-xs text-muted flex-center"><Loader2 size={12} className="spinner" /> Obteniendo Coordenadas...</span>}
             </label>
+            
             <input
               type="text"
               className="form-input"
-              value={origin.address}
-              onChange={handleOriginAddressChange}
-              onBlur={(e) => geocodeAddress(e.target.value, true)}
-              placeholder="Ej: Belgrano, San Isidro, Recoleta, Pilar, etc."
+              value={originQuery}
+              onChange={(e) => handleOriginInputChange(e.target.value)}
+              placeholder="Escribe una dirección (Ej: Belgrano, San Isidro, Recoleta, Pilar...)"
               required
             />
-            <div className="coords-row">
-              <input
-                type="number"
-                step="any"
-                className="form-input sub-input"
-                value={origin.latitude}
-                onChange={(e) => setOrigin({ ...origin, latitude: parseFloat(e.target.value) || 0 })}
-                placeholder="Latitud"
-                required
-              />
-              <input
-                type="number"
-                step="any"
-                className="form-input sub-input"
-                value={origin.longitude}
-                onChange={(e) => setOrigin({ ...origin, longitude: parseFloat(e.target.value) || 0 })}
-                placeholder="Longitud"
-                required
-              />
+
+            {/* Listado de sugerencias de Origen */}
+            {originSuggestions.length > 0 && (
+              <ul className="suggestions-list card glass-card">
+                {originSuggestions.map((item, idx) => (
+                  <li
+                    key={idx}
+                    className="suggestion-item"
+                    onClick={() => handleSelectPresetLocation({
+                      address: item.display_name || item.address,
+                      latitude: parseFloat(item.lat || item.latitude),
+                      longitude: parseFloat(item.lon || item.longitude)
+                    }, true)}
+                  >
+                    📍 {item.name || item.display_name || item.address}
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            <div className="coords-row margin-top-8">
+              <span className="text-xs text-muted font-mono flex-center gap-4">
+                Lat: <strong>{origin.latitude}</strong> | Lng: <strong>{origin.longitude}</strong>
+              </span>
             </div>
           </div>
 
           {/* Destination Section */}
-          <div className="form-group">
+          <div className="form-group relative">
             <label className="form-label flex-between">
               <span><Navigation className="text-indigo" size={16} /> Punto de Destino</span>
-              {geocodingDest && <span className="text-muted text-xs flex-center"><Loader2 size={12} className="spinner" /> Obteniendo Coordenadas...</span>}
+              {isGeocodingDest && <span className="text-xs text-muted flex-center"><Loader2 size={12} className="spinner" /> Obteniendo Coordenadas...</span>}
             </label>
+
             <input
               type="text"
               className="form-input"
-              value={destination.address}
-              onChange={handleDestAddressChange}
-              onBlur={(e) => geocodeAddress(e.target.value, false)}
-              placeholder="Ej: Microcentro, Palermo, Pilar, Tigre, etc."
+              value={destQuery}
+              onChange={(e) => handleDestInputChange(e.target.value)}
+              placeholder="Escribe el destino (Ej: Microcentro, Palermo, Pilar, Tigre...)"
               required
             />
-            <div className="coords-row">
-              <input
-                type="number"
-                step="any"
-                className="form-input sub-input"
-                value={destination.latitude}
-                onChange={(e) => setDestination({ ...destination, latitude: parseFloat(e.target.value) || 0 })}
-                placeholder="Latitud"
-                required
-              />
-              <input
-                type="number"
-                step="any"
-                className="form-input sub-input"
-                value={destination.longitude}
-                onChange={(e) => setDestination({ ...destination, longitude: parseFloat(e.target.value) || 0 })}
-                placeholder="Longitud"
-                required
-              />
+
+            {/* Listado de sugerencias de Destino */}
+            {destSuggestions.length > 0 && (
+              <ul className="suggestions-list card glass-card">
+                {destSuggestions.map((item, idx) => (
+                  <li
+                    key={idx}
+                    className="suggestion-item"
+                    onClick={() => handleSelectPresetLocation({
+                      address: item.display_name || item.address,
+                      latitude: parseFloat(item.lat || item.latitude),
+                      longitude: parseFloat(item.lon || item.longitude)
+                    }, false)}
+                  >
+                    🏁 {item.name || item.display_name || item.address}
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            <div className="coords-row margin-top-8">
+              <span className="text-xs text-muted font-mono flex-center gap-4">
+                Lat: <strong>{destination.latitude}</strong> | Lng: <strong>{destination.longitude}</strong>
+              </span>
             </div>
           </div>
 
           {/* Date & Time */}
           <div className="form-group full-width">
             <label className="form-label">
-              <Clock className="text-amber" size={16} /> Fecha y Hora Aproximada de Salida
+              <Clock className="text-amber" size={16} /> Horario Deseado de Salida
             </label>
             <input
               type="datetime-local"
@@ -246,14 +309,14 @@ export default function TripRequestForm({ onSubmit, loading }) {
           </div>
         </div>
 
-        <button type="submit" className="btn-primary" disabled={loading}>
+        <button type="submit" className="btn-primary full-width margin-top-16" disabled={loading}>
           {loading ? (
             <span className="flex-center">
-              <span className="spinner"></span> Buscando Combis Compatibles...
+              <span className="spinner"></span> Generando Solicitud...
             </span>
           ) : (
-            <span className="flex-center">
-              <Search size={18} /> Buscar Combis Compartidas
+            <span className="flex-center font-bold">
+              <PlusCircle size={20} /> Generar Solicitud de Viaje
             </span>
           )}
         </button>

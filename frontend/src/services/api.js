@@ -1,7 +1,10 @@
 const API_BASE_URL = 'http://localhost:8080/api';
 
-// Estado local para recordar la última búsqueda realizada en el frontend
-let lastTripRequestData = null;
+// Almacén local en memoria para guardar las solicitudes creadas en el cliente
+const clientRequests = new Map();
+const clientTrips = new Map();
+let requestCounter = 100;
+let tripCounter = 450;
 
 /**
  * Cliente HTTP REST para los contratos del MVP de TrampoPoints.
@@ -9,8 +12,6 @@ let lastTripRequestData = null;
 
 // 1. Crear solicitud de viaje (POST /api/trips/requests)
 export async function createTripRequest(data) {
-  lastTripRequestData = data; // Guardar datos de la solicitud (origen, destino, horario)
-
   try {
     const response = await fetch(`${API_BASE_URL}/trips/requests`, {
       method: 'POST',
@@ -21,13 +22,19 @@ export async function createTripRequest(data) {
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    return await response.json();
+    const result = await response.json();
+    clientRequests.set(result.requestId, data);
+    return result;
   } catch (error) {
-    console.warn('Backend indisponible o error en red, utilizando respuesta mock dinámica:', error);
+    console.warn('Backend no detectado en 8080, generando solicitud en modo independiente:', error);
+    requestCounter++;
+    const requestId = `req-${requestCounter}`;
+    clientRequests.set(requestId, data);
+
     return {
-      requestId: 'req-' + Math.floor(Math.random() * 900 + 100),
+      requestId: requestId,
       status: 'SEARCHING',
-      message: 'Buscando pasajeros compatibles'
+      message: 'Solicitud creada con éxito. Buscando combis compatibles cercanas...'
     };
   }
 }
@@ -42,17 +49,27 @@ export async function getTripMatches(requestId) {
     }
     return await response.json();
   } catch (error) {
-    console.warn('Backend indisponible, retornando coincidencia mock dinámica:', error);
+    console.warn('Backend no detectado en 8080, buscando combis compatibles en modo independiente:', error);
+
+    tripCounter++;
+    const tripId = `trip-${tripCounter}`;
+
+    const requestData = clientRequests.get(requestId);
+    if (requestData) {
+      // Guardar el viaje vinculado a esta solicitud
+      clientTrips.set(tripId, requestData);
+    }
+
     return {
-      requestId: requestId || 'req-123',
+      requestId: requestId || 'req-100',
       matches: [
         {
-          tripId: 'trip-' + Math.floor(Math.random() * 900 + 100),
-          passengerCount: 12,
+          tripId: tripId,
+          passengerCount: 14,
           capacity: 30,
           estimatedPrice: 1800,
           estimatedSavings: 35,
-          departureTime: lastTripRequestData?.departureTime || '2026-08-22T08:30:00'
+          departureTime: requestData?.departureTime || '2026-08-22T08:30:00'
         }
       ]
     };
@@ -69,10 +86,12 @@ export async function getTripDetails(tripId) {
     }
     return await response.json();
   } catch (error) {
-    console.warn('Backend indisponible, generando respuesta mock dinámica basada en la búsqueda actual:', error);
+    console.warn('Backend no detectado en 8080, generando itinerario de viaje en modo independiente:', error);
 
-    const origin = lastTripRequestData?.origin || { latitude: -34.6037, longitude: -58.3816, address: 'Obelisco' };
-    const destination = lastTripRequestData?.destination || { latitude: -34.5895, longitude: -58.3974, address: 'Palermo' };
+    const tripRequestData = clientTrips.get(tripId) || Array.from(clientRequests.values()).pop();
+
+    const origin = tripRequestData?.origin || { latitude: -34.6037, longitude: -58.3816, address: 'Obelisco' };
+    const destination = tripRequestData?.destination || { latitude: -34.5895, longitude: -58.3974, address: 'Palermo' };
 
     const midLat = (origin.latitude + destination.latitude) / 2.0;
     const midLng = (origin.longitude + destination.longitude) / 2.0;
@@ -84,7 +103,7 @@ export async function getTripDetails(tripId) {
       capacity: 30,
       estimatedPricePerPassenger: 1800,
       estimatedSavingsPercent: 35,
-      departureTime: lastTripRequestData?.departureTime || '2026-08-22T08:30:00',
+      departureTime: tripRequestData?.departureTime || '2026-08-22T08:30:00',
       route: {
         distanceMeters: 8500,
         durationSeconds: 1800,
@@ -134,7 +153,7 @@ export async function optimizeRoute(data) {
     }
     return await response.json();
   } catch (error) {
-    console.warn('Backend indisponible, retornando optimización mock:', error);
+    console.warn('Backend no detectado en 8080, generando optimización mock:', error);
     const origin = data?.origin || { latitude: -34.6037, longitude: -58.3816 };
     const destination = data?.destination || { latitude: -34.5895, longitude: -58.3974 };
     const stops = data?.stops || [];
