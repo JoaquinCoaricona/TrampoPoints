@@ -39,7 +39,7 @@ export default function Header() {
             </div>
             <div className="brand-text">
               <h1>
-                Trampo<span className="text-neon-green">Points</span>
+                Tramo<span className="text-neon-green">Points</span>
               </h1>
               <span className="subtitle">Plataforma de Viajes Compartidos</span>
             </div>

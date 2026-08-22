@@ -9,13 +9,14 @@ const USER_STORAGE_KEY = 'trampopoints_auth_user';
  */
 
 export function resolveUserRole(rawRole, email) {
+  const lowerEmail = (email || '').toLowerCase().trim();
+  if (lowerEmail.includes('admin')) return 'ADMIN';
+
   const r = (rawRole || '').toUpperCase().trim();
   if (r === 'DRIVER' || r === 'CHOFER') return 'DRIVER';
   if (r === 'ADMIN') return 'ADMIN';
   
-  const lowerEmail = (email || '').toLowerCase().trim();
   if (lowerEmail.includes('chofer') || lowerEmail.includes('driver')) return 'DRIVER';
-  if (lowerEmail.includes('admin')) return 'ADMIN';
   return 'USER';
 }
 

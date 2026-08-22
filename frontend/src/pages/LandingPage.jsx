@@ -1,37 +1,120 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Zap,
   MapPin,
-  Clock,
-  Sparkles,
-  TrendingDown,
-  Bus,
-  Users,
   Navigation,
-  DollarSign,
-  ShieldCheck,
-  PlusCircle,
-  ArrowRight,
-  CheckCircle2,
   ChevronDown,
   ChevronUp,
-  Star,
-  ShieldAlert,
-  Car,
-  Award,
   HelpCircle,
-  PhoneCall,
-  LogIn
+  Users,
+  Clock,
+  Wallet,
+  ShieldCheck,
+  Cpu,
+  Database,
+  Activity,
+  CheckCircle2,
+  Rocket,
+  Globe,
+  Radio,
+  Car
 } from 'lucide-react';
 import FareCalculator from '../components/FareCalculator';
-import heroCombiImg from '../assets/hero_combi.jpg';
+import videoFondoLanding from '../assets/video_fondo_landing.mp4';
+import videoRecorridoLineas from '../assets/recorrido_lineas.mp4';
 import passengersComfortImg from '../assets/passengers_comfort.jpg';
+
+// MINI LOGO TP IDÉNTICO A LA REFERENCIA
+function MiniLogoTP({ size = 44, className = '' }) {
+  return (
+    <div className={`tp-mini-logo-box ${className}`} style={{ width: size, height: size }}>
+      <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="100" height="100" rx="24" fill="#151d2a" stroke="rgba(255, 255, 255, 0.18)" strokeWidth="4" />
+        <path d="M26 26H74V38H54V74H40V38H26V26Z" fill="#34d399" />
+        <path d="M40 38H66C72.6 38 78 43.4 78 50C78 56.6 72.6 62 66 62H54V50H66C66 50 66 50 66 50Z" fill="#34d399" />
+      </svg>
+    </div>
+  );
+}
+
+// COMPONENTE DE VIDEO DE FONDO CON VELOCIDAD 0.5X Y DEGRADADOS DE TRANSICIÓN SUAVE
+function SectionVideoBg({ opacity = 0.20 }) {
+  const vidRef = useRef(null);
+
+  useEffect(() => {
+    const video = vidRef.current;
+    if (!video) return;
+
+    // Velocidad lenta 0.5x
+    video.playbackRate = 0.5;
+    video.play().catch(() => {});
+
+    const handleEnded = () => {
+      video.currentTime = 0;
+      if (vidRef.current) vidRef.current.playbackRate = 0.5;
+      video.play().catch(() => {});
+    };
+
+    video.addEventListener('ended', handleEnded);
+    return () => video.removeEventListener('ended', handleEnded);
+  }, []);
+
+  return (
+    <div className="section-video-bg-container">
+      <video
+        ref={vidRef}
+        autoPlay
+        loop
+        muted
+        playsInline
+        className="section-video-bg-element"
+        style={{ opacity: opacity }}
+      >
+        <source src={videoRecorridoLineas} type="video/mp4" />
+      </video>
+      <div className="section-video-fade-top" />
+      <div className="section-video-fade-bottom" />
+    </div>
+  );
+}
 
 export default function LandingPage({
   onEnterApp,
   onOpenAuthModal
 }) {
+  const videoRef = useRef(null);
   const [openFaqIndex, setOpenFaqIndex] = useState(null);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  // SCROLL LISTENER PARA MOSTRAR NAVBAR SOLO AL BAJAR
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 100) {
+        setIsScrolled(true);
+      } else {
+        setIsScrolled(false);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // REPRODUCCIÓN CONTINUA DEL HERO (NADA DEL HERO SE TOCÓ EN ABSOLUTO)
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    video.play().catch(() => {});
+
+    const handleEnded = () => {
+      video.currentTime = 0;
+      video.play().catch(() => {});
+    };
+
+    video.addEventListener('ended', handleEnded);
+    return () => video.removeEventListener('ended', handleEnded);
+  }, []);
 
   const toggleFaq = (index) => {
     setOpenFaqIndex(openFaqIndex === index ? null : index);
@@ -39,462 +122,689 @@ export default function LandingPage({
 
   const faqs = [
     {
-      question: '¿Cómo calcula TrampoPoints la tarifa del viaje?',
-      answer: 'El costo total del recorrido trazado por OSRM se calcula de acuerdo con la distancia real y el consumo de la combi. Ese valor total se divide equitativamente entre la cantidad exacta de pasajeros agrupados (hasta 75% más económico que pedir un auto privado).'
+      question: '¿Cómo se calcula el costo del viaje?',
+      answer: 'El costo total trazado por OSRM se divide equitativamente entre los pasajeros del grupo (hasta 75% menos que Uber/Taxi).'
     },
     {
-      question: '¿Tengo asiento garantizado al reservar?',
-      answer: '¡Sí! Al ser un sistema de solicitudes previas con cupos de combis de 30 asientos, tu plaza queda 100% reservada desde el momento en que se confirma la coincidencia de tu grupo.'
+      question: '¿El asiento está garantizado?',
+      answer: 'Sí. Al confirmarse el grupo, tu lugar en la combi de 30 asientos queda 100% reservado.'
     },
     {
-      question: '¿Los choferes y unidades están habilitados?',
-      answer: 'Absolutamente. Todos los choferes y empresas de combis asociadas cuentan con licencia profesional, seguro contra terceros y pasajeros, VTV vigente y documentación al día verificada por nuestro equipo.'
+      question: '¿Los choferes están verificados?',
+      answer: 'Sí. Todos cuentan con licencia profesional D2, VTV, seguro y documentación auditada.'
     },
     {
-      question: '¿Qué pasa si mi punto de partida está a unas cuadras de la combi?',
-      answer: 'Nuestro algoritmo de ruteo OSRM optimiza las paradas intermedias para que camines menos de 300 metros hasta tu punto de ascenso y descenso en esquinas seguras e iluminadas.'
-    },
-    {
-      question: '¿Puedo usar TrampoPoints para viajes diarios de trabajo o facultad?',
-      answer: '¡Es nuestro uso principal! Podés programar tus viajes de lunes a viernes en tu horario habitual y viajar siempre con la misma comunidad de vecinos o compañeros.'
+      question: '¿Dónde me subo a la combi?',
+      answer: 'El algoritmo OSRM fija esquinas iluminadas a menos de 300m de tu origen.'
     }
   ];
 
   return (
-    <div className="landing-standalone-wrapper text-left text-white">
-      {/* NAVBAR EXCLUSIVA DE LANDING PAGE */}
-      <header className="landing-navbar glass-card border-bottom-glass sticky top-0 z-50 padding-v-16 padding-h-32 flex-between align-center">
-        <div className="landing-logo flex-center gap-10 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-          <div className="logo-icon-bg bg-emerald text-dark padding-8 border-radius-10 flex-center">
-            <Bus size={22} className="text-white" />
-          </div>
-          <span className="font-extrabold text-22 tracking-tight text-white">
-            Trampo<span className="text-emerald">Points</span>
+    <div className="tramo-landing-root text-white">
+      
+      {/* NAVBAR FLOTANTE SCROLLABLE CON MINI LOGO TP */}
+      <header className={`tramo-navbar-fixed ${isScrolled ? 'nav-active' : 'nav-passive'}`}>
+        <div 
+          className="tramo-brand-logo flex-center gap-10 cursor-pointer"
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        >
+          <MiniLogoTP size={34} />
+          <span className="brand-title-text font-outfit">
+            Tramo<span className="brand-emerald">Points</span>
           </span>
         </div>
 
-        <nav className="landing-nav-links flex-center gap-24 font-semibold text-14">
-          <a href="#como-funciona" className="nav-link text-muted hover-white">Cómo Funciona</a>
-          <a href="#tarifas" className="nav-link text-muted hover-white">Tarifas y Ahorro</a>
-          <a href="#seguridad" className="nav-link text-muted hover-white">Seguridad</a>
-          <a href="#testimonios" className="nav-link text-muted hover-white">Testimonios</a>
-          <a href="#faq" className="nav-link text-muted hover-white">Preguntas Frecuentes</a>
+        <nav className="tramo-nav-menu">
+          <a href="#inicio" className="tramo-nav-item">Solicitar Viaje</a>
+          <a href="#red-combis" className="tramo-nav-item">Nuestra Red</a>
+          <a href="#servicios" className="tramo-nav-item">Servicios</a>
+          <a href="#algoritmo" className="tramo-nav-item">Algoritmo OSRM</a>
+          <a href="#arquitectura" className="tramo-nav-item">Arquitectura</a>
+          <a href="#comparativa" className="tramo-nav-item">Precios</a>
         </nav>
 
-        <div className="landing-nav-actions flex-center gap-12">
+        <div className="tramo-nav-right">
           <button
             type="button"
-            className="btn-secondary text-14 flex-center gap-6"
+            className="btn-tramo-outline"
             onClick={onOpenAuthModal}
           >
-            <LogIn size={16} /> Iniciar Sesión
-          </button>
-          
-          <button
-            type="button"
-            className="btn-primary btn-landing-cta text-14 font-bold flex-center gap-8 shadow-emerald"
-            onClick={() => onEnterApp('CREATE')}
-          >
-            <PlusCircle size={18} /> ¡Quiero Viajar!
+            Acceso Usuarios / Choferes
           </button>
         </div>
       </header>
 
-      {/* 1. HERO SECTION PRINCIPAL DE VENTA */}
-      <section className="landing-hero padding-v-60 padding-h-24 relative overflow-hidden">
-        <div className="container max-w-1200 margin-auto grid-2-col gap-40 align-center">
-          
-          <div className="hero-text-side flex-column gap-24 align-start">
-            <div className="badge badge-amber badge-pill font-semibold text-xs flex-center gap-6 animate-pulse">
-              <Sparkles size={14} className="text-amber" />
-              LA RED INTELIGENTE DE COMBIS COMPARTIDAS
-            </div>
+      {/* 1. HERO TOTALMENTE INTACTO (LA PARTE DE ARRIBA DEL HERO NO SE TOCÓ EN ABSOLUTO) */}
+      <section id="inicio" className="tramo-hero-viewport">
+        <video
+          ref={videoRef}
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="tramo-hero-video-vivid"
+        >
+          <source src={videoFondoLanding} type="video/mp4" />
+        </video>
 
-            <h1 className="text-gradient-white font-extrabold text-52 leading-tight">
-              Viajá en combi con gente de tu zona. <br />
-              <span className="text-gradient-emerald">Pagá hasta 75% menos.</span>
-            </h1>
-
-            <p className="text-muted text-18 leading-relaxed">
-              Decile adiós al costo exorbitante del auto privado y al estrés del colectivo colapsado. TrampoPoints agrupa pasajeros afines en combis modernas con ruta optimizada por OSRM y asiento asegurado.
-            </p>
-
-            {/* CALL TO ACTION PRINCIPAL */}
-            <div className="hero-cta-group flex-center-left gap-16 margin-top-12 flex-wrap">
-              <button
-                type="button"
-                className="btn-primary btn-hero-lg text-18 font-extrabold padding-v-16 padding-h-36 flex-center gap-12 shadow-emerald animate-bounce-subtle"
-                onClick={() => onEnterApp('CREATE')}
-              >
-                <PlusCircle size={22} /> ¡Quiero Viajar Ahora! <ArrowRight size={20} />
-              </button>
-
-              <button
-                type="button"
-                className="btn-secondary btn-hero-lg text-15 font-semibold padding-v-16 padding-h-24 flex-center gap-8"
-                onClick={() => onEnterApp('ADMIN')}
-              >
-                <ShieldCheck size={18} className="text-amber" /> Acceso Administrador
-              </button>
-            </div>
-
-            <div className="trust-badges-row flex-center-left gap-20 margin-top-16 text-xs text-muted">
-              <span className="flex-center gap-6"><CheckCircle2 size={14} className="text-emerald" /> Sin costo de reserva previo</span>
-              <span className="flex-center gap-6"><CheckCircle2 size={14} className="text-emerald" /> Cancelación flexible</span>
-              <span className="flex-center gap-6"><CheckCircle2 size={14} className="text-emerald" /> Choferes verificados</span>
-            </div>
+        <div className="tramo-hero-content-exact">
+          <div className="margin-bottom-24 flex-center">
+            <MiniLogoTP size={52} />
           </div>
 
-          {/* FOTO HERO / DEMO VISUAL */}
-          <div className="hero-image-side relative">
-            <div className="hero-image-wrapper glass-card padding-8 border-gradient">
-              <img
-                src={heroCombiImg}
-                alt="Combi Inteligente TrampoPoints navegando por la ciudad"
-                className="width-full height-auto border-radius-14 shadow-lg object-cover"
-              />
-              <div className="floating-hero-pill glass-card padding-12 border-emerald absolute bottom-20 left-20 flex-center gap-12">
-                <div className="badge-icon-bg bg-emerald text-dark padding-8 border-radius-8">
-                  <Navigation size={20} className="text-white" />
-                </div>
-                <div>
-                  <strong className="block text-white text-14 font-extrabold">Ruta Activa Belgrano ➔ Centro</strong>
-                  <span className="text-xs text-emerald font-bold">OSRM • 11.4 km por calles reales</span>
-                </div>
+          <h1 className="tramo-headline-exact">
+            Viajá Inteligente.<br />
+            Ahorro del 75%.
+          </h1>
+
+          <div className="tramo-stats-row-exact">
+            <div className="tramo-stat-pill">
+              <div className="stat-icon-green">
+                <Users size={22} />
+              </div>
+              <div className="stat-text-box">
+                <strong className="stat-number">3M+</strong>
+                <span className="stat-label">Viajes Compartidos</span>
+              </div>
+            </div>
+
+            <div className="tramo-stat-pill">
+              <div className="stat-icon-green">
+                <Clock size={22} />
+              </div>
+              <div className="stat-text-box">
+                <strong className="stat-number">96%</strong>
+                <span className="stat-label">Puntualidad</span>
+              </div>
+            </div>
+
+            <div className="tramo-stat-pill highlight-pill">
+              <div className="stat-icon-green">
+                <Wallet size={22} />
+              </div>
+              <div className="stat-text-box">
+                <strong className="stat-title-strong">Ahorro Promedio</strong>
+                <span className="stat-label-bold">del 75%</span>
               </div>
             </div>
           </div>
 
-        </div>
-      </section>
-
-      {/* STATS IMPACT BAR */}
-      <section className="landing-stats-bar bg-card-dark padding-v-28 border-y-glass">
-        <div className="container max-w-1200 margin-auto grid-4-col gap-24 text-center">
-          <div className="stat-box">
-            <strong className="text-36 font-extrabold text-gradient-emerald font-mono">+50.000</strong>
-            <span className="block text-13 text-muted margin-top-4">Viajes Compartidos Trazados</span>
-          </div>
-          <div className="stat-box">
-            <strong className="text-36 font-extrabold text-gradient-white font-mono">75%</strong>
-            <span className="block text-13 text-muted margin-top-4">Ahorro Promedio por Viaje</span>
-          </div>
-          <div className="stat-box">
-            <strong className="text-36 font-extrabold text-amber font-mono">30 Min</strong>
-            <span className="block text-13 text-muted margin-top-4">Ventana Horaria de Puntualidad</span>
-          </div>
-          <div className="stat-box">
-            <strong className="text-36 font-extrabold text-indigo font-mono">4.9 ★</strong>
-            <span className="block text-13 text-muted margin-top-4">Satisfacción de Pasajeros</span>
-          </div>
-        </div>
-      </section>
-
-      {/* 2. CALCULADORA DINÁMICA DE TARIFAS */}
-      <section id="tarifas" className="landing-section padding-v-60">
-        <div className="container max-w-1100 margin-auto">
-          <FareCalculator onStartRequest={() => onEnterApp('CREATE')} />
-        </div>
-      </section>
-
-      {/* 3. CÓMO FUNCIONA EL ALGORITMO (3 PASOS) */}
-      <section id="como-funciona" className="landing-section padding-v-60 bg-dark-subtle">
-        <div className="container max-w-1100 margin-auto">
-          <div className="section-header text-center margin-bottom-48">
-            <span className="badge badge-amber font-bold text-xs uppercase margin-bottom-8">
-              Tecnología e Inteligencia Spatio-Temporal
-            </span>
-            <h2 className="text-gradient-white text-36 font-extrabold">
-              ¿Cómo agrupamos tu viaje en 3 simples pasos?
-            </h2>
-            <p className="text-muted text-16 margin-top-8 max-w-650 margin-auto">
-              Nuestro algoritmo analiza tu origen, tu destino y tu ventana horaria para asignarte la combi ideal.
-            </p>
-          </div>
-
-          <div className="steps-grid grid-3-col gap-28">
-            <div className="step-card card glass-card padding-32 flex-column gap-20 relative">
-              <div className="step-number-badge">1</div>
-              <div className="step-icon bg-indigo-subtle text-indigo padding-14 border-radius-12 width-fit">
-                <MapPin size={30} />
-              </div>
-              <div>
-                <h3 className="font-extrabold text-20 text-white">1. Solicitás tu Recorrido</h3>
-                <p className="text-muted text-14 margin-top-8 leading-relaxed">
-                  Ingresás tu dirección de casa, tu lugar de trabajo o facultad y la hora a la que querés salir.
-                </p>
-              </div>
-            </div>
-
-            <div className="step-card card glass-card padding-32 flex-column gap-20 relative">
-              <div className="step-number-badge">2</div>
-              <div className="step-icon bg-amber-subtle text-amber padding-14 border-radius-12 width-fit">
-                <Zap size={30} />
-              </div>
-              <div>
-                <h3 className="font-extrabold text-20 text-white">2. Agrupamiento por Afinidad</h3>
-                <p className="text-muted text-14 margin-top-8 leading-relaxed">
-                  El algoritmo detecta vecinos con orígenes cercanos (hasta 2 km) y destinos afines (hasta 3 km) armando el cluster.
-                </p>
-              </div>
-            </div>
-
-            <div className="step-card card glass-card padding-32 flex-column gap-20 relative">
-              <div className="step-number-badge">3</div>
-              <div className="step-icon bg-emerald-subtle text-emerald padding-14 border-radius-12 width-fit">
-                <Navigation size={30} />
-              </div>
-              <div>
-                <h3 className="font-extrabold text-20 text-white">3. Trazado OSRM y Combi</h3>
-                <p className="text-muted text-14 margin-top-8 leading-relaxed">
-                  OSRM genera el trayecto doblando esquina por esquina por calles reales. Te subís en tu parada con asiento garantizado.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 4. EXPERIENCIA Y CONFORT A BORDO */}
-      <section className="landing-section padding-v-60">
-        <div className="container max-w-1200 margin-auto grid-2-col gap-40 align-center">
-          <div className="comfort-img-side">
-            <div className="glass-card padding-8 border-gradient">
-              <img
-                src={passengersComfortImg}
-                alt="Pasajeros disfrutando del confort a bordo de una combi TrampoPoints"
-                className="width-full height-auto border-radius-14 shadow-lg object-cover"
-              />
-            </div>
-          </div>
-
-          <div className="comfort-text-side flex-column gap-20">
-            <span className="badge badge-emerald font-bold text-xs uppercase width-fit">
-              Máximo Confort e Integración
-            </span>
-            <h2 className="text-gradient-white text-36 font-extrabold leading-tight">
-              Viajá como te merecés todos los días.
-            </h2>
-            <p className="text-muted text-16 leading-relaxed">
-              Combis equipadas con sillones reclinables ergonométricos, Wi-Fi gratis a bordo, aire acondicionado y comunidad respetuosa de vecinos y compañeros.
-            </p>
-
-            <ul className="comfort-checklist flex-column gap-12 margin-top-8 text-15">
-              <li className="flex-center-left gap-10">
-                <CheckCircle2 size={18} className="text-emerald" />
-                <span><strong>Asiento reservado e individual</strong> — Sin viajar de pie ni amontonado.</span>
-              </li>
-              <li className="flex-center-left gap-10">
-                <CheckCircle2 size={18} className="text-emerald" />
-                <span><strong>Wi-Fi gratis a bordo</strong> — Aprovechá el viaje para trabajar o estudiar.</span>
-              </li>
-              <li className="flex-center-left gap-10">
-                <CheckCircle2 size={18} className="text-emerald" />
-                <span><strong>Sin trasbordos engorrosos</strong> — De tu zona directo al destino.</span>
-              </li>
-            </ul>
-
+          <div className="margin-top-52">
             <button
               type="button"
-              className="btn-primary btn-hero-lg font-bold text-16 width-fit margin-top-12 flex-center gap-8 shadow-emerald"
+              className="btn-gold-emerald-pill"
               onClick={() => onEnterApp('CREATE')}
             >
-              <PlusCircle size={18} /> ¡Quiero Reservar Mi Lugar!
+              Empezar Solicitud de Viaje
             </button>
           </div>
         </div>
       </section>
+       {/* =====================================================
+          LOWER LANDING — FULL VIEWPORT SCROLL SNAP & FADE EFFECTS
+          ===================================================== */}
+      <style>{`
+        /* Global Snap & Behavior */
+        html {
+          scroll-snap-type: y mandatory;
+          scroll-behavior: smooth;
+        }
+        .tramo-hero-viewport {
+          scroll-snap-align: start;
+        }
+        
+        .lp-lower {
+          background: #060a10;
+          color: #e2e8f0;
+          font-family: 'Outfit', 'Inter', system-ui, sans-serif;
+          overflow-x: hidden;
+        }
+        .lp-lower * { box-sizing: border-box; }
+        
+        .lp-section {
+          position: relative;
+          width: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          scroll-snap-align: start;
+          overflow: hidden;
+          background: #060a10;
+          
+          /* Fade-in Scroll Effect */
+          opacity: 0;
+          transform: translateY(30px);
+          transition: opacity 1s cubic-bezier(0.16, 1, 0.3, 1), transform 1s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .lp-section:nth-child(even) {
+          background: #090e16;
+        }
+        .lp-section.lp-visible {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        
+        @media (min-width: 901px) {
+          .lp-section {
+            height: 100vh;
+            min-height: 700px;
+          }
+        }
+        @media (max-width: 900px) {
+          .lp-section {
+            min-height: 100vh;
+            padding: 100px 24px;
+          }
+        }
+        
+        .lp-inner {
+          width: 100%;
+          max-width: 1140px;
+          margin: 0 auto;
+          position: relative;
+          z-index: 2;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+        }
+        
+        .lp-badge {
+          display: inline-block;
+          padding: 6px 16px;
+          border-radius: 100px;
+          font-size: 11px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 2px;
+          background: rgba(16, 185, 129, 0.1);
+          color: #34d399;
+          border: 1px solid rgba(16, 185, 129, 0.2);
+          margin-bottom: 24px;
+        }
+        .lp-h2 {
+          font-size: clamp(28px, 4.5vw, 42px);
+          font-weight: 900;
+          color: #ffffff;
+          line-height: 1.15;
+          margin: 0 0 16px 0;
+          text-align: center;
+        }
+        .lp-subtitle {
+          font-size: 16px;
+          color: #94a3b8;
+          line-height: 1.6;
+          max-width: 620px;
+          margin: 0 0 40px 0;
+          text-align: center;
+        }
 
-      {/* 5. SEGURIDAD Y VERIFICACIÓN DE CHOFERES */}
-      <section id="seguridad" className="landing-section padding-v-60 bg-dark-subtle">
-        <div className="container max-w-1100 margin-auto text-center">
-          <span className="badge badge-indigo font-bold text-xs uppercase margin-bottom-8">
-            Seguridad Garantizada
-          </span>
-          <h2 className="text-gradient-white text-36 font-extrabold">
-            Tu tranquilidad es nuestra prioridad N° 1
-          </h2>
+        /* FEATURES GRID */
+        .lp-features-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 20px;
+          width: 100%;
+        }
+        .lp-feature-card {
+          background: rgba(15, 23, 42, 0.6);
+          border: 1px solid rgba(255, 255, 255, 0.06);
+          border-radius: 16px;
+          padding: 28px 24px;
+          transition: border-color 0.3s, transform 0.3s, box-shadow 0.3s;
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          text-align: left;
+        }
+        .lp-feature-card:hover {
+          border-color: rgba(52, 211, 153, 0.3);
+          transform: translateY(-4px);
+          box-shadow: 0 16px 36px rgba(0, 0, 0, 0.35);
+        }
+        .lp-feature-icon {
+          width: 44px; height: 44px;
+          border-radius: 12px;
+          display: flex; align-items: center; justify-content: center;
+          margin-bottom: 18px;
+        }
+        .lp-feature-icon.green { background: rgba(16, 185, 129, 0.12); color: #34d399; }
+        .lp-feature-icon.amber { background: rgba(234, 179, 8, 0.12); color: #fbbf24; }
+        .lp-feature-icon.indigo { background: rgba(99, 102, 241, 0.12); color: #818cf8; }
+        .lp-feature-card h3 {
+          font-size: 18px; font-weight: 800; color: #fff;
+          margin: 0 0 8px 0;
+        }
+        .lp-feature-card p {
+          font-size: 14px; color: #94a3b8; line-height: 1.5; margin: 0;
+        }
 
-          <div className="grid-3-col gap-24 margin-top-40">
-            <div className="card glass-card padding-28 text-center flex-column align-center gap-12">
-              <div className="icon-badge text-indigo bg-indigo-subtle padding-14 border-radius-14">
-                <ShieldCheck size={32} />
+        /* HOW IT WORKS STEPS */
+        .lp-steps {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 16px;
+          width: 100%;
+          margin-bottom: 40px;
+        }
+        .lp-step {
+          text-align: center;
+          padding: 28px 20px;
+          border-radius: 16px;
+          border: 1px solid rgba(255, 255, 255, 0.05);
+          background: rgba(15, 23, 42, 0.4);
+        }
+        .lp-step-num {
+          font-size: 36px; font-weight: 900;
+          background: linear-gradient(135deg, #34d399, #10b981);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          line-height: 1;
+          margin-bottom: 14px;
+        }
+        .lp-step h4 {
+          font-size: 16px; font-weight: 700; color: #fff;
+          margin: 0 0 8px 0;
+        }
+        .lp-step p {
+          font-size: 13px; color: #64748b; line-height: 1.4; margin: 0;
+        }
+        .lp-cta-btn {
+          display: inline-block;
+          padding: 14px 40px;
+          border-radius: 12px;
+          font-size: 16px; font-weight: 700;
+          color: #060a10;
+          background: linear-gradient(135deg, #34d399, #10b981);
+          border: none; cursor: pointer;
+          transition: transform 0.2s, box-shadow 0.2s;
+          text-decoration: none;
+        }
+        .lp-cta-btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 24px rgba(16, 185, 129, 0.3);
+        }
+
+        /* COMPARISON TABLE */
+        .lp-table-wrap {
+          border-radius: 16px;
+          overflow: hidden;
+          border: 1px solid rgba(255, 255, 255, 0.06);
+          width: 100%;
+          margin-bottom: 32px;
+        }
+        .lp-table {
+          width: 100%;
+          border-collapse: collapse;
+          background: rgba(15, 23, 42, 0.4);
+        }
+        .lp-table th, .lp-table td {
+          padding: 16px 20px;
+          text-align: left;
+          font-size: 14px;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .lp-table aggression th {
+          font-size: 12px; font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+          color: #64748b;
+          background: rgba(15, 23, 42, 0.7);
+        }
+        .lp-table thead th:nth-child(2) { color: #34d399; }
+        .lp-table td:nth-child(2) {
+          color: #34d399;
+          font-weight: 700;
+          background: rgba(16, 185, 129, 0.03);
+        }
+        .lp-table td:first-child { color: #e2e8f0; font-weight: 600; }
+        .lp-table td:nth-child(3) { color: #64748b; }
+        .lp-table tbody tr:last-child td { border-bottom: none; }
+
+        /* PARTNERS ROW */
+        .lp-partners {
+          display: flex; flex-wrap: wrap; justify-content: center;
+          gap: 36px;
+          font-size: 14px; font-weight: 600;
+          color: #475569;
+          margin-top: 10px;
+        }
+        .lp-partners span { transition: color 0.2s; cursor: default; }
+        .lp-partners span:hover { color: #94a3b8; }
+        .lp-partners .highlight { color: #34d399; }
+
+        /* FAQ ACCORDION */
+        .lp-faq-container {
+          width: 100%;
+          max-width: 800px;
+          margin: 0 auto;
+        }
+        .lp-faq-item {
+          border: 1px solid rgba(255, 255, 255, 0.06);
+          border-radius: 12px;
+          margin-bottom: 10px;
+          overflow: hidden;
+          background: rgba(15, 23, 42, 0.3);
+          transition: border-color 0.3s;
+        }
+        .lp-faq-item:hover { border-color: rgba(52, 211, 153, 0.2); }
+        .lp-faq-btn {
+          width: 100%; padding: 18px 20px;
+          display: flex; align-items: center; justify-content: space-between;
+          background: none; border: none; cursor: pointer;
+          color: #fff; font-size: 15px; font-weight: 600;
+          font-family: inherit; text-align: left;
+          gap: 12px;
+        }
+        .lp-faq-answer {
+          padding: 0 20px 18px 20px;
+          font-size: 14px; color: #94a3b8; line-height: 1.6;
+          border-top: 1px solid rgba(255, 255, 255, 0.05);
+          padding-top: 14px;
+        }
+
+        /* HIGH QUALITY CENTERED VIDEO BG - ENLARGED & MORE VISIBLE */
+        .lp-video-bg {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          width: 100%;
+          max-width: 1100px; /* Ampliado de 800px para que se vea más grande */
+          height: 90%;
+          pointer-events: none;
+          z-index: 1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          overflow: hidden;
+        }
+        .lp-video-bg video {
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+          opacity: 0.22; /* Opacidad aumentada de 0.12 a 0.22 para mayor visibilidad */
+          filter: brightness(0.95) blur(0.5px); /* Brillo aumentado para que se note un poco más */
+          mask-image: radial-gradient(circle, black 35%, transparent 75%);
+          -webkit-mask-image: radial-gradient(circle, black 35%, transparent 75%);
+        }
+
+        /* STANDARD FOOTER - NOT FULL SCREEN */
+        .lp-footer-container {
+          background: #060a10;
+          color: #475569;
+          font-size: 12px;
+          border-top: 1px solid rgba(255, 255, 255, 0.05);
+          width: 100%;
+          padding: 40px 24px;
+          position: relative;
+          z-index: 2;
+        }
+        .lp-footer-inner {
+          max-width: 1140px;
+          margin: 0 auto;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 16px;
+        }
+        .lp-footer-inner a {
+          color: #64748b;
+          text-decoration: none;
+          margin-right: 16px;
+        }
+        .lp-footer-inner a:hover {
+          color: #34d399;
+        }
+
+        /* RESPONSIVE LAYOUT */
+        @media (max-width: 900px) {
+          .lp-features-grid { grid-template-columns: 1fr 1fr; }
+          .lp-steps { grid-template-columns: 1fr 1fr; }
+        }
+        @media (max-width: 600px) {
+          .lp-features-grid { grid-template-columns: 1fr; }
+          .lp-steps { grid-template-columns: 1fr; }
+          .lp-section { padding: 80px 16px; }
+          .lp-table th, .lp-table td { padding: 12px 14px; font-size: 13px; }
+          .lp-footer-inner { flex-direction: column; text-align: center; }
+          .lp-footer-inner a { margin: 0 8px; }
+        }
+      `}</style>
+
+      {/* Intersection Observer Initializer */}
+      <ObserverLoader />
+
+      <div className="lp-lower">
+
+        {/* ——— SECTION 1: FEATURES ——— */}
+        <section className="lp-section">
+          <div className="lp-inner">
+            <span className="lp-badge">Plataforma</span>
+            <h2 className="lp-h2">Todo lo que necesitás<br/>para viajar mejor</h2>
+            <p className="lp-subtitle">
+              TramoPoints combina inteligencia artificial, rutas OSRM y grupos inteligentes para ofrecerte viajes compartidos premium a una fracción del costo.
+            </p>
+
+            <div className="lp-features-grid">
+              <div className="lp-feature-card">
+                <div className="lp-feature-icon green"><MapPin size={22} /></div>
+                <h3>Geocodificación en Tiempo Real</h3>
+                <p>Ubicamos paradas seguras a menos de 300m de tu posición usando datos cartográficos vivos.</p>
               </div>
-              <h3 className="font-bold text-18 text-white">Conductores Habilitados</h3>
-              <p className="text-muted text-13 leading-relaxed">
-                Choferes con licencia profesional D2, registro de antecedentes penales limpio y seguros al día.
-              </p>
-            </div>
-
-            <div className="card glass-card padding-28 text-center flex-column align-center gap-12">
-              <div className="icon-badge text-emerald bg-emerald-subtle padding-14 border-radius-14">
-                <Navigation size={32} />
+              <div className="lp-feature-card">
+                <div className="lp-feature-icon amber"><Cpu size={22} /></div>
+                <h3>Clustering Inteligente</h3>
+                <p>Agrupamos pasajeros cercanos automáticamente para optimizar rutas y reducir costos.</p>
               </div>
-              <h3 className="font-bold text-18 text-white">Monitoreo GPS en Vivo</h3>
-              <p className="text-muted text-13 leading-relaxed">
-                Todas las combis emiten su ubicación satelital en tiempo real durante todo el itinerario trazado.
-              </p>
-            </div>
-
-            <div className="card glass-card padding-28 text-center flex-column align-center gap-12">
-              <div className="icon-badge text-amber bg-amber-subtle padding-14 border-radius-14">
-                <Users size={32} />
+              <div className="lp-feature-card">
+                <div className="lp-feature-icon indigo"><Navigation size={22} /></div>
+                <h3>Rutas OSRM Optimizadas</h3>
+                <p>Calculamos el trayecto más eficiente en milisegundos con el motor de ruteo OSRM.</p>
               </div>
-              <h3 className="font-bold text-18 text-white">Comunidad Validada</h3>
-              <p className="text-muted text-13 leading-relaxed">
-                Pasajeros con identidad verificada por e-mail institucional, universitario o DNI.
-              </p>
+              <div className="lp-feature-card">
+                <div className="lp-feature-icon green"><ShieldCheck size={22} /></div>
+                <h3>Choferes Verificados</h3>
+                <p>Licencia D2, VTV al día, seguro obligatorio y documentación auditada.</p>
+              </div>
+              <div className="lp-feature-card">
+                <div className="lp-feature-icon amber"><Users size={22} /></div>
+                <h3>Paneles Multi-Rol</h3>
+                <p>Dashboard dedicado para pasajeros, choferes y administradores con datos en tiempo real.</p>
+              </div>
+              <div className="lp-feature-card">
+                <div className="lp-feature-icon indigo"><Activity size={22} /></div>
+                <h3>Seguimiento GPS en Vivo</h3>
+                <p>Rastreá tu combi en tiempo real desde la app. Sabé exactamente cuándo llega.</p>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* 6. TESTIMONIOS REALES */}
-      <section id="testimonios" className="landing-section padding-v-60">
-        <div className="container max-w-1100 margin-auto text-center">
-          <span className="badge badge-amber font-bold text-xs uppercase margin-bottom-8">
-            Opiniones de la Comunidad
-          </span>
-          <h2 className="text-gradient-white text-36 font-extrabold">
-            Lo que dicen nuestros pasajeros
-          </h2>
+        {/* ——— SECTION 2: HOW IT WORKS ——— */}
+        <section className="lp-section">
+          <div className="lp-video-bg">
+            <video autoPlay loop muted playsInline><source src={videoRecorridoLineas} type="video/mp4" /></video>
+          </div>
+          <div className="lp-inner">
+            <span className="lp-badge">Cómo Funciona</span>
+            <h2 className="lp-h2">De la solicitud al viaje<br/>en 4 pasos</h2>
+            <p className="lp-subtitle">
+              Nuestro algoritmo procesa tu pedido y arma el grupo perfecto en segundos.
+            </p>
 
-          <div className="grid-3-col gap-24 margin-top-40">
-            <div className="card glass-card padding-24 flex-column flex-between text-left">
-              <div>
-                <div className="flex-center-left gap-4 text-amber margin-bottom-12">
-                  <Star size={16} fill="#fbbf24" /><Star size={16} fill="#fbbf24" /><Star size={16} fill="#fbbf24" /><Star size={16} fill="#fbbf24" /><Star size={16} fill="#fbbf24" />
-                </div>
-                <p className="text-muted text-14 italic leading-relaxed">
-                  "Antes me gastaba una fortuna en Uber desde Pilar a Palermo todos los días. Con TrampoPoints pago un 70% menos y viajo sentado trabajando con la laptop."
-                </p>
+            <div className="lp-steps">
+              <div className="lp-step">
+                <div className="lp-step-num">01</div>
+                <h4>Solicitás</h4>
+                <p>Ingresás origen, destino y horario preferido desde la app.</p>
               </div>
-              <div className="margin-top-16 border-top-glass padding-top-12 flex-center-left gap-10">
-                <div className="avatar-circle bg-emerald text-dark font-bold text-12 padding-6 border-radius-full">MP</div>
-                <div>
-                  <strong className="block text-white text-14">Martín Paez</strong>
-                  <span className="text-xs text-muted">Ingeniero • Pilar ➔ Palermo</span>
-                </div>
+              <div className="lp-step">
+                <div className="lp-step-num">02</div>
+                <h4>Agrupamos</h4>
+                <p>El AI agrupa pasajeros cercanos con destinos similares.</p>
+              </div>
+              <div className="lp-step">
+                <div className="lp-step-num">03</div>
+                <h4>Optimizamos</h4>
+                <p>OSRM calcula la ruta más eficiente y asigna paradas seguras.</p>
+              </div>
+              <div className="lp-step">
+                <div className="lp-step-num">04</div>
+                <h4>Viajás</h4>
+                <p>Tu combi pasa por la esquina indicada. Seguimiento GPS en vivo.</p>
               </div>
             </div>
 
-            <div className="card glass-card padding-24 flex-column flex-between text-left">
-              <div>
-                <div className="flex-center-left gap-4 text-amber margin-bottom-12">
-                  <Star size={16} fill="#fbbf24" /><Star size={16} fill="#fbbf24" /><Star size={16} fill="#fbbf24" /><Star size={16} fill="#fbbf24" /><Star size={16} fill="#fbbf24" />
-                </div>
-                <p className="text-muted text-14 italic leading-relaxed">
-                  "Es genial porque la combi me pasa a buscar a 2 cuadras de casa en Belgrano y me deja en la puerta de la facultad. Salgo a horario exacto."
-                </p>
-              </div>
-              <div className="margin-top-16 border-top-glass padding-top-12 flex-center-left gap-10">
-                <div className="avatar-circle bg-indigo text-white font-bold text-12 padding-6 border-radius-full">CR</div>
-                <div>
-                  <strong className="block text-white text-14">Camila Rivas</strong>
-                  <span className="text-xs text-muted">Estudiante UBA • Belgrano ➔ Centro</span>
-                </div>
-              </div>
+            <button className="lp-cta-btn" onClick={() => onEnterApp('CREATE')}>
+              Solicitar Mi Viaje
+            </button>
+          </div>
+        </section>
+
+        {/* ——— SECTION 3: COMPARISON TABLE ——— */}
+        <section className="lp-section">
+          <div className="lp-inner">
+            <span className="lp-badge">Precios</span>
+            <h2 className="lp-h2">TramoPoints vs. Alternativas</h2>
+            <p className="lp-subtitle">
+              Comparación directa de costo, tiempo y confort para tus trayectos diarios.
+            </p>
+
+            <div className="lp-table-wrap">
+              <table className="lp-table">
+                <thead>
+                  <tr>
+                    <th>Atributo</th>
+                    <th>TramoPoints</th>
+                    <th>Uber / Taxi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Costo promedio</td>
+                    <td>$18 – $28</td>
+                    <td>$70 – $120</td>
+                  </tr>
+                  <tr>
+                    <td>Tiempo de espera</td>
+                    <td>Horarios fijos y puntuales</td>
+                    <td>Variable por demanda</td>
+                  </tr>
+                  <tr>
+                    <td>Asiento</td>
+                    <td>100% reservado</td>
+                    <td>Sujeto a disponibilidad</td>
+                  </tr>
+                  <tr>
+                    <td>Paradas</td>
+                    <td>Esquinas iluminadas (OSRM)</td>
+                    <td>Puerta a puerta</td>
+                  </tr>
+                  <tr>
+                    <td>Seguimiento GPS</td>
+                    <td>En vivo desde la app</td>
+                    <td>Disponible</td>
+                  </tr>
+                  <tr>
+                    <td>Documentación del chofer</td>
+                    <td>Verificada y auditada</td>
+                    <td>Variable</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
 
-            <div className="card glass-card padding-24 flex-column flex-between text-left">
-              <div>
-                <div className="flex-center-left gap-4 text-amber margin-bottom-12">
-                  <Star size={16} fill="#fbbf24" /><Star size={16} fill="#fbbf24" /><Star size={16} fill="#fbbf24" /><Star size={16} fill="#fbbf24" /><Star size={16} fill="#fbbf24" />
-                </div>
-                <p className="text-muted text-14 italic leading-relaxed">
-                  "Como chofer de combi, TrampoPoints me llena los cupos vacíos del recorrido de ida y vuelta. El ruteo por OSRM dobló en cada esquina perfecta."
-                </p>
-              </div>
-              <div className="margin-top-16 border-top-glass padding-top-12 flex-center-left gap-10">
-                <div className="avatar-circle bg-amber text-dark font-bold text-12 padding-6 border-radius-full">GL</div>
-                <div>
-                  <strong className="block text-white text-14">Gustavo López</strong>
-                  <span className="text-xs text-muted">Chofer de Flota • San Isidro</span>
-                </div>
-              </div>
+            <div className="lp-partners">
+              <span style={{ fontSize: '12px', color: '#475569', textTransform: 'uppercase', letterSpacing: '1px', marginRight: '12px' }}>Tecnologías & Partners:</span>
+              <span>Claro</span>
+              <span>OSRM</span>
+              <span>LinkedIn</span>
+              <span>Microsoft</span>
+              <span className="highlight">TP Circular</span>
+              <span>dhyason</span>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* 7. PREGUNTAS FRECUENTES (FAQ ACCORDION) */}
-      <section id="faq" className="landing-section padding-v-60 bg-dark-subtle">
-        <div className="container max-w-900 margin-auto">
-          <div className="section-header text-center margin-bottom-40">
-            <span className="badge badge-indigo font-bold text-xs uppercase margin-bottom-8">
-              Respuestas Rápidas
-            </span>
-            <h2 className="text-gradient-white text-36 font-extrabold">
-              Preguntas Frecuentes
-            </h2>
+        {/* ——— SECTION 4: FAQ ——— */}
+        <section className="lp-section">
+          <div className="lp-video-bg">
+            <video autoPlay loop muted playsInline><source src={videoRecorridoLineas} type="video/mp4" /></video>
           </div>
+          <div className="lp-inner">
+            <span className="lp-badge">Soporte</span>
+            <h2 className="lp-h2" style={{ marginBottom: '40px' }}>Preguntas Frecuentes</h2>
 
-          <div className="faq-accordion-container flex-column gap-16">
-            {faqs.map((faq, idx) => (
-              <div key={faq.question} className="faq-item card glass-card padding-20 border-radius-14">
-                <button
-                  type="button"
-                  className="faq-question-btn width-full flex-between align-center text-left background-none border-none cursor-pointer"
-                  onClick={() => toggleFaq(idx)}
-                >
-                  <span className="font-extrabold text-16 text-white flex-center-left gap-10">
-                    <HelpCircle size={18} className="text-emerald" />
-                    {faq.question}
-                  </span>
-                  {openFaqIndex === idx ? (
-                    <ChevronUp size={20} className="text-emerald" />
-                  ) : (
-                    <ChevronDown size={20} className="text-muted" />
+            <div className="lp-faq-container">
+              {faqs.map((faq, idx) => (
+                <div key={faq.question} className="lp-faq-item">
+                  <button className="lp-faq-btn" onClick={() => toggleFaq(idx)}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <HelpCircle size={18} style={{ color: '#34d399', flexShrink: 0 }} />
+                      {faq.question}
+                    </span>
+                    {openFaqIndex === idx
+                      ? <ChevronUp size={18} style={{ color: '#34d399', flexShrink: 0 }} />
+                      : <ChevronDown size={18} style={{ color: '#475569', flexShrink: 0 }} />
+                    }
+                  </button>
+                  {openFaqIndex === idx && (
+                    <div className="lp-faq-answer">{faq.answer}</div>
                   )}
-                </button>
-
-                {openFaqIndex === idx && (
-                  <div className="faq-answer-content margin-top-14 border-top-glass padding-top-12 text-muted text-14 leading-relaxed animate-fade-in">
-                    {faq.answer}
-                  </div>
-                )}
-              </div>
-            ))}
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* 8. CALL TO ACTION FINAL DE ALTO IMPACTO */}
-      <section className="landing-cta-banner padding-v-80 text-center relative overflow-hidden">
-        <div className="hero-background-glow" />
-        <div className="container max-w-900 margin-auto flex-column align-center gap-24 relative z-10">
-          <h2 className="text-gradient-white text-42 font-extrabold">
-            ¿Qué esperás para cambiar tu forma de viajar?
-          </h2>
-          <p className="text-muted text-18 max-w-650">
-            Sumate hoy a la comunidad de movilidad inteligente. Cargá tu solicitud en 30 segundos y descubrí tu combi asignada.
-          </p>
 
-          <button
-            type="button"
-            className="btn-primary btn-hero-lg text-20 font-extrabold padding-v-18 padding-h-44 flex-center gap-12 shadow-emerald animate-pulse"
-            onClick={() => onEnterApp('CREATE')}
-          >
-            <PlusCircle size={24} /> ¡Quiero Viajar Ahora! <ArrowRight size={22} />
-          </button>
-        </div>
-      </section>
-
-      {/* FOOTER */}
-      <footer className="landing-footer border-top-glass padding-v-32 text-center text-xs text-muted">
-        <div className="container max-w-1200 margin-auto flex-between align-center flex-wrap gap-16">
-          <div className="flex-center gap-8">
-            <Bus size={16} className="text-emerald" />
-            <strong className="text-white">TrampoPoints Argentina</strong> © 2026. Todos los derechos reservados.
+        {/* ——— STANDARD FOOTER ——— */}
+        <footer className="lp-footer-container">
+          <div className="lp-footer-inner">
+            <div>
+              <a href="#inicio">Inicio</a>
+              <a href="#servicios">Servicios</a>
+              <a href="#faq">FAQ</a>
+              <a href="#">Recursos</a>
+              <a href="#">Políticas de Privacidad</a>
+            </div>
+            <p style={{ margin: 0 }}>© 2026 TramoPoints. Movilidad inteligente para todos.</p>
           </div>
-          <div className="flex-center gap-16">
-            <a href="#como-funciona" className="hover-white">Cómo Funciona</a>
-            <a href="#tarifas" className="hover-white">Tarifas</a>
-            <a href="#seguridad" className="hover-white">Seguridad</a>
-            <a href="#faq" className="hover-white">Preguntas Frecuentes</a>
-          </div>
-        </div>
-      </footer>
+        </footer>
+
+      </div>
     </div>
   );
+}
+
+// Simple internal helper component to execute IntersectionObserver
+function ObserverLoader() {
+  useEffect(() => {
+    const observerOptions = {
+      root: null,
+      rootMargin: '0px',
+      threshold: 0.15
+    };
+
+    const handleIntersect = (entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('lp-visible');
+        }
+      });
+    };
+
+    const observer = new IntersectionObserver(handleIntersect, observerOptions);
+    const sections = document.querySelectorAll('.lp-section');
+    sections.forEach(sec => observer.observe(sec));
+
+    return () => {
+      sections.forEach(sec => observer.unobserve(sec));
+    };
+  }, []);
+
+  return null;
 }
