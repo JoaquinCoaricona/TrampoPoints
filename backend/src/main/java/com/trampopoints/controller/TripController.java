@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/trips")
@@ -39,6 +40,16 @@ public class TripController {
     public ResponseEntity<List<TripRequest>> getAllRequests() {
         List<TripRequest> requests = tripService.getAllRequests();
         return ResponseEntity.ok(requests);
+    }
+
+    /**
+     * 1c. Ejecutar algoritmo de agrupamiento y optimización de rutas
+     * POST /api/trips/process-grouping
+     */
+    @PostMapping("/process-grouping")
+    public ResponseEntity<Map<String, Object>> processGrouping() {
+        Map<String, Object> result = tripService.processGroupingAlgorithm();
+        return ResponseEntity.ok(result);
     }
 
     /**

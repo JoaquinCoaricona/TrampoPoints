@@ -8,7 +8,7 @@ import RouteOptimizer from './components/RouteOptimizer';
 import AuthModal from './components/AuthModal';
 import AdminPanel from './components/AdminPanel';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { createTripRequest, getTripMatches, getTripDetails } from './services/api';
+import { createTripRequest, getTripMatches, getTripDetails, getAllTripRequests, processGroupingAlgorithm } from './services/api';
 import {
   PlusCircle,
   ListOrdered,
@@ -161,7 +161,32 @@ function MainApp() {
     }
   };
 
-  // Controles de Administrador
+  const handleRunGroupingAlgorithm = async () => {
+    try {
+      const result = await processGroupingAlgorithm();
+      try {
+        const refreshedRequests = await getAllTripRequests();
+        if (refreshedRequests && refreshedRequests.length > 0) {
+          saveRequestsToStorage(refreshedRequests);
+        }
+      } catch (e) {
+        console.warn('No se pudieron refrescar solicitudes desde backend:', e);
+      }
+
+      return {
+        newTrips: result.trips || [],
+        summary: {
+          processedCount: result.processedCount || 0,
+          tripsCreated: result.tripsCreatedCount || 0,
+          message: result.message || 'Algoritmo ejecutado en el backend con éxito.'
+        }
+      };
+    } catch (err) {
+      console.error('Error al ejecutar algoritmo en el backend:', err);
+      throw err;
+    }
+  };
+
   const handleUpdateStatusByAdmin = (requestId, newStatus) => {
     const updated = allRequests.map(r => r.requestId === requestId ? { ...r, status: newStatus } : r);
     saveRequestsToStorage(updated);
@@ -255,6 +280,7 @@ function MainApp() {
         {isAdmin && activeTab === 'ADMIN' && (
           <AdminPanel
             allRequests={allRequests}
+            onRunAlgorithm={handleRunGroupingAlgorithm}
             onUpdateStatus={handleUpdateStatusByAdmin}
             onDeleteRequest={handleDeleteRequestByAdmin}
             onViewMatches={handleViewRequestMatches}

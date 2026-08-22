@@ -11,12 +11,24 @@ import {
   CheckCircle2,
   AlertCircle,
   ArrowRight,
-  Layers
+  Layers,
+  Zap,
+  Loader2,
+  Sparkles,
+  Bus
 } from 'lucide-react';
 
-export default function AdminPanel({ allRequests, onUpdateStatus, onDeleteRequest, onViewMatches }) {
+export default function AdminPanel({
+  allRequests,
+  onRunAlgorithm,
+  onUpdateStatus,
+  onDeleteRequest,
+  onViewMatches
+}) {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [lastAlgorithmResult, setLastAlgorithmResult] = useState(null);
 
   const filteredRequests = allRequests.filter(req => {
     const matchesSearch =
@@ -34,8 +46,22 @@ export default function AdminPanel({ allRequests, onUpdateStatus, onDeleteReques
   const searchingCount = allRequests.filter(r => r.status === 'SEARCHING').length;
   const matchedCount = allRequests.filter(r => r.status === 'MATCHED' || r.status === 'CONFIRMED').length;
 
+  const handleExecuteAlgorithm = async () => {
+    setIsProcessing(true);
+    setLastAlgorithmResult(null);
+
+    try {
+      const result = await onRunAlgorithm();
+      setLastAlgorithmResult(result);
+    } catch (err) {
+      console.error('Error al ejecutar algoritmo en backend:', err);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   return (
-    <div className="card glass-card admin-panel-container">
+    <div className="card glass-card admin-panel-container flex-column gap-24">
       {/* Header */}
       <div className="card-header flex-between align-center border-bottom-glass padding-bottom-16">
         <div>
@@ -46,7 +72,7 @@ export default function AdminPanel({ allRequests, onUpdateStatus, onDeleteReques
                 Panel de Control de Administrador
               </h2>
               <span className="text-muted text-xs">
-                Monitoreo y gestión de todas las solicitudes del sistema en tiempo real
+                Monitoreo y ejecución del algoritmo de agrupamiento por afinidad en tiempo real
               </span>
             </div>
           </div>
@@ -56,8 +82,78 @@ export default function AdminPanel({ allRequests, onUpdateStatus, onDeleteReques
         </span>
       </div>
 
+      {/* Algorithm Execution Banner Box */}
+      <div className="card glass-card algorithm-exec-box border-indigo padding-20">
+        <div className="flex-between align-center">
+          <div className="flex-center-left gap-12">
+            <div className="algo-icon-badge">
+              <Zap size={24} className="text-indigo" />
+            </div>
+            <div>
+              <h3 className="font-extrabold text-16 text-white flex-center gap-6">
+                Algoritmo de Agrupamiento y Optimización de Rutas
+              </h3>
+              <p className="text-muted text-13 margin-top-2">
+                Procesa las solicitudes en estado <strong className="text-amber">SEARCHING</strong>, calcula afinidades geográficas/temporales y genera los viajes en combi.
+              </p>
+            </div>
+          </div>
+
+          <div className="algo-action-container flex-column align-end gap-8 shrink-0">
+            <span className="badge badge-subtle font-bold text-xs flex-center gap-4">
+              <Sparkles size={13} className="text-amber" />
+              {searchingCount} Solicitudes Pendientes
+            </span>
+
+            <button
+              type="button"
+              className="btn-primary btn-algo-launch flex-center gap-8"
+              onClick={handleExecuteAlgorithm}
+              disabled={isProcessing || searchingCount === 0}
+            >
+              {isProcessing ? (
+                <>
+                  <Loader2 size={18} className="spinner" />
+                  Procesando Algoritmo...
+                </>
+              ) : (
+                <>
+                  <Zap size={18} />
+                  Ejecutar Algoritmo ({searchingCount})
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Result Summary Notification */}
+        {lastAlgorithmResult && (
+          <div className="banner banner-success margin-top-16 flex-column gap-6">
+            <div className="flex-between align-center">
+              <strong className="flex-center gap-6 text-14">
+                <CheckCircle2 size={18} /> ¡Algoritmo Ejecutado con Éxito!
+              </strong>
+              <button className="btn-text text-xs" onClick={() => setLastAlgorithmResult(null)}>Cerrar</button>
+            </div>
+            <p className="text-13">
+              {lastAlgorithmResult.summary.message}
+            </p>
+
+            {lastAlgorithmResult.newTrips.length > 0 && (
+              <div className="new-trips-summary-list flex-row gap-8 margin-top-8">
+                {lastAlgorithmResult.newTrips.map(trip => (
+                  <span key={trip.tripId} className="badge badge-emerald text-xs font-mono flex-center gap-4">
+                    <Bus size={12} /> Combi {trip.tripId} ({trip.stops.length / 2} Pasajeros Afines)
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
       {/* Stats Overview */}
-      <div className="stats-grid margin-top-20 margin-bottom-24">
+      <div className="stats-grid">
         <div className="stat-card bg-indigo">
           <div className="stat-icon bg-indigo">
             <Layers size={22} />
@@ -90,7 +186,7 @@ export default function AdminPanel({ allRequests, onUpdateStatus, onDeleteReques
       </div>
 
       {/* Filters Toolbar */}
-      <div className="filters-toolbar flex-between gap-16 margin-bottom-20">
+      <div className="filters-toolbar flex-between gap-16">
         <div className="search-input-wrapper flex-grow relative">
           <Search size={16} className="search-icon-inside text-muted" />
           <input

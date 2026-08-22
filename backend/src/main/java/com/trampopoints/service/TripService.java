@@ -15,13 +15,15 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Service
 public class TripService {
 
-    private final Map<String, TripRequest> requestsMap = new ConcurrentHashMap<>();
-    private final Map<String, Trip> tripsMap = new ConcurrentHashMap<>();
-    private final AtomicInteger requestCounter = new AtomicInteger(100);
-    private final AtomicInteger tripCounter = new AtomicInteger(456);
-
     private final MatchingService matchingService;
     private final RouteService routeService;
+
+    // Almacén en memoria de viajes y solicitudes
+    private final Map<String, Trip> tripsMap = new ConcurrentHashMap<>();
+    private final Map<String, TripRequest> requestsMap = new ConcurrentHashMap<>();
+    
+    private final AtomicInteger requestCounter = new AtomicInteger(100);
+    private final AtomicInteger tripCounter = new AtomicInteger(450);
 
     @Autowired
     public TripService(MatchingService matchingService, RouteService routeService) {
@@ -37,15 +39,14 @@ public class TripService {
         
         List<Stop> stops = new ArrayList<>();
         stops.add(new Stop("stop-1", "PICKUP", 1, -34.6037, -58.3816, "Obelisco"));
-        stops.add(new Stop("stop-2", "PICKUP", 2, -34.6001, -58.3900, "Parada 2"));
-        stops.add(new Stop("stop-3", "DROPOFF", 3, -34.5895, -58.3974, "Palermo"));
+        stops.add(new Stop("stop-2", "DROPOFF", 2, -34.5895, -58.3974, "Palermo"));
 
         String polyline = routeService.generatePolyline(obelisco, stops, palermo);
 
         Trip trip456 = new Trip(
                 "trip-456",
                 "CONFIRMED",
-                12,
+                1,
                 30,
                 1800,
                 35,
@@ -64,25 +65,35 @@ public class TripService {
         requestsMap.put(req123.getRequestId(), req123);
     }
 
-    public TripRequestResponseDto createTripRequest(TripRequestDto dto) {
-        String requestId = "req-" + requestCounter.incrementAndGet();
-        
+    public TripRequestResponseDto createTripRequest(TripRequestDto requestDto) {
+        String newRequestId = "req-" + requestCounter.incrementAndGet();
+
         Location origin = new Location(
-                dto.getOrigin().getLatitude(),
-                dto.getOrigin().getLongitude(),
-                dto.getOrigin().getAddress() != null ? dto.getOrigin().getAddress() : "Origen (" + dto.getOrigin().getLatitude() + ", " + dto.getOrigin().getLongitude() + ")"
+                requestDto.getOrigin().getLatitude(),
+                requestDto.getOrigin().getLongitude(),
+                requestDto.getOrigin().getAddress()
         );
-        
+
         Location destination = new Location(
-                dto.getDestination().getLatitude(),
-                dto.getDestination().getLongitude(),
-                dto.getDestination().getAddress() != null ? dto.getDestination().getAddress() : "Destino (" + dto.getDestination().getLatitude() + ", " + dto.getDestination().getLongitude() + ")"
+                requestDto.getDestination().getLatitude(),
+                requestDto.getDestination().getLongitude(),
+                requestDto.getDestination().getAddress()
         );
 
-        TripRequest req = new TripRequest(requestId, origin, destination, dto.getDepartureTime());
-        requestsMap.put(requestId, req);
+        TripRequest newRequest = new TripRequest(
+                newRequestId,
+                origin,
+                destination,
+                requestDto.getDepartureTime()
+        );
 
-        return new TripRequestResponseDto(requestId, "SEARCHING", "Buscando pasajeros compatibles");
+        requestsMap.put(newRequestId, newRequest);
+
+        return new TripRequestResponseDto(
+                newRequestId,
+                "SEARCHING",
+                "Solicitud creada con éxito. Buscando combis compatibles cercanas..."
+        );
     }
 
     public MatchResponseDto findMatches(String requestId) {
@@ -90,7 +101,6 @@ public class TripService {
         List<TripMatchDto> matches = new ArrayList<>();
 
         if (req != null) {
-            // Buscar entre los viajes existentes compatibles
             for (Trip trip : tripsMap.values()) {
                 if (matchingService.isCompatible(
                         req.getOrigin(), req.getDestination(), req.getDepartureTime(),
@@ -110,7 +120,7 @@ public class TripService {
 
             // Si no hubo coincidencia directa, generar una nueva propuesta de viaje compartida para la solicitud
             if (matches.isEmpty()) {
-                Trip newTrip = createDynamicSharedTrip(req);
+                Trip newTrip = createDynamicTripFromCluster(List.of(req));
                 tripsMap.put(newTrip.getTripId(), newTrip);
                 matches.add(new TripMatchDto(
                         newTrip.getTripId(),
@@ -177,25 +187,48 @@ public class TripService {
         );
     }
 
-    private Trip createDynamicSharedTrip(TripRequest req) {
+    private Trip createDynamicTripFromCluster(List<TripRequest> cluster) {
         String newTripId = "trip-" + tripCounter.incrementAndGet();
+        TripRequest seed = cluster.get(0);
         
-        // Calcular puntos de parada intermedios simulando pasajeros compatibles cercanos
-        double midLat = (req.getOrigin().getLatitude() + req.getDestination().getLatitude()) / 2.0;
-        double midLng = (req.getOrigin().getLongitude() + req.getDestination().getLongitude()) / 2.0;
-
         List<Stop> stops = new ArrayList<>();
-        stops.add(new Stop("stop-1", "PICKUP", 1, req.getOrigin().getLatitude(), req.getOrigin().getLongitude(), req.getOrigin().getAddress()));
-        stops.add(new Stop("stop-2", "PICKUP", 2, midLat, midLng, "Parada Intermedia de Grupo"));
-        stops.add(new Stop("stop-3", "DROPOFF", 3, req.getDestination().getLatitude(), req.getDestination().getLongitude(), req.getDestination().getAddress()));
+        int order = 1;
 
-        int dist = routeService.calculateDistanceMeters(req.getOrigin(), req.getDestination());
+        // 1. Agregar paradas de subida (PICKUP) reales para cada solicitud del grupo
+        for (int i = 0; i < cluster.size(); i++) {
+            TripRequest req = cluster.get(i);
+            stops.add(new Stop(
+                    "stop-" + newTripId + "-p" + (i + 1),
+                    "PICKUP",
+                    order++,
+                    req.getOrigin().getLatitude(),
+                    req.getOrigin().getLongitude(),
+                    req.getOrigin().getAddress()
+            ));
+        }
+
+        // 2. Agregar paradas de bajada (DROPOFF) reales para cada solicitud del grupo
+        for (int i = 0; i < cluster.size(); i++) {
+            TripRequest req = cluster.get(i);
+            stops.add(new Stop(
+                    "stop-" + newTripId + "-d" + (i + 1),
+                    "DROPOFF",
+                    order++,
+                    req.getDestination().getLatitude(),
+                    req.getDestination().getLongitude(),
+                    req.getDestination().getAddress()
+            ));
+        }
+
+        // Cantidad exacta de pasajeros asignados a esta combi
+        int passengerCount = cluster.size();
+
+        int dist = routeService.calculateDistanceMeters(seed.getOrigin(), seed.getDestination());
         int dur = routeService.calculateDurationSeconds(dist);
-        String polyline = routeService.generatePolyline(req.getOrigin(), stops, req.getDestination());
+        String polyline = routeService.generatePolyline(seed.getOrigin(), stops, seed.getDestination());
 
-        int passengerCount = 8 + (int)(Math.random() * 8); // 8-15 pasajeros
-        int estimatedPrice = Math.max(1200, (int)(dist * 0.25));
-        int savings = 30 + (int)(Math.random() * 15);
+        int estimatedPrice = Math.max(1200, (int)(dist * 0.22));
+        int savings = Math.min(45, 30 + (cluster.size() * 3));
 
         return new Trip(
                 newTripId,
@@ -204,9 +237,9 @@ public class TripService {
                 matchingService.getVehicleCapacity(),
                 estimatedPrice,
                 savings,
-                req.getDepartureTime(),
-                req.getOrigin(),
-                req.getDestination(),
+                seed.getDepartureTime(),
+                seed.getOrigin(),
+                seed.getDestination(),
                 dist,
                 dur,
                 polyline,
@@ -217,5 +250,49 @@ public class TripService {
     public List<TripRequest> getAllRequests() {
         return new ArrayList<>(requestsMap.values());
     }
-}
 
+    public Map<String, Object> processGroupingAlgorithm() {
+        List<TripRequest> searching = new ArrayList<>();
+        for (TripRequest r : requestsMap.values()) {
+            if ("SEARCHING".equals(r.getStatus())) {
+                searching.add(r);
+            }
+        }
+
+        List<Trip> createdTrips = new ArrayList<>();
+        List<TripRequest> unassigned = new ArrayList<>(searching);
+
+        while (!unassigned.isEmpty()) {
+            TripRequest seed = unassigned.remove(0);
+            List<TripRequest> cluster = new ArrayList<>();
+            cluster.add(seed);
+
+            for (int i = unassigned.size() - 1; i >= 0; i--) {
+                TripRequest candidate = unassigned.get(i);
+                if (matchingService.isCompatible(
+                        seed.getOrigin(), seed.getDestination(), seed.getDepartureTime(),
+                        candidate.getOrigin(), candidate.getDestination(), candidate.getDepartureTime(),
+                        cluster.size()
+                )) {
+                    cluster.add(candidate);
+                    unassigned.remove(i);
+                }
+            }
+
+            Trip newTrip = createDynamicTripFromCluster(cluster);
+            tripsMap.put(newTrip.getTripId(), newTrip);
+            createdTrips.add(newTrip);
+
+            for (TripRequest r : cluster) {
+                r.setStatus("CONFIRMED");
+            }
+        }
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("processedCount", searching.size());
+        result.put("tripsCreatedCount", createdTrips.size());
+        result.put("trips", createdTrips);
+        result.put("message", "Se agruparon " + searching.size() + " solicitudes afines en " + createdTrips.size() + " combis.");
+        return result;
+    }
+}
