@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Mail, Phone, Image, CheckCircle, Save, Loader2, Award, Shield, CheckCircle2 } from 'lucide-react';
+import { User, Mail, Phone, Image, CheckCircle, Save, Loader2, Award, Shield, CheckCircle2, Sparkles } from 'lucide-react';
 import { getDriverProfile, updateDriverProfile } from '../../services/driverService';
 
 export default function DriverProfile({ onUpdateSuccess }) {
@@ -52,154 +52,157 @@ export default function DriverProfile({ onUpdateSuccess }) {
 
   if (loading) {
     return (
-      <div className="card glass-card padding-32 text-center flex-center">
-        <Loader2 className="spinner" size={24} />
-        <span>Cargando perfil del chofer...</span>
+      <div className="driver-profile-skeleton flex-column gap-20">
+        <div className="skeleton-box shimmer-wave" style={{ height: '90px', borderRadius: '14px' }} />
+        <div className="skeleton-box shimmer-wave" style={{ height: '340px', borderRadius: '14px' }} />
       </div>
     );
   }
 
   return (
-    <div className="driver-profile-view">
-      <div className="card glass-card">
-        <div className="card-header flex-between margin-bottom-24">
-          <div>
-            <h2 className="title-with-icon">
-              <User className="accent-icon" size={22} /> Perfil del Chofer
-            </h2>
-            <p className="card-subtitle">
-              Consultá y administrá tu información personal de contacto y habilitación profesional.
-            </p>
-          </div>
-          <div className="driver-badge-status">
-            <Shield size={16} className="text-emerald" />
-            <span>Cuenta Verificada</span>
-          </div>
+    <div className="driver-subpage-container">
+      {/* Header section (clean, no heavy card) */}
+      <div className="subpage-header flex-between align-center flex-wrap gap-12 margin-bottom-24">
+        <div>
+          <span className="subpage-eyebrow text-electric-violet flex-center gap-6">
+            <User size={14} /> Configuración de Cuenta
+          </span>
+          <h1 className="subpage-title">Mi Perfil de Chofer</h1>
+          <p className="subpage-subtitle">
+            Administrá tu información de contacto y habilitación profesional en TrampoPoints.
+          </p>
         </div>
 
-        {/* Success / Error Alerts */}
-        {savedSuccess && (
-          <div className="banner banner-auth-success margin-bottom-20 flex-between">
-            <span className="flex-center gap-8">
-              <CheckCircle2 size={18} className="text-emerald" />
-              ¡Datos del perfil actualizados correctamente en el servidor!
-            </span>
-          </div>
-        )}
-
-        {error && (
-          <div className="banner banner-error margin-bottom-20">
-            <span>{error}</span>
-          </div>
-        )}
-
-        {/* Stats Summary Bar */}
-        <div className="driver-profile-stats-bar margin-bottom-24">
-          <div className="stat-pill">
-            <span className="pill-label">Calificación</span>
-            <span className="pill-val">⭐ {profile?.ratingAverage?.toFixed(1) || '4.8'} / 5</span>
-          </div>
-          <div className="stat-pill">
-            <span className="pill-label">Opiniones</span>
-            <span className="pill-val">💬 {profile?.totalRatings || 103}</span>
-          </div>
-          <div className="stat-pill">
-            <span className="pill-label">Viajes Realizados</span>
-            <span className="pill-val">🚐 {profile?.tripsCompleted || 42}</span>
-          </div>
-          <div className="stat-pill">
-            <span className="pill-label">Estado</span>
-            <span className="pill-val text-emerald">● Activo</span>
-          </div>
+        <div className="badge-verified-clean">
+          <Shield size={15} className="text-neon-green" />
+          <span>Cuenta Verificada</span>
         </div>
-
-        {/* Profile Edit Form */}
-        <form onSubmit={handleSubmit} className="driver-profile-form">
-          <div className="form-grid">
-            <div className="form-group">
-              <label className="form-label">
-                <User size={15} className="text-indigo" /> Nombre
-              </label>
-              <input
-                type="text"
-                className="form-input"
-                value={profile?.name || ''}
-                onChange={(e) => setProfile({ ...profile, name: e.target.value })}
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">
-                <User size={15} className="text-indigo" /> Apellido
-              </label>
-              <input
-                type="text"
-                className="form-input"
-                value={profile?.lastName || ''}
-                onChange={(e) => setProfile({ ...profile, lastName: e.target.value })}
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">
-                <Mail size={15} className="text-emerald" /> Correo Electrónico
-              </label>
-              <input
-                type="email"
-                className="form-input"
-                value={profile?.email || ''}
-                onChange={(e) => setProfile({ ...profile, email: e.target.value })}
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">
-                <Phone size={15} className="text-amber" /> Teléfono de Contacto
-              </label>
-              <input
-                type="tel"
-                className="form-input"
-                value={profile?.phone || ''}
-                onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
-                required
-              />
-            </div>
-
-            <div className="form-group full-width">
-              <label className="form-label">
-                <Image size={15} className="text-rose" /> URL de Foto de Perfil (Avatar)
-              </label>
-              <input
-                type="url"
-                className="form-input"
-                value={profile?.avatarUrl || ''}
-                onChange={(e) => setProfile({ ...profile, avatarUrl: e.target.value })}
-                placeholder="https://..."
-              />
-            </div>
-          </div>
-
-          <div className="margin-top-16 flex-between">
-            <span className="text-muted text-xs">
-              Los cambios se sincronizan en tiempo real con el backend de TrampoPoints.
-            </span>
-            <button type="submit" className="btn-primary btn-auto flex-center gap-8" disabled={saving}>
-              {saving ? (
-                <>
-                  <Loader2 className="spinner" size={16} /> Guardando...
-                </>
-              ) : (
-                <>
-                  <Save size={16} /> Guardar Cambios del Perfil
-                </>
-              )}
-            </button>
-          </div>
-        </form>
       </div>
+
+      {/* Success / Error Alerts */}
+      {savedSuccess && (
+        <div className="alert-banner-green margin-bottom-20 flex-between">
+          <span className="flex-center gap-8">
+            <CheckCircle2 size={18} className="text-neon-green" />
+            ¡Datos del perfil actualizados correctamente en el servidor!
+          </span>
+        </div>
+      )}
+
+      {error && (
+        <div className="alert-banner-red margin-bottom-20">
+          <span>{error}</span>
+        </div>
+      )}
+
+      {/* Profile Metrics Bar (Minimalist Strip) */}
+      <div className="profile-metrics-strip margin-bottom-28">
+        <div className="metric-strip-item">
+          <span className="metric-strip-label">Calificación</span>
+          <strong className="metric-strip-value text-electric-violet">
+            ⭐ {profile?.ratingAverage?.toFixed(1) || '4.8'} <span className="text-muted text-xs">/ 5</span>
+          </strong>
+        </div>
+        <div className="metric-strip-item">
+          <span className="metric-strip-label">Opiniones</span>
+          <strong className="metric-strip-value">{profile?.totalRatings || 103}</strong>
+        </div>
+        <div className="metric-strip-item">
+          <span className="metric-strip-label">Viajes Realizados</span>
+          <strong className="metric-strip-value">{profile?.tripsCompleted || 42}</strong>
+        </div>
+        <div className="metric-strip-item">
+          <span className="metric-strip-label">Estado</span>
+          <strong className="metric-strip-value text-neon-green">● Activo</strong>
+        </div>
+      </div>
+
+      {/* Form Area */}
+      <form onSubmit={handleSubmit} className="clean-profile-form">
+        <div className="form-grid-2cols">
+          <div className="form-group">
+            <label className="form-label">
+              <User size={14} className="text-electric-violet" /> Nombre
+            </label>
+            <input
+              type="text"
+              className="form-input"
+              value={profile?.name || ''}
+              onChange={(e) => setProfile({ ...profile, name: e.target.value })}
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">
+              <User size={14} className="text-electric-violet" /> Apellido
+            </label>
+            <input
+              type="text"
+              className="form-input"
+              value={profile?.lastName || ''}
+              onChange={(e) => setProfile({ ...profile, lastName: e.target.value })}
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">
+              <Mail size={14} className="text-neon-green" /> Correo Electrónico
+            </label>
+            <input
+              type="email"
+              className="form-input"
+              value={profile?.email || ''}
+              onChange={(e) => setProfile({ ...profile, email: e.target.value })}
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">
+              <Phone size={14} className="text-electric-violet" /> Teléfono de Contacto
+            </label>
+            <input
+              type="tel"
+              className="form-input"
+              value={profile?.phone || ''}
+              onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
+              required
+            />
+          </div>
+
+          <div className="form-group full-width">
+            <label className="form-label">
+              <Image size={14} className="text-neon-green" /> URL de Foto de Perfil (Avatar)
+            </label>
+            <input
+              type="url"
+              className="form-input"
+              value={profile?.avatarUrl || ''}
+              onChange={(e) => setProfile({ ...profile, avatarUrl: e.target.value })}
+              placeholder="https://..."
+            />
+          </div>
+        </div>
+
+        <div className="form-footer-actions flex-between align-center margin-top-24">
+          <span className="text-muted text-xs">
+            Los cambios se sincronizan en tiempo real con el backend de TrampoPoints.
+          </span>
+          <button type="submit" className="btn-primary-neon flex-center gap-8" disabled={saving}>
+            {saving ? (
+              <>
+                <Loader2 className="spinner" size={16} /> Guardando...
+              </>
+            ) : (
+              <>
+                <Save size={16} /> Guardar Cambios del Perfil
+              </>
+            )}
+          </button>
+        </div>
+      </form>
     </div>
   );
 }

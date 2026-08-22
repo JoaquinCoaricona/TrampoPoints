@@ -24,62 +24,58 @@ export default function DriverRecommendations() {
 
   if (loading) {
     return (
-      <div className="card glass-card padding-32 text-center flex-center">
-        <Loader2 className="spinner" size={24} />
-        <span>Cargando recomendaciones...</span>
+      <div className="driver-recommendations-skeleton flex-column gap-20">
+        <div className="skeleton-box shimmer-wave" style={{ height: '90px', borderRadius: '14px' }} />
+        <div className="skeleton-box shimmer-wave" style={{ height: '280px', borderRadius: '14px' }} />
       </div>
     );
   }
 
   return (
-    <div className="driver-recommendations-view">
-      <div className="card glass-card">
-        <div className="card-header flex-between margin-bottom-24">
-          <div>
-            <h2 className="title-with-icon">
-              <Sparkles className="accent-icon text-amber" size={22} /> Recomendaciones de Pasajeros
-            </h2>
-            <p className="card-subtitle">
-              Muro de testimonios y valoraciones destacadas recibidas de pasajeros habituales.
-            </p>
-          </div>
+    <div className="driver-subpage-container">
+      {/* Header section (Clean, no heavy box) */}
+      <div className="subpage-header flex-between align-center flex-wrap gap-12 margin-bottom-24">
+        <div>
+          <span className="subpage-eyebrow text-electric-violet flex-center gap-6">
+            <Sparkles size={14} /> Muro de Testimonios
+          </span>
+          <h1 className="subpage-title">Recomendaciones de Pasajeros</h1>
+          <p className="subpage-subtitle">
+            Citas y comentarios destacados otorgados por los viajeros de tu comunidad.
+          </p>
         </div>
+      </div>
 
-        <div className="recommendations-grid">
-          {recommendations.map((rec) => (
-            <div key={rec.id} className="recommendation-card card glass-card">
-              <div className="rec-quote-icon">
-                <Quote size={28} className="text-indigo" />
-              </div>
-
-              <div className="rec-stars text-amber margin-bottom-8">
+      {/* Clean Quotes List (No heavy card boxes) */}
+      <div className="recommendations-clean-list flex-column gap-20">
+        {recommendations.map((rec) => (
+          <div key={rec.id} className="rec-quote-item">
+            <div className="rec-quote-header flex-between align-center margin-bottom-8">
+              <div className="rec-stars text-electric-violet">
                 {'★'.repeat(rec.score)}{'☆'.repeat(5 - rec.score)}
               </div>
+              {rec.tripRoute && (
+                <span className="rec-route-tag text-xs text-muted flex-center gap-4">
+                  <MapPin size={12} className="text-neon-green" /> {rec.tripRoute}
+                </span>
+              )}
+            </div>
 
-              <blockquote className="rec-quote-text">
-                "{rec.quote}"
-              </blockquote>
+            <blockquote className="rec-quote-body">
+              "{rec.quote}"
+            </blockquote>
 
-              <div className="rec-footer margin-top-16 flex-between">
-                <div className="rec-author-info flex-center gap-8">
-                  <div className="rec-avatar-circle">
-                    <UserCheck size={16} />
-                  </div>
-                  <div>
-                    <strong>{rec.passengerName}</strong>
-                    <span className="block text-xs text-muted">Pasajero Frecuente</span>
-                  </div>
-                </div>
-
-                {rec.tripRoute && (
-                  <span className="badge badge-subtle flex-center gap-4 text-xs">
-                    <MapPin size={12} /> {rec.tripRoute}
-                  </span>
-                )}
+            <div className="rec-quote-author-row margin-top-12 flex-center gap-8">
+              <div className="rec-avatar-small">
+                {rec.passengerName[0]}
+              </div>
+              <div>
+                <strong className="rec-passenger-name">{rec.passengerName}</strong>
+                <span className="text-xs text-muted block">Pasajero Frecuente</span>
               </div>
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
       </div>
     </div>
   );

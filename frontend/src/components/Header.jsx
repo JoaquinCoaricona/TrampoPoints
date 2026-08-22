@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Bus, LogIn, LogOut, ShieldCheck, User, Sparkles } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import LogoutConfirmModal from './LogoutConfirmModal';
+import { resolveUserRole } from '../services/authService';
 
 export default function Header() {
-  const { user, isAuthenticated, logout, openAuthModal } = useAuth();
+  const { user, isAuthenticated, logout } = useAuth();
+  const navigate = useNavigate();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const getUserInitials = (name) => {
@@ -17,26 +20,30 @@ export default function Header() {
       .toUpperCase();
   };
 
-  const isAdmin = user?.role === 'ADMIN';
-  const isDriver = user?.role === 'DRIVER' || user?.role === 'CHOFER';
+  const userRole = resolveUserRole(user?.role, user?.email);
+  const isAdmin = userRole === 'ADMIN';
+  const isDriver = userRole === 'DRIVER';
 
   const handleConfirmLogout = async () => {
     await logout();
+    navigate('/', { replace: true });
   };
 
   return (
     <>
       <header className="app-header">
         <div className="header-container">
-          <div className="brand">
+          <Link to={isDriver ? '/driver' : '/'} className="brand-link flex-center gap-12">
             <div className="logo-badge">
-              <Bus className="icon-bus" size={26} />
+              <Bus className="icon-bus" size={24} />
             </div>
             <div className="brand-text">
-              <h1>TrampoPoints</h1>
+              <h1>
+                Trampo<span className="text-neon-green">Points</span>
+              </h1>
               <span className="subtitle">Plataforma de Viajes Compartidos</span>
             </div>
-          </div>
+          </Link>
 
           <div className="header-actions flex-center gap-12">
             <div className="header-status hide-mobile">
@@ -97,7 +104,7 @@ export default function Header() {
                 <button
                   type="button"
                   className="btn-login-header"
-                  onClick={() => openAuthModal('LOGIN')}
+                  onClick={() => navigate('/login')}
                 >
                   <LogIn size={16} />
                   <span>Ingresar</span>

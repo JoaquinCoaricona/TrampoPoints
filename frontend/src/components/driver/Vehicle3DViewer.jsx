@@ -107,7 +107,7 @@ export default function Vehicle3DViewer({ vehicle, onVehicleChange }) {
 
     // 1. Scene
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0a0f1d);
+    scene.background = new THREE.Color(0x080C10);
     sceneRef.current = scene;
 
     // 2. Camera
@@ -115,11 +115,11 @@ export default function Vehicle3DViewer({ vehicle, onVehicleChange }) {
     cameraRef.current = camera;
 
     // 3. Renderer with ACES ToneMapping & High DPI
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: 'high-performance' });
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.1;
+    renderer.toneMappingExposure = 1.15;
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
@@ -128,12 +128,12 @@ export default function Vehicle3DViewer({ vehicle, onVehicleChange }) {
     rendererRef.current = renderer;
 
     // 4. Studio Lighting Rig
-    // A. Soft Ambient Hemisphere Light (Sky & Ground)
-    const hemiLight = new THREE.HemisphereLight(0x93c5fd, 0x1e293b, 0.7);
+    // A. Soft Ambient Hemisphere Light (Electric violet sky & dark carbon ground)
+    const hemiLight = new THREE.HemisphereLight(0xa78bfa, 0x080c10, 0.75);
     scene.add(hemiLight);
 
     // B. Key Studio Directional Light (Soft top-front highlight)
-    const keyLight = new THREE.DirectionalLight(0xffffff, 1.6);
+    const keyLight = new THREE.DirectionalLight(0xffffff, 1.7);
     keyLight.position.set(6, 10, 8);
     keyLight.castShadow = true;
     keyLight.shadow.mapSize.width = 1024;
@@ -141,8 +141,8 @@ export default function Vehicle3DViewer({ vehicle, onVehicleChange }) {
     keyLight.shadow.bias = -0.0001;
     scene.add(keyLight);
 
-    // C. Fill Studio Light (Side/Back warmth)
-    const fillLight = new THREE.DirectionalLight(0x818cf8, 0.8);
+    // C. Fill Studio Light (Electric Violet / Neon rim accent)
+    const fillLight = new THREE.DirectionalLight(0x7c4dff, 0.7);
     fillLight.position.set(-8, 6, -6);
     scene.add(fillLight);
 
@@ -155,12 +155,13 @@ export default function Vehicle3DViewer({ vehicle, onVehicleChange }) {
     headlightsSpotRef.current = spotLight;
 
     // 5. Studio Floor Grid & Contact Shadow Plane
-    const floorGeom = new THREE.PlaneGeometry(35, 35);
+    const floorGeom = new THREE.PlaneGeometry(40, 40);
     const floorMat = new THREE.MeshStandardMaterial({
-      color: 0x090d16,
+      color: 0x080C10,
       roughness: 0.85,
-      metalness: 0.2
+      metalness: 0.15
     });
+
     const floor = new THREE.Mesh(floorGeom, floorMat);
     floor.rotation.x = -Math.PI / 2;
     floor.receiveShadow = true;

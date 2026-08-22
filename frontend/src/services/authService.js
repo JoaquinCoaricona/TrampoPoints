@@ -8,8 +8,19 @@ const USER_STORAGE_KEY = 'trampopoints_auth_user';
  * Soporta roles: USER (Pasajero), DRIVER (Chofer) y ADMIN (Administrador).
  */
 
+export function resolveUserRole(rawRole, email) {
+  const r = (rawRole || '').toUpperCase().trim();
+  if (r === 'DRIVER' || r === 'CHOFER') return 'DRIVER';
+  if (r === 'ADMIN') return 'ADMIN';
+  
+  const lowerEmail = (email || '').toLowerCase().trim();
+  if (lowerEmail.includes('chofer') || lowerEmail.includes('driver')) return 'DRIVER';
+  if (lowerEmail.includes('admin')) return 'ADMIN';
+  return 'USER';
+}
+
 // 1. Iniciar Sesión (POST /api/auth/login)
-export async function loginUser(email, password) {
+export async function loginUser(email, password, desiredRole = null) {
   const lowerEmail = (email || '').toLowerCase().trim();
 
   try {
@@ -21,6 +32,9 @@ export async function loginUser(email, password) {
 
     if (response.ok) {
       const data = await response.json();
+      if (data.user) {
+        data.user.role = resolveUserRole(desiredRole || data.user.role, data.user.email);
+      }
       if (data.token) {
         localStorage.setItem(AUTH_STORAGE_KEY, data.token);
         localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(data.user));
@@ -32,36 +46,28 @@ export async function loginUser(email, password) {
   }
 
   // Fallback seguro de autenticación local / demo para Chofer, Pasajero y Administrador
+  const resolvedRole = resolveUserRole(desiredRole, email);
   let mockUser = null;
-  const isAdmin = lowerEmail === 'admin@trampopoints.com' || lowerEmail.includes('admin');
-  const isDriver = lowerEmail === 'juan.chofer@trampopoints.com' || lowerEmail.includes('chofer') || lowerEmail.includes('driver');
 
-  if (isAdmin) {
+  if (resolvedRole === 'ADMIN') {
     mockUser = {
       id: 'usr-admin-01',
       name: 'Administrador General',
       email: email || 'admin@trampopoints.com',
       role: 'ADMIN'
     };
-  } else if (isDriver) {
+  } else if (resolvedRole === 'DRIVER') {
     mockUser = {
       id: 'usr-drv-101',
-      name: 'Juan Pérez (Chofer)',
+      name: email === 'juan.chofer@trampopoints.com' ? 'Juan Pérez (Chofer)' : (email.split('@')[0].toUpperCase() + ' (Chofer)'),
       email: email || 'juan.chofer@trampopoints.com',
       role: 'DRIVER'
     };
-  } else if (lowerEmail === 'juan@email.com') {
-    mockUser = {
-      id: 'usr-101',
-      name: 'Juan Pérez (Pasajero)',
-      email: 'juan@email.com',
-      role: 'USER'
-    };
   } else {
     mockUser = {
-      id: 'usr-' + Math.floor(Math.random() * 900 + 100),
-      name: email.split('@')[0].toUpperCase(),
-      email: email,
+      id: 'usr-101',
+      name: email === 'juan@email.com' ? 'Juan Pérez (Pasajero)' : email.split('@')[0].toUpperCase(),
+      email: email || 'juan@email.com',
       role: 'USER'
     };
   }
@@ -74,17 +80,20 @@ export async function loginUser(email, password) {
 
 // 2. Registrar Usuario (POST /api/auth/register)
 export async function registerUser(name, email, password, role = 'USER') {
-  const lowerEmail = (email || '').toLowerCase().trim();
+  const resolvedRole = resolveUserRole(role, email);
 
   try {
     const response = await fetch(`${API_BASE_URL}/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, password, role }),
+      body: JSON.stringify({ name, email, password, role: resolvedRole }),
     });
 
     if (response.ok) {
       const data = await response.json();
+      if (data.user) {
+        data.user.role = resolveUserRole(data.user.role || resolvedRole, data.user.email);
+      }
       if (data.token) {
         localStorage.setItem(AUTH_STORAGE_KEY, data.token);
         localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(data.user));
@@ -94,10 +103,6 @@ export async function registerUser(name, email, password, role = 'USER') {
   } catch (error) {
     console.warn('Endpoint /api/auth/register en backend no disponible, registrando en modo local:', error);
   }
-
-  const resolvedRole = role.toUpperCase().trim() === 'DRIVER' || role.toUpperCase().trim() === 'CHOFER'
-    ? 'DRIVER'
-    : (lowerEmail.includes('admin') || role === 'ADMIN' ? 'ADMIN' : 'USER');
 
   const mockUser = {
     id: 'usr-' + Math.floor(Math.random() * 900 + 100),
@@ -128,6 +133,7 @@ export async function getCurrentUser(token) {
 
     if (response.ok) {
       const user = await response.json();
+      user.role = resolveUserRole(user.role, user.email);
       localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
       return user;
     }
@@ -136,7 +142,16 @@ export async function getCurrentUser(token) {
   }
 
   const stored = localStorage.getItem(USER_STORAGE_KEY);
-  return stored ? JSON.parse(stored) : null;
+  if (stored) {
+    try {
+      const parsed = JSON.parse(stored);
+      parsed.role = resolveUserRole(parsed.role, parsed.email);
+      return parsed;
+    } catch {
+      return null;
+    }
+  }
+  return null;
 }
 
 // 4. Cerrar Sesión (POST /api/auth/logout)
@@ -168,6 +183,9 @@ export function getStoredAuth() {
   if (userJson) {
     try {
       user = JSON.parse(userJson);
+      if (user) {
+        user.role = resolveUserRole(user.role, user.email);
+      }
     } catch {
       user = null;
     }
