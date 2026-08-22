@@ -62,8 +62,8 @@ const SEEDED_DEMO_REQUESTS = [
 function MainApp() {
   const { user, isAuthenticated, openAuthModal } = useAuth();
   const isAdmin = user?.role === 'ADMIN';
+  const isDriver = user?.role === 'DRIVER' || user?.role === 'CHOFER';
 
-  const [isDriverMode, setIsDriverMode] = useState(false);
   const [activeTab, setActiveTab] = useState('CREATE'); // 'ADMIN' | 'CREATE' | 'MY_REQUESTS' | 'OPTIMIZER'
   const [viewState, setViewState] = useState('FORM'); // 'FORM' | 'CONFIRMATION' | 'MATCHES' | 'DETAILS'
   
@@ -73,6 +73,7 @@ function MainApp() {
   const [currentRequestId, setCurrentRequestId] = useState(null);
   const [matches, setMatches] = useState([]);
   const [selectedTrip, setSelectedTrip] = useState(null);
+
 
   // Cargar solicitudes desde LocalStorage al iniciar
   useEffect(() => {
@@ -214,15 +215,12 @@ function MainApp() {
 
   return (
     <div className="app-layout">
-      <Header
-        onToggleDriverMode={() => setIsDriverMode(!isDriverMode)}
-        isDriverModeActive={isDriverMode}
-      />
+      <Header />
       <AuthModal />
 
       <main className="main-content container">
-        {isDriverMode ? (
-          <DriverModule onExit={() => setIsDriverMode(false)} />
+        {isDriver ? (
+          <DriverModule />
         ) : (
           <>
             {/* Navigation Tabs */}
@@ -235,6 +233,7 @@ function MainApp() {
                   <ShieldCheck size={16} /> Panel Administrador ({allRequests.length})
                 </button>
               )}
+
 
               <button
                 className={`tab-btn ${activeTab === 'CREATE' ? 'active' : ''}`}

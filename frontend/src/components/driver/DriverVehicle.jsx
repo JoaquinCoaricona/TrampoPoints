@@ -89,12 +89,13 @@ export default function DriverVehicle({ onUpdateSuccess }) {
 
   if (loading) {
     return (
-      <div className="card glass-card padding-32 text-center flex-center">
-        <Loader2 className="spinner" size={24} />
-        <span>Cargando datos del vehículo...</span>
+      <div className="driver-vehicle-skeleton flex-column gap-20">
+        <div className="skeleton-box shimmer-wave" style={{ height: '380px', borderRadius: '16px' }} />
+        <div className="skeleton-box shimmer-wave" style={{ height: '300px', borderRadius: '16px' }} />
       </div>
     );
   }
+
 
   return (
     <div className="driver-vehicle-view">

@@ -53,10 +53,10 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const register = async (name, email, password) => {
+  const register = async (name, email, password, role = 'USER') => {
     setError(null);
     try {
-      const result = await registerUser(name, email, password);
+      const result = await registerUser(name, email, password, role);
       setToken(result.token);
       setUser(result.user);
       setIsAuthModalOpen(false);
@@ -66,6 +66,7 @@ export function AuthProvider({ children }) {
       throw err;
     }
   };
+
 
   const logout = async () => {
     try {

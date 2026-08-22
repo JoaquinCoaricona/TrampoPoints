@@ -13,7 +13,8 @@ import {
   Sparkles,
   Loader2,
   Bus,
-  ShieldCheck
+  ShieldCheck,
+  UserCheck
 } from 'lucide-react';
 
 export default function AuthModal() {
@@ -31,6 +32,7 @@ export default function AuthModal() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [role, setRole] = useState('USER'); // 'USER' | 'DRIVER'
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -62,13 +64,14 @@ export default function AuthModal() {
       if (isLogin) {
         await login(email, password);
       } else {
-        await register(name, email, password);
+        await register(name, email, password, role);
       }
       setName('');
       setEmail('');
       setPassword('');
+      setRole('USER');
     } catch {
-      // El error ya queda establecido en el context
+      // El error queda establecido en el context
     } finally {
       setSubmitting(false);
     }
@@ -78,6 +81,13 @@ export default function AuthModal() {
     setError(null);
     setAuthModalMode('LOGIN');
     setEmail('juan@email.com');
+    setPassword('password123');
+  };
+
+  const handleUseDemoDriver = () => {
+    setError(null);
+    setAuthModalMode('LOGIN');
+    setEmail('juan.chofer@trampopoints.com');
     setPassword('password123');
   };
 
@@ -113,8 +123,8 @@ export default function AuthModal() {
           </h2>
           <p className="auth-subtitle">
             {isLogin
-              ? 'Iniciá sesión para reservar combis y compartir viajes con tu grupo'
-              : 'Registrate para unirte a viajes compartidos en minibuses'}
+              ? 'Iniciá sesión para acceder a tu módulo correspondiente (Pasajero, Chofer o Administrador)'
+              : 'Registrate para viajar o para registrarte como chofer de combi'}
           </p>
         </div>
 
@@ -154,8 +164,21 @@ export default function AuthModal() {
                 <Sparkles size={15} className="demo-icon text-indigo" />
                 <span>Demo Pasajero: <strong>juan@email.com</strong></span>
               </span>
-              <span className="badge badge-subtle text-xs">Rol: USER</span>
+              <span className="badge badge-subtle text-xs">Rol: PASAJERO</span>
             </button>
+
+            <button
+              type="button"
+              className="btn-demo-quick flex-between align-center border-indigo"
+              onClick={handleUseDemoDriver}
+            >
+              <span className="flex-center gap-6">
+                <Bus size={15} className="text-indigo" />
+                <span>Demo Chofer: <strong>juan.chofer@trampopoints.com</strong></span>
+              </span>
+              <span className="badge badge-indigo text-xs font-bold">Rol: CHOFER</span>
+            </button>
+
             <button
               type="button"
               className="btn-demo-quick flex-between align-center border-amber"
@@ -180,6 +203,40 @@ export default function AuthModal() {
 
         {/* Auth Form */}
         <form onSubmit={handleSubmit} className="auth-form">
+          {/* Role selector in registration mode */}
+          {!isLogin && (
+            <div className="form-group margin-bottom-16">
+              <label className="form-label">
+                <Sparkles size={15} className="text-indigo" /> Tipo de Cuenta (Rol)
+              </label>
+              <div className="role-selection-grid">
+                <button
+                  type="button"
+                  className={`role-option-card ${role === 'USER' ? 'selected' : ''}`}
+                  onClick={() => setRole('USER')}
+                >
+                  <div className="flex-center gap-6">
+                    <UserCheck size={18} className={role === 'USER' ? 'text-indigo' : 'text-muted'} />
+                    <strong>Pasajero</strong>
+                  </div>
+                  <span className="role-card-desc">Compartir viajes y reservar combis</span>
+                </button>
+
+                <button
+                  type="button"
+                  className={`role-option-card ${role === 'DRIVER' ? 'selected' : ''}`}
+                  onClick={() => setRole('DRIVER')}
+                >
+                  <div className="flex-center gap-6">
+                    <Bus size={18} className={role === 'DRIVER' ? 'text-indigo' : 'text-muted'} />
+                    <strong>Chofer</strong>
+                  </div>
+                  <span className="role-card-desc">Gestionar mi vehículo y realizar viajes</span>
+                </button>
+              </div>
+            </div>
+          )}
+
           {!isLogin && (
             <div className="form-group margin-bottom-16">
               <label className="form-label">
@@ -188,7 +245,7 @@ export default function AuthModal() {
               <input
                 type="text"
                 className="form-input"
-                placeholder="Ej. Juan Pérez"
+                placeholder={role === 'DRIVER' ? 'Ej. Juan Pérez (Chofer)' : 'Ej. Juan Pérez'}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required={!isLogin}
@@ -250,7 +307,9 @@ export default function AuthModal() {
             ) : (
               <span className="flex-center">
                 {isLogin ? <LogIn size={18} /> : <UserPlus size={18} />}
-                {isLogin ? 'Ingresar a TrampoPoints' : 'Crear Mi Cuenta'}
+                {isLogin
+                  ? 'Ingresar a TrampoPoints'
+                  : (role === 'DRIVER' ? 'Crear Cuenta de Chofer' : 'Crear Cuenta de Pasajero')}
               </span>
             )}
           </button>

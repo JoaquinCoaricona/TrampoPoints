@@ -43,18 +43,21 @@ export default function DriverModule({ onExit }) {
       {/* Top Banner / Breadcrumb */}
       <div className="driver-module-header flex-between margin-bottom-20">
         <div className="driver-module-title-area flex-center gap-12">
-          <button
-            className="btn-secondary btn-sm flex-center gap-6"
-            onClick={onExit}
-            title="Volver a la vista principal"
-          >
-            <ArrowLeft size={16} /> Volver a TrampoPoints
-          </button>
+          {onExit && (
+            <button
+              className="btn-secondary btn-sm flex-center gap-6"
+              onClick={onExit}
+              title="Volver a la vista principal"
+            >
+              <ArrowLeft size={16} /> Volver a TrampoPoints
+            </button>
+          )}
           <div className="driver-badge-indicator">
             <Bus size={18} className="text-indigo" />
-            <span>Panel de Gestión del Chofer</span>
+            <span>Panel Oficial del Chofer (Combis y Minibuses)</span>
           </div>
         </div>
+
 
         <div className="driver-status-indicator hide-mobile">
           <span className="dot pulse"></span>

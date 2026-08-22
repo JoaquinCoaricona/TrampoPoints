@@ -28,25 +28,43 @@ public class AuthService {
     @Autowired
     public AuthService(PasswordSecurityService securityService) {
         this.securityService = securityService;
-        initDefaultUser();
+        initDefaultUsers();
     }
 
     /**
-     * Pre-siembra de usuario demo para pruebas inmediatas.
+     * Pre-siembra de usuarios demo: Pasajero, Administrador y Chofer.
      */
-    private void initDefaultUser() {
+    private void initDefaultUsers() {
+        // 1. Demo Pasajero
         String defaultUserId = "usr-101";
         String email = "juan@email.com";
         String salt = securityService.generateSalt();
         String hash = securityService.hashPassword("password123", salt);
-
-        User defaultUser = new User(defaultUserId, "Juan Pérez", email, hash, salt);
+        User defaultUser = new User(defaultUserId, "Juan Pérez (Pasajero)", email, hash, salt, "USER");
         usersById.put(defaultUserId, defaultUser);
         emailToUserId.put(email.toLowerCase().trim(), defaultUserId);
+
+        // 2. Demo Administrador
+        String adminId = "usr-admin-01";
+        String adminEmail = "admin@trampopoints.com";
+        String adminSalt = securityService.generateSalt();
+        String adminHash = securityService.hashPassword("admin123", adminSalt);
+        User adminUser = new User(adminId, "Administrador General", adminEmail, adminHash, adminSalt, "ADMIN");
+        usersById.put(adminId, adminUser);
+        emailToUserId.put(adminEmail.toLowerCase().trim(), adminId);
+
+        // 3. Demo Chofer
+        String driverUserId = "usr-drv-101";
+        String driverEmail = "juan.chofer@trampopoints.com";
+        String driverSalt = securityService.generateSalt();
+        String driverHash = securityService.hashPassword("password123", driverSalt);
+        User driverUser = new User(driverUserId, "Juan Pérez (Chofer)", driverEmail, driverHash, driverSalt, "DRIVER");
+        usersById.put(driverUserId, driverUser);
+        emailToUserId.put(driverEmail.toLowerCase().trim(), driverUserId);
     }
 
     /**
-     * Registro de un nuevo usuario con validaciones de email, contraseña y unicidad.
+     * Registro de un nuevo usuario con asignación de rol (USER, DRIVER, ADMIN).
      */
     public AuthResponseDto register(RegisterRequestDto request) {
         if (request.getName() == null || request.getName().trim().isEmpty()) {
@@ -70,14 +88,25 @@ public class AuthService {
         String salt = securityService.generateSalt();
         String hash = securityService.hashPassword(request.getPassword(), salt);
 
-        User newUser = new User(userId, request.getName().trim(), normalizedEmail, hash, salt);
+        // Resolver rol solicitado
+        String role = "USER";
+        if (request.getRole() != null) {
+            String r = request.getRole().toUpperCase().trim();
+            if (r.equals("DRIVER") || r.equals("CHOFER")) {
+                role = "DRIVER";
+            } else if (r.equals("ADMIN")) {
+                role = "ADMIN";
+            }
+        }
+
+        User newUser = new User(userId, request.getName().trim(), normalizedEmail, hash, salt, role);
         usersById.put(userId, newUser);
         emailToUserId.put(normalizedEmail, userId);
 
         String token = securityService.generateAuthToken();
         tokenToUserId.put(token, userId);
 
-        UserDto userDto = new UserDto(newUser.getId(), newUser.getName(), newUser.getEmail());
+        UserDto userDto = new UserDto(newUser.getId(), newUser.getName(), newUser.getEmail(), newUser.getRole());
         return new AuthResponseDto(token, userDto);
     }
 
@@ -108,7 +137,7 @@ public class AuthService {
         String token = securityService.generateAuthToken();
         tokenToUserId.put(token, userId);
 
-        UserDto userDto = new UserDto(user.getId(), user.getName(), user.getEmail());
+        UserDto userDto = new UserDto(user.getId(), user.getName(), user.getEmail(), user.getRole());
         return new AuthResponseDto(token, userDto);
     }
 
@@ -132,7 +161,7 @@ public class AuthService {
             return null;
         }
 
-        return new UserDto(user.getId(), user.getName(), user.getEmail());
+        return new UserDto(user.getId(), user.getName(), user.getEmail(), user.getRole());
     }
 
     /**

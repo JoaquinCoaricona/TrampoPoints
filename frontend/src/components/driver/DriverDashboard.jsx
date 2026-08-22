@@ -20,12 +20,18 @@ export default function DriverDashboard({ dashboardData, onNavigate, onRefresh }
 
   if (!dashboardData) {
     return (
-      <div className="card glass-card padding-32 text-center flex-center">
-        <Loader2 className="spinner" size={24} />
-        <span>Cargando panel del chofer...</span>
+      <div className="driver-dashboard-skeleton flex-column gap-20">
+        <div className="skeleton-hero-card skeleton-box shimmer-wave" style={{ height: '140px', borderRadius: '16px' }} />
+        <div className="grid-cards-dashboard">
+          <div className="skeleton-box shimmer-wave" style={{ height: '180px', borderRadius: '14px' }} />
+          <div className="skeleton-box shimmer-wave" style={{ height: '180px', borderRadius: '14px' }} />
+          <div className="skeleton-box shimmer-wave" style={{ height: '180px', borderRadius: '14px' }} />
+        </div>
+        <div className="skeleton-box shimmer-wave" style={{ height: '220px', borderRadius: '14px' }} />
       </div>
     );
   }
+
 
   const { driver, vehicle, ratingSummary, validDocsCount, expiredDocsCount, topRecommendations } = dashboardData;
 

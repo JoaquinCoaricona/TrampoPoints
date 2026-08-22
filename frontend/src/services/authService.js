@@ -5,7 +5,7 @@ const USER_STORAGE_KEY = 'trampopoints_auth_user';
 
 /**
  * Servicio cliente para interactuar con los endpoints de Autenticación de TrampoPoints.
- * Soporta roles: USER (Pasajero) y ADMIN (Administrador de la plataforma).
+ * Soporta roles: USER (Pasajero), DRIVER (Chofer) y ADMIN (Administrador).
  */
 
 // 1. Iniciar Sesión (POST /api/auth/login)
@@ -31,9 +31,10 @@ export async function loginUser(email, password) {
     console.warn('Endpoint /api/auth/login en backend no disponible o error de red, ejecutando autenticación en modo local:', error);
   }
 
-  // Fallback seguro de autenticación local / demo para Pasajeros y Administrador
+  // Fallback seguro de autenticación local / demo para Chofer, Pasajero y Administrador
   let mockUser = null;
   const isAdmin = lowerEmail === 'admin@trampopoints.com' || lowerEmail.includes('admin');
+  const isDriver = lowerEmail === 'juan.chofer@trampopoints.com' || lowerEmail.includes('chofer') || lowerEmail.includes('driver');
 
   if (isAdmin) {
     mockUser = {
@@ -42,10 +43,17 @@ export async function loginUser(email, password) {
       email: email || 'admin@trampopoints.com',
       role: 'ADMIN'
     };
+  } else if (isDriver) {
+    mockUser = {
+      id: 'usr-drv-101',
+      name: 'Juan Pérez (Chofer)',
+      email: email || 'juan.chofer@trampopoints.com',
+      role: 'DRIVER'
+    };
   } else if (lowerEmail === 'juan@email.com') {
     mockUser = {
       id: 'usr-101',
-      name: 'Juan Pérez',
+      name: 'Juan Pérez (Pasajero)',
       email: 'juan@email.com',
       role: 'USER'
     };
@@ -87,13 +95,15 @@ export async function registerUser(name, email, password, role = 'USER') {
     console.warn('Endpoint /api/auth/register en backend no disponible, registrando en modo local:', error);
   }
 
-  const isAdmin = lowerEmail.includes('admin') || role === 'ADMIN';
+  const resolvedRole = role.toUpperCase().trim() === 'DRIVER' || role.toUpperCase().trim() === 'CHOFER'
+    ? 'DRIVER'
+    : (lowerEmail.includes('admin') || role === 'ADMIN' ? 'ADMIN' : 'USER');
 
   const mockUser = {
     id: 'usr-' + Math.floor(Math.random() * 900 + 100),
     name: name || 'Usuario',
     email: email,
-    role: isAdmin ? 'ADMIN' : 'USER'
+    role: resolvedRole
   };
 
   const mockToken = 'tp_mock_token_' + Date.now();

@@ -28,7 +28,7 @@ public class AuthControllerTest {
     private ObjectMapper objectMapper;
 
     @Test
-    @DisplayName("Debe loguear correctamente al usuario demo pre-sembrado")
+    @DisplayName("Debe loguear correctamente al usuario demo pasajero pre-sembrado")
     void testLoginDemoUserSuccess() throws Exception {
         LoginRequestDto loginDto = new LoginRequestDto("juan@email.com", "password123");
 
@@ -38,7 +38,21 @@ public class AuthControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.token").isNotEmpty())
                 .andExpect(jsonPath("$.user.email").value("juan@email.com"))
-                .andExpect(jsonPath("$.user.name").value("Juan Pérez"));
+                .andExpect(jsonPath("$.user.role").value("USER"));
+    }
+
+    @Test
+    @DisplayName("Debe loguear correctamente al chofer demo pre-sembrado")
+    void testLoginDemoDriverSuccess() throws Exception {
+        LoginRequestDto loginDto = new LoginRequestDto("juan.chofer@trampopoints.com", "password123");
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(loginDto)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").isNotEmpty())
+                .andExpect(jsonPath("$.user.email").value("juan.chofer@trampopoints.com"))
+                .andExpect(jsonPath("$.user.role").value("DRIVER"));
     }
 
     @Test
@@ -54,18 +68,19 @@ public class AuthControllerTest {
     }
 
     @Test
-    @DisplayName("Debe registrar un nuevo usuario y permitir obtener su perfil")
-    void testRegisterAndGetMe() throws Exception {
-        String uniqueEmail = "maria_" + System.currentTimeMillis() + "@email.com";
-        RegisterRequestDto regDto = new RegisterRequestDto("María Gómez", uniqueEmail, "segura123");
+    @DisplayName("Debe registrar un nuevo usuario con rol DRIVER y permitir obtener su perfil")
+    void testRegisterDriverAndGetMe() throws Exception {
+        String uniqueEmail = "chofer_" + System.currentTimeMillis() + "@email.com";
+        RegisterRequestDto regDto = new RegisterRequestDto("Roberto Chofer", uniqueEmail, "segura123", "DRIVER");
 
         MvcResult regResult = mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(regDto)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.token").isNotEmpty())
-                .andExpect(jsonPath("$.user.name").value("María Gómez"))
+                .andExpect(jsonPath("$.user.name").value("Roberto Chofer"))
                 .andExpect(jsonPath("$.user.email").value(uniqueEmail))
+                .andExpect(jsonPath("$.user.role").value("DRIVER"))
                 .andReturn();
 
         String responseJson = regResult.getResponse().getContentAsString();
@@ -75,7 +90,8 @@ public class AuthControllerTest {
         mockMvc.perform(get("/api/auth/me")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("María Gómez"))
+                .andExpect(jsonPath("$.name").value("Roberto Chofer"))
+                .andExpect(jsonPath("$.role").value("DRIVER"))
                 .andExpect(jsonPath("$.email").value(uniqueEmail));
 
         // Cerrar sesión

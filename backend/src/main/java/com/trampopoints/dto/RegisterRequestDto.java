@@ -4,6 +4,7 @@ public class RegisterRequestDto {
     private String name;
     private String email;
     private String password;
+    private String role; // "USER", "DRIVER", "ADMIN"
 
     public RegisterRequestDto() {}
 
@@ -11,6 +12,14 @@ public class RegisterRequestDto {
         this.name = name;
         this.email = email;
         this.password = password;
+        this.role = "USER";
+    }
+
+    public RegisterRequestDto(String name, String email, String password, String role) {
+        this.name = name;
+        this.email = email;
+        this.password = password;
+        this.role = role != null ? role : "USER";
     }
 
     public String getName() {
@@ -35,5 +44,13 @@ public class RegisterRequestDto {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
     }
 }
