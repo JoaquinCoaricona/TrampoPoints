@@ -31,7 +31,7 @@ export default function Header() {
 
   return (
     <>
-      <header className="app-header" style={{ background: '#09090b', borderBottom: '1px solid #1f1f23', padding: '12px 0' }}>
+      <header className="app-header" style={{ background: '#09090b', borderBottom: '1px solid #1f1f23', padding: '12px 0', marginBottom: '28px' }}>
         <div className="header-container">
           <Link to={isDriver ? '/driver' : '/'} className="brand-link flex-center gap-12" style={{ textDecoration: 'none' }}>
             <div className="brand-logo-only" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>

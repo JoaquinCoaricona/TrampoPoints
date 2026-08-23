@@ -92,7 +92,7 @@ export default function TripRequestForm({ onSubmit, loading }) {
   const handleOriginInputChange = (text) => {
     setOriginQuery(text);
     setOrigin(prev => ({ ...prev, address: text }));
-    setIsOriginSelected(false); // Pierde la selección al editar el texto manual
+    setIsOriginSelected(false);
 
     if (text.length >= 2) {
       const matches = PRESET_LOCATIONS.filter(l =>
@@ -113,7 +113,7 @@ export default function TripRequestForm({ onSubmit, loading }) {
   const handleDestInputChange = (text) => {
     setDestQuery(text);
     setDestination(prev => ({ ...prev, address: text }));
-    setIsDestSelected(false); // Pierde la selección al editar el texto manual
+    setIsDestSelected(false);
 
     if (text.length >= 2) {
       const matches = PRESET_LOCATIONS.filter(l =>
@@ -351,25 +351,25 @@ export default function TripRequestForm({ onSubmit, loading }) {
           {/* Left Column: Form Fields with serpentine road line on the left */}
           <div className="trip-form-inputs-col">
             <form onSubmit={handleSubmit}>
-              
+
               <div className="inputs-serpentine-wrap">
                 {/* Winding road loop-the-loop connecting Origen and Destino inputs */}
-                <svg 
+                <svg
                   style={{
                     position: 'absolute',
                     left: '-10px',
                     top: '0px',
-                    height: '180px',
+                    height: '220px',
                     width: '40px',
                     overflow: 'visible',
                     pointerEvents: 'none'
                   }}
                 >
-                  <path 
-                    d="M 24,56 C -10,56 -15,92 12,103 C 35,114 35,130 12,141 C -15,150 -10,150 24,150" 
-                    fill="none" 
-                    strokeWidth="2.5" 
-                    strokeDasharray="5 5" 
+                  <path
+                    d="M 24,56 C -10,56 -15,82 12,96 C 35,109 35,124 12,138 C -15,152 -10,174 24,174"
+                    fill="none"
+                    strokeWidth="2.5"
+                    strokeDasharray="5 5"
                     style={{
                       stroke: isDriverAwake ? '#22c55e' : '#27272a',
                       transition: 'stroke 0.5s ease',
@@ -395,7 +395,7 @@ export default function TripRequestForm({ onSubmit, loading }) {
                   {/* Warning if typed but not selected from dropdown */}
                   {originQuery.trim().length >= 3 && !isOriginSelected && (
                     <span style={{ fontSize: '12px', color: '#f87171', marginTop: '6px', display: 'block' }}>
-                      ⚠️ Seleccioná una dirección sugerida de la lista.
+                      Seleccioná una dirección sugerida de la lista.
                     </span>
                   )}
 
@@ -412,7 +412,7 @@ export default function TripRequestForm({ onSubmit, loading }) {
                             longitude: parseFloat(item.lon || item.longitude)
                           }, true)}
                         >
-                          📍 {item.name || item.display_name || item.address}
+                          {item.name || item.display_name || item.address}
                         </li>
                       ))}
                     </ul>
@@ -436,7 +436,7 @@ export default function TripRequestForm({ onSubmit, loading }) {
                   {/* Warning if typed but not selected from dropdown */}
                   {destQuery.trim().length >= 3 && !isDestSelected && (
                     <span style={{ fontSize: '12px', color: '#f87171', marginTop: '6px', display: 'block' }}>
-                      ⚠️ Seleccioná una dirección sugerida de la lista.
+                      Seleccioná una dirección sugerida de la lista.
                     </span>
                   )}
 
@@ -453,7 +453,7 @@ export default function TripRequestForm({ onSubmit, loading }) {
                             longitude: parseFloat(item.lon || item.longitude)
                           }, false)}
                         >
-                          🏁 {item.name || item.display_name || item.address}
+                          {item.name || item.display_name || item.address}
                         </li>
                       ))}
                     </ul>
@@ -491,9 +491,9 @@ export default function TripRequestForm({ onSubmit, loading }) {
               </div>
 
               {/* Action submit button - Disabled until BOTH directions are selected */}
-              <button 
-                type="submit" 
-                className="btn-viajar" 
+              <button
+                type="submit"
+                className="btn-viajar"
                 disabled={loading || !isOriginSelected || !isDestSelected}
               >
                 {loading ? (
@@ -514,7 +514,7 @@ export default function TripRequestForm({ onSubmit, loading }) {
           {/* Right Column: High Detail Driver SVG Illustration (Mirrored, based on reference photo) */}
           <div className="trip-form-animation-col">
             <div className="driver-illustration-wrap">
-              <svg 
+              <svg
                 className="driver-interactive-svg"
                 viewBox="0 0 240 240"
                 style={{ strokeLinecap: 'round', strokeLinejoin: 'round' }}
@@ -534,7 +534,7 @@ export default function TripRequestForm({ onSubmit, loading }) {
                 <path d="M 112,152 L 80,184" stroke="#1f1f23" strokeWidth="3" fill="none" />
 
                 {/* 3. Driver Upper Body Group (Waist anchor at (190, 185)) */}
-                <g 
+                <g
                   style={{
                     transform: isDriverAwake ? 'rotate(0deg) translate(0px, 0px)' : 'rotate(-16deg) translate(-26px, 12px)',
                     transformOrigin: '190px 185px',
@@ -542,61 +542,61 @@ export default function TripRequestForm({ onSubmit, loading }) {
                   }}
                 >
                   {/* Spine / Torso back curvature */}
-                  <path 
-                    d="M 192,185 C 195,145 186,115 166,95" 
-                    stroke={isDriverAwake ? '#e4e4e7' : '#71717a'} 
-                    strokeWidth="2.5" 
-                    fill="none" 
-                    style={{ transition: 'stroke 0.8s' }} 
+                  <path
+                    d="M 192,185 C 195,145 186,115 166,95"
+                    stroke={isDriverAwake ? '#e4e4e7' : '#71717a'}
+                    strokeWidth="2.5"
+                    fill="none"
+                    style={{ transition: 'stroke 0.8s' }}
                   />
                   {/* Chest / Front contour */}
-                  <path 
-                    d="M 148,185 C 146,155 140,128 132,112" 
-                    stroke={isDriverAwake ? '#e4e4e7' : '#71717a'} 
-                    strokeWidth="2.5" 
-                    fill="none" 
-                    style={{ transition: 'stroke 0.8s' }} 
+                  <path
+                    d="M 148,185 C 146,155 140,128 132,112"
+                    stroke={isDriverAwake ? '#e4e4e7' : '#71717a'}
+                    strokeWidth="2.5"
+                    fill="none"
+                    style={{ transition: 'stroke 0.8s' }}
                   />
 
                   {/* Hoodie Hood Folds */}
-                  <path 
-                    d="M 166,95 C 172,99 184,108 188,124 C 190,140 178,145 168,138 C 160,132 158,118 158,118" 
-                    stroke={isDriverAwake ? '#e4e4e7' : '#71717a'} 
-                    strokeWidth="2" 
-                    fill="none" 
-                    style={{ transition: 'stroke 0.8s' }} 
+                  <path
+                    d="M 166,95 C 172,99 184,108 188,124 C 190,140 178,145 168,138 C 160,132 158,118 158,118"
+                    stroke={isDriverAwake ? '#e4e4e7' : '#71717a'}
+                    strokeWidth="2"
+                    fill="none"
+                    style={{ transition: 'stroke 0.8s' }}
                   />
-                  <path 
-                    d="M 172,105 C 178,110 182,118 182,126" 
-                    stroke={isDriverAwake ? '#a1a1aa' : '#52525b'} 
-                    strokeWidth="1.5" 
-                    fill="none" 
-                    style={{ transition: 'stroke 0.8s' }} 
+                  <path
+                    d="M 172,105 C 178,110 182,118 182,126"
+                    stroke={isDriverAwake ? '#a1a1aa' : '#52525b'}
+                    strokeWidth="1.5"
+                    fill="none"
+                    style={{ transition: 'stroke 0.8s' }}
                   />
 
                   {/* Detailed Head & Hair profile */}
-                  <path 
-                    d="M 124,70 C 122,60 134,50 144,56 C 150,52 158,56 160,66 C 156,64 148,63 142,69 C 136,64 128,66 124,70 Z" 
-                    stroke={isDriverAwake ? '#e4e4e7' : '#71717a'} 
-                    strokeWidth="2" 
-                    fill="none" 
-                    style={{ transition: 'stroke 0.8s' }} 
+                  <path
+                    d="M 124,70 C 122,60 134,50 144,56 C 150,52 158,56 160,66 C 156,64 148,63 142,69 C 136,64 128,66 124,70 Z"
+                    stroke={isDriverAwake ? '#e4e4e7' : '#71717a'}
+                    strokeWidth="2"
+                    fill="none"
+                    style={{ transition: 'stroke 0.8s' }}
                   />
-                  <path 
-                    d="M 132,68 C 136,58 148,58 152,65" 
-                    stroke={isDriverAwake ? '#e4e4e7' : '#71717a'} 
-                    strokeWidth="1.5" 
-                    fill="none" 
-                    style={{ transition: 'stroke 0.8s' }} 
+                  <path
+                    d="M 132,68 C 136,58 148,58 152,65"
+                    stroke={isDriverAwake ? '#e4e4e7' : '#71717a'}
+                    strokeWidth="1.5"
+                    fill="none"
+                    style={{ transition: 'stroke 0.8s' }}
                   />
-                  
+
                   {/* Face Outline */}
-                  <path 
-                    d="M 148,78 C 146,65 136,65 132,68 C 127,71 123,76 123,80 L 118,83 C 117,84 117,86 119,87 L 123,89 C 123,92 125,96 129,99 C 135,102 147,98 147,88 C 147,84 149,81 148,78 Z" 
-                    stroke={isDriverAwake ? '#e4e4e7' : '#71717a'} 
-                    strokeWidth="2.5" 
-                    fill="none" 
-                    style={{ transition: 'stroke 0.8s' }} 
+                  <path
+                    d="M 148,78 C 146,65 136,65 132,68 C 127,71 123,76 123,80 L 118,83 C 117,84 117,86 119,87 L 123,89 C 123,92 125,96 129,99 C 135,102 147,98 147,88 C 147,84 149,81 148,78 Z"
+                    stroke={isDriverAwake ? '#e4e4e7' : '#71717a'}
+                    strokeWidth="2.5"
+                    fill="none"
+                    style={{ transition: 'stroke 0.8s' }}
                   />
 
                   {/* Face expression cross-fade */}
