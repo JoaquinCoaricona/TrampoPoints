@@ -2,7 +2,7 @@ const API_BASE_URL = 'http://localhost:8080/api';
 
 function getHeaders(customHeaders = {}) {
   const headers = { 'Content-Type': 'application/json', ...customHeaders };
-  const token = sessionStorage.getItem('trampopoints_auth_token');
+  const token = localStorage.getItem('trampopoints_auth_token');
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
@@ -73,7 +73,7 @@ export async function optimizeRoute(data) {
   return await response.json();
 }
 
-// 5. Ejecutar algoritmo de agrupamiento y optimización en Backend (POST /api/trips/process-grouping)
+// 5. Ejecutar algoritmo de agrupamiento y optimizaciÃ³n en Backend (POST /api/trips/process-grouping)
 export async function processGroupingAlgorithm() {
   const response = await fetch(`${API_BASE_URL}/trips/process-grouping`, {
     method: 'POST',
@@ -98,4 +98,18 @@ export async function deleteTripRequest(requestId) {
   }
   return await response.json();
 }
+
+// 7. Obtener información de combis/choferes disponibles (GET /api/trips/available-combis)
+export async function getAvailableCombis() {
+  const response = await fetch(`${API_BASE_URL}/trips/available-combis`, {
+    headers: getHeaders()
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  return await response.json();
+}
+
+
 

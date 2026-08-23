@@ -121,4 +121,16 @@ public class TripController {
                     .body(Map.of("error", "No tienes permisos para eliminar esta solicitud o no fue encontrada."));
         }
     }
+
+    /**
+     * 1e. Obtener cantidad de combis/choferes disponibles
+     * GET /api/trips/available-combis
+     */
+    @GetMapping("/available-combis")
+    public ResponseEntity<Map<String, Object>> getAvailableCombis() {
+        Map<String, Object> info = tripService.getAvailableCombisInfo();
+        return ResponseEntity.ok(info);
+    }
 }
+
+

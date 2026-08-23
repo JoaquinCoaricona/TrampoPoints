@@ -10,9 +10,12 @@ import {
   MapPin,
   CheckCircle2,
   Clock,
-  AlertTriangle
+  AlertTriangle,
+  Trash2,
+  X
 } from 'lucide-react';
-import { updateVehicleStatus, getDriverTrips } from '../../services/driverService';
+import { updateVehicleStatus, getDriverTrips, deleteDriverTrip } from '../../services/driverService';
+
 
 export default function DriverDashboard({ dashboardData: propData, onRefresh: propRefresh }) {
   const navigate = useNavigate();
@@ -20,9 +23,45 @@ export default function DriverDashboard({ dashboardData: propData, onRefresh: pr
   const dashboardData = propData || outletCtx.dashboardData;
   const onRefresh = propRefresh || outletCtx.onRefresh;
   const [updatingStatus, setUpdatingStatus] = useState(false);
+  // Optimistic local status (sobreescribe el del dashboard mientras actualiza)
+  const [localVehicleStatus, setLocalVehicleStatus] = useState(null);
 
   const [trips, setTrips] = React.useState([]);
   const [loadingTrips, setLoadingTrips] = React.useState(true);
+
+  // Registro de notificaciones de viajes ya vistas/descartadas
+  const [dismissedTripIds, setDismissedTripIds] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('tp_dismissed_driver_trips') || '[]');
+    } catch {
+      return [];
+    }
+  });
+
+  const handleDismissNotification = (tripId) => {
+    if (!tripId || dismissedTripIds.includes(tripId)) return;
+    const next = [...dismissedTripIds, tripId];
+    setDismissedTripIds(next);
+    try {
+      localStorage.setItem('tp_dismissed_driver_trips', JSON.stringify(next));
+    } catch (e) {
+      console.warn('Error al guardar dismissed trip notification:', e);
+    }
+  };
+
+  const handleDeleteTrip = async (tripId) => {
+    if (window.confirm('¿Deseás liberar y cancelar este viaje asignado? El chofer quedará libre para nuevos viajes.')) {
+      try {
+        await deleteDriverTrip(tripId);
+        setTrips(prev => prev.filter(t => t.tripId !== tripId));
+        handleDismissNotification(tripId);
+        if (onRefresh) onRefresh();
+      } catch (err) {
+        console.error('Error al cancelar viaje:', err);
+        alert('No se pudo cancelar el viaje.');
+      }
+    }
+  };
 
   React.useEffect(() => {
     async function loadTrips() {
@@ -39,6 +78,7 @@ export default function DriverDashboard({ dashboardData: propData, onRefresh: pr
   }, []);
 
   const activeTrip = trips.find(t => t.status === 'CONFIRMED' || t.status === 'ACTIVE');
+  const showNotification = activeTrip && !dismissedTripIds.includes(activeTrip.tripId);
 
   if (!dashboardData) {
     return (
@@ -51,14 +91,18 @@ export default function DriverDashboard({ dashboardData: propData, onRefresh: pr
   }
 
   const { driver, vehicle, ratingSummary, validDocsCount, expiredDocsCount, topRecommendations } = dashboardData;
+  // Estado efectivo: el local (optimista) tiene prioridad sobre el del backend
+  const effectiveVehicleStatus = localVehicleStatus || vehicle?.status;
 
   const handleStatusChange = async (newStatus) => {
     setUpdatingStatus(true);
+    setLocalVehicleStatus(newStatus); // Optimistic: actualizar UI de inmediato
     try {
       await updateVehicleStatus(newStatus);
       if (onRefresh) onRefresh();
     } catch (err) {
       console.error('Error al cambiar estado:', err);
+      setLocalVehicleStatus(vehicle?.status); // Revertir si falla
     } finally {
       setUpdatingStatus(false);
     }
@@ -66,7 +110,7 @@ export default function DriverDashboard({ dashboardData: propData, onRefresh: pr
 
   return (
     <div className="driver-editorial-dashboard">
-      {activeTrip && (
+      {showNotification && (
         <div className="driver-notification-banner margin-bottom-32 flex-between align-center gap-16">
           <div className="flex-center gap-12">
             <span className="dot pulse"></span>
@@ -77,10 +121,34 @@ export default function DriverDashboard({ dashboardData: propData, onRefresh: pr
               </span>
             </div>
           </div>
-          <Link to={`/driver/trip/${activeTrip.tripId}`} className="banner-btn flex-center gap-6">
-            <span>Ver Recorrido</span>
-            <ArrowRight size={14} />
-          </Link>
+          <div className="flex-center gap-8">
+            <Link
+              to={`/driver/trip/${activeTrip.tripId}`}
+              className="banner-btn flex-center gap-6"
+              onClick={() => handleDismissNotification(activeTrip.tripId)}
+            >
+              <span>Ver Recorrido</span>
+              <ArrowRight size={14} />
+            </Link>
+            <button
+              type="button"
+              onClick={() => handleDismissNotification(activeTrip.tripId)}
+              title="Descartar notificación"
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: '#a1a1aa',
+                cursor: 'pointer',
+                padding: '6px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: '6px'
+              }}
+            >
+              <X size={16} />
+            </button>
+          </div>
         </div>
       )}
 
@@ -91,17 +159,17 @@ export default function DriverDashboard({ dashboardData: propData, onRefresh: pr
             Hola, <span className="text-neon-green">{driver?.name?.split(' ')[0] || 'Chofer'}</span>
           </h1>
           <div className="dash-status-indicator flex-center gap-8">
-            {vehicle?.status === 'AVAILABLE' && (
+            {effectiveVehicleStatus === 'AVAILABLE' && (
               <span className="status-live-pill text-neon-green">
                 <span className="dot pulse"></span> Disponible para viajes
               </span>
             )}
-            {vehicle?.status === 'UNAVAILABLE' && (
+            {effectiveVehicleStatus === 'UNAVAILABLE' && (
               <span className="status-live-pill text-amber">
                 <span className="dot dot-amber"></span> En Pausa temporal
               </span>
             )}
-            {vehicle?.status === 'OUT_OF_SERVICE' && (
+            {effectiveVehicleStatus === 'OUT_OF_SERVICE' && (
               <span className="status-live-pill text-rose">
                 <span className="dot dot-red"></span> En Mantenimiento
               </span>
@@ -113,25 +181,25 @@ export default function DriverDashboard({ dashboardData: propData, onRefresh: pr
         <div className="segmented-toggle-row">
           <button
             type="button"
-            className={`seg-btn ${vehicle?.status === 'AVAILABLE' ? 'active-green' : ''}`}
+            className={`seg-btn ${effectiveVehicleStatus === 'AVAILABLE' ? 'active-green' : ''}`}
             onClick={() => handleStatusChange('AVAILABLE')}
-            disabled={updatingStatus || vehicle?.status === 'AVAILABLE'}
+            disabled={updatingStatus || effectiveVehicleStatus === 'AVAILABLE'}
           >
             Disponible
           </button>
           <button
             type="button"
-            className={`seg-btn ${vehicle?.status === 'UNAVAILABLE' ? 'active-amber' : ''}`}
+            className={`seg-btn ${effectiveVehicleStatus === 'UNAVAILABLE' ? 'active-amber' : ''}`}
             onClick={() => handleStatusChange('UNAVAILABLE')}
-            disabled={updatingStatus || vehicle?.status === 'UNAVAILABLE'}
+            disabled={updatingStatus || effectiveVehicleStatus === 'UNAVAILABLE'}
           >
             Pausa
           </button>
           <button
             type="button"
-            className={`seg-btn ${vehicle?.status === 'OUT_OF_SERVICE' ? 'active-red' : ''}`}
+            className={`seg-btn ${effectiveVehicleStatus === 'OUT_OF_SERVICE' ? 'active-red' : ''}`}
             onClick={() => handleStatusChange('OUT_OF_SERVICE')}
-            disabled={updatingStatus || vehicle?.status === 'OUT_OF_SERVICE'}
+            disabled={updatingStatus || effectiveVehicleStatus === 'OUT_OF_SERVICE'}
           >
             Taller
           </button>
@@ -245,10 +313,31 @@ export default function DriverDashboard({ dashboardData: propData, onRefresh: pr
                       <span>{trip.stops.length} Paradas</span>
                     </div>
                   </div>
-                  <Link to={`/driver/trip/${trip.tripId}`} className="driver-trip-action flex-center gap-6">
-                    <span>Ver Recorrido</span>
-                    <ChevronRight size={14} />
-                  </Link>
+                  <div className="flex-center gap-8 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteTrip(trip.tripId)}
+                      className="driver-trip-action"
+                      style={{
+                        borderColor: 'rgba(244, 63, 94, 0.25)',
+                        background: 'rgba(244, 63, 94, 0.06)',
+                        color: '#f43f5e',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                      }}
+                      title="Liberar chofer y cancelar este viaje"
+                    >
+                      <Trash2 size={13} />
+                      <span>Liberar viaje</span>
+                    </button>
+
+                    <Link to={`/driver/trip/${trip.tripId}`} className="driver-trip-action flex-center gap-6">
+                      <span>Ver Recorrido</span>
+                      <ChevronRight size={14} />
+                    </Link>
+                  </div>
                 </div>
               </div>
             ))}

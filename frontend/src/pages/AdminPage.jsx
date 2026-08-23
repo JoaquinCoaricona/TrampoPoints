@@ -3,6 +3,8 @@ import AdminPanel from '../components/AdminPanel';
 
 export default function AdminPage({
   allRequests,
+  availableCombisCount,
+  onRefreshCombis,
   onRunAlgorithm,
   onUpdateStatus,
   onDeleteRequest,
@@ -12,6 +14,8 @@ export default function AdminPage({
     <div className="admin-page-wrapper">
       <AdminPanel
         allRequests={allRequests}
+        availableCombisCount={availableCombisCount}
+        onRefreshCombis={onRefreshCombis}
         onRunAlgorithm={onRunAlgorithm}
         onUpdateStatus={onUpdateStatus}
         onDeleteRequest={onDeleteRequest}
@@ -20,3 +24,4 @@ export default function AdminPage({
     </div>
   );
 }
+

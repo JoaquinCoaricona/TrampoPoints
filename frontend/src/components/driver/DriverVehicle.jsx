@@ -41,6 +41,11 @@ export default function DriverVehicle({ onUpdateSuccess }) {
     try {
       const data = await getVehicle();
       setVehicle(data);
+      // Recuperar la selección de imagen guardada
+      if (data?.imageUrl) {
+        const match = data.imageUrl.match(/vehicle-model-(\d+)/);
+        if (match) setSelectedModel(parseInt(match[1]));
+      }
     } catch (err) {
       setError('Error al cargar datos del vehículo');
     } finally {
@@ -147,7 +152,10 @@ export default function DriverVehicle({ onUpdateSuccess }) {
             <div 
               key={m.id}
               className={`model-card ${selectedModel === m.id ? 'selected' : ''}`}
-              onClick={() => setSelectedModel(m.id)}
+              onClick={() => {
+                setSelectedModel(m.id);
+                setVehicle(prev => ({ ...prev, imageUrl: `/assets/vehicle-model-${m.id}.jpg` }));
+              }}
             >
               <img 
                 src={`/assets/vehicle-model-${m.id}.jpg`} 

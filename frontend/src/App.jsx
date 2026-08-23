@@ -28,7 +28,7 @@ import TripDetails from './components/TripDetails';
 
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { resolveUserRole } from './services/authService';
-import { createTripRequest, getTripMatches, getTripDetails, getAllTripRequests, processGroupingAlgorithm, deleteTripRequest } from './services/api';
+import { createTripRequest, getTripMatches, getTripDetails, getAllTripRequests, processGroupingAlgorithm, deleteTripRequest, getAvailableCombis } from './services/api';
 import {
   PlusCircle,
   ListOrdered,
@@ -70,16 +70,47 @@ function LandingPageWrapper() {
 function ConfirmationWrapper({ allRequests }) {
   const { requestId } = useParams();
   const navigate = useNavigate();
-  const requestData = allRequests.find(r => r.requestId === requestId);
+  const [localRequest, setLocalRequest] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const requestData = allRequests.find(r => r.requestId === requestId) || localRequest;
+
+  useEffect(() => {
+    if (!requestData && requestId) {
+      setLoading(true);
+      getAllTripRequests()
+        .then((reqs) => {
+          if (Array.isArray(reqs)) {
+            const found = reqs.find(r => r.requestId === requestId);
+            if (found) {
+              setLocalRequest(found);
+            }
+          }
+        })
+        .catch((err) => console.warn('Error al buscar solicitud:', err))
+        .finally(() => setLoading(false));
+    }
+  }, [requestId, requestData]);
+
+  if (loading && !requestData) {
+    return (
+      <div className="flex-center padding-48 flex-col gap-12" style={{ minHeight: '300px' }}>
+        <Loader2 className="spinner color-white" size={32} />
+        <p className="color-zinc-400 text-sm">Cargando estado y mapa de tu solicitud...</p>
+      </div>
+    );
+  }
 
   return (
     <RequestConfirmation
       requestData={requestData}
       onCreateAnother={() => navigate('/app')}
       onViewMyRequests={() => navigate('/app/requests')}
+      onViewMatches={() => navigate(`/app/matches/${requestId}`)}
     />
   );
 }
+
 
 function MatchesWrapper() {
   const { requestId } = useParams();
@@ -176,6 +207,7 @@ function PassengerApp() {
 
   const [loading, setLoading] = useState(false);
   const [allRequests, setAllRequests] = useState([]);
+  const [availableCombisCount, setAvailableCombisCount] = useState(null);
 
   // Enforce authentication and role limits for the system flow
   useEffect(() => {
@@ -199,11 +231,34 @@ function PassengerApp() {
     }
   };
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      fetchAllRequests();
+  const fetchAvailableCombis = async () => {
+    try {
+      const data = await getAvailableCombis();
+      if (data && typeof data.availableCount === 'number') {
+        setAvailableCombisCount(data.availableCount);
+      }
+    } catch (err) {
+      console.warn('No se pudo obtener la cantidad de combis disponibles:', err);
     }
-  }, [isAuthenticated]);
+  };
+
+  // Carga inicial y polling para sincronización en tiempo real con Supabase.
+  // Se consultan solicitudes y combis disponibles periódicamente.
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    fetchAllRequests(); // carga inmediata
+    fetchAvailableCombis(); // carga inmediata de combis disponibles
+
+    const POLL_INTERVAL_MS = 3500;
+    const intervalId = setInterval(() => {
+      fetchAllRequests();
+      fetchAvailableCombis();
+    }, POLL_INTERVAL_MS);
+
+    return () => clearInterval(intervalId);
+  }, [isAuthenticated]); // eslint-disable-line react-hooks/exhaustive-deps
+
 
   const handleCreateRequest = async (formData) => {
     setLoading(true);
@@ -240,6 +295,7 @@ function PassengerApp() {
         if (refreshedRequests && refreshedRequests.length > 0) {
           setAllRequests(refreshedRequests);
         }
+        await fetchAvailableCombis();
       } catch (e) {
         console.warn('No se pudieron refrescar solicitudes desde backend:', e);
       }
@@ -269,6 +325,7 @@ function PassengerApp() {
         await deleteTripRequest(requestId);
         const updated = allRequests.filter(r => r.requestId !== requestId);
         setAllRequests(updated);
+        await fetchAvailableCombis();
       } catch (err) {
         console.error('Error al eliminar la solicitud en el backend:', err);
         alert('No se pudo eliminar la solicitud. Intente nuevamente.');
@@ -326,6 +383,8 @@ function PassengerApp() {
             isAdmin ? (
               <AdminPage
                 allRequests={allRequests}
+                availableCombisCount={availableCombisCount}
+                onRefreshCombis={fetchAvailableCombis}
                 onRunAlgorithm={handleRunGroupingAlgorithm}
                 onUpdateStatus={handleUpdateStatusByAdmin}
                 onDeleteRequest={handleDeleteRequestByAdmin}

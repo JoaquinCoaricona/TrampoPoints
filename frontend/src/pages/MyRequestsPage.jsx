@@ -1,5 +1,6 @@
 import React from 'react';
-import { PlusCircle, Clock, MapPin, Navigation } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { PlusCircle, Clock, MapPin, Navigation, Map } from 'lucide-react';
 
 export default function MyRequestsPage({
   userRequests,
@@ -7,6 +8,8 @@ export default function MyRequestsPage({
   onViewMatches,
   onDeleteRequest
 }) {
+  const navigate = useNavigate();
+
   if (userRequests.length === 0) {
     return null;
   }
@@ -307,7 +310,28 @@ export default function MyRequestsPage({
                 <div className="request-actions-row" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                   <button
                     className="request-action"
-                    onClick={() => onViewMatches(req)}
+                    onClick={() => navigate(`/app/confirmation/${req.requestId}`)}
+                    title="Ver mapa del recorrido solicitado y radar de búsqueda"
+                    style={{
+                      borderColor: 'rgba(56, 189, 248, 0.25)',
+                      background: 'rgba(56, 189, 248, 0.06)',
+                      color: '#38bdf8'
+                    }}
+                  >
+                    <Map size={13} style={{ marginRight: '4px' }} />
+                    Ver mapa de solicitud
+                  </button>
+
+                  <button
+                    className="request-action"
+                    onClick={() => isConfirmed && onViewMatches(req)}
+                    disabled={!isConfirmed}
+                    title={!isConfirmed ? 'El viaje todavía está siendo organizado' : 'Ver el recorrido de tu combi'}
+                    style={!isConfirmed ? {
+                      opacity: 0.38,
+                      cursor: 'not-allowed',
+                      borderColor: 'rgba(255,255,255,0.04)',
+                    } : {}}
                   >
                     Ver recorrido asignado
                   </button>

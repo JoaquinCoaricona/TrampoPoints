@@ -1,13 +1,13 @@
-const API_BASE_URL = 'http://localhost:8080/api';
+﻿const API_BASE_URL = 'http://localhost:8080/api';
 
-// Usamos sessionStorage en lugar de localStorage:
-// - Los datos duran solo mientras el tab/browser está abierto
+// Usamos localStorage en lugar de localStorage:
+// - Los datos duran solo mientras el tab/browser estÃ¡ abierto
 // - No persisten datos entre sesiones
 const AUTH_STORAGE_KEY = 'trampopoints_auth_token';
 const USER_STORAGE_KEY = 'trampopoints_auth_user';
 
 /**
- * Servicio cliente para interactuar con los endpoints de Autenticación de TrampoPoints.
+ * Servicio cliente para interactuar con los endpoints de AutenticaciÃ³n de TrampoPoints.
  * Soporta roles: USER (Pasajero), DRIVER (Chofer) y ADMIN (Administrador).
  */
 
@@ -23,7 +23,7 @@ export function resolveUserRole(rawRole, email) {
   return 'USER';
 }
 
-// 1. Iniciar Sesión (POST /api/auth/login)
+// 1. Iniciar SesiÃ³n (POST /api/auth/login)
 export async function loginUser(email, password, desiredRole = null) {
   try {
     const response = await fetch(`${API_BASE_URL}/auth/login`, {
@@ -38,14 +38,14 @@ export async function loginUser(email, password, desiredRole = null) {
         data.user.role = resolveUserRole(desiredRole || data.user.role, data.user.email);
       }
       if (data.token) {
-        sessionStorage.setItem(AUTH_STORAGE_KEY, data.token);
-        sessionStorage.setItem(USER_STORAGE_KEY, JSON.stringify(data.user));
+        localStorage.setItem(AUTH_STORAGE_KEY, data.token);
+        localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(data.user));
       }
       return data;
     }
 
     const errBody = await response.json().catch(() => ({}));
-    throw new Error(errBody.error || 'Credenciales inválidas');
+    throw new Error(errBody.error || 'Credenciales invÃ¡lidas');
   } catch (error) {
     throw error;
   }
@@ -68,8 +68,8 @@ export async function registerUser(name, email, password, role = 'USER') {
         data.user.role = resolveUserRole(data.user.role || resolvedRole, data.user.email);
       }
       if (data.token) {
-        sessionStorage.setItem(AUTH_STORAGE_KEY, data.token);
-        sessionStorage.setItem(USER_STORAGE_KEY, JSON.stringify(data.user));
+        localStorage.setItem(AUTH_STORAGE_KEY, data.token);
+        localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(data.user));
       }
       return data;
     }
@@ -83,7 +83,7 @@ export async function registerUser(name, email, password, role = 'USER') {
 
 // 3. Obtener Usuario Actual (GET /api/auth/me)
 export async function getCurrentUser(token) {
-  const activeToken = token || sessionStorage.getItem(AUTH_STORAGE_KEY);
+  const activeToken = token || localStorage.getItem(AUTH_STORAGE_KEY);
   if (!activeToken) return null;
 
   try {
@@ -98,19 +98,19 @@ export async function getCurrentUser(token) {
     if (response.ok) {
       const user = await response.json();
       user.role = resolveUserRole(user.role, user.email);
-      sessionStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
+      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
       return user;
     } else if (response.status === 401) {
-      sessionStorage.removeItem(AUTH_STORAGE_KEY);
-      sessionStorage.removeItem(USER_STORAGE_KEY);
+      localStorage.removeItem(AUTH_STORAGE_KEY);
+      localStorage.removeItem(USER_STORAGE_KEY);
       return null;
     }
   } catch (error) {
     console.warn('No se pudo verificar token con backend:', error);
   }
 
-  // Fallback (solo si no es un error 401 explícito de token inválido)
-  const stored = sessionStorage.getItem(USER_STORAGE_KEY);
+  // Fallback (solo si no es un error 401 explÃ­cito de token invÃ¡lido)
+  const stored = localStorage.getItem(USER_STORAGE_KEY);
   if (stored) {
     try {
       const parsed = JSON.parse(stored);
@@ -123,9 +123,9 @@ export async function getCurrentUser(token) {
   return null;
 }
 
-// 4. Cerrar Sesión (POST /api/auth/logout)
+// 4. Cerrar SesiÃ³n (POST /api/auth/logout)
 export async function logoutUser() {
-  const token = sessionStorage.getItem(AUTH_STORAGE_KEY);
+  const token = localStorage.getItem(AUTH_STORAGE_KEY);
   if (token) {
     try {
       await fetch(`${API_BASE_URL}/auth/logout`, {
@@ -140,14 +140,14 @@ export async function logoutUser() {
     }
   }
 
-  sessionStorage.removeItem(AUTH_STORAGE_KEY);
-  sessionStorage.removeItem(USER_STORAGE_KEY);
+  localStorage.removeItem(AUTH_STORAGE_KEY);
+  localStorage.removeItem(USER_STORAGE_KEY);
   return { success: true };
 }
 
 export function getStoredAuth() {
-  const token = sessionStorage.getItem(AUTH_STORAGE_KEY);
-  const userJson = sessionStorage.getItem(USER_STORAGE_KEY);
+  const token = localStorage.getItem(AUTH_STORAGE_KEY);
+  const userJson = localStorage.getItem(USER_STORAGE_KEY);
   let user = null;
   if (userJson) {
     try {
@@ -161,3 +161,4 @@ export function getStoredAuth() {
   }
   return { token, user };
 }
+

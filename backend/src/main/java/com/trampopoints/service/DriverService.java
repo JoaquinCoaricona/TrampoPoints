@@ -23,6 +23,8 @@ public class DriverService {
     private final VehicleDocumentationRepository vehicleDocumentationRepository;
     private final DriverRatingRepository driverRatingRepository;
     private final DriverRecommendationRepository driverRecommendationRepository;
+    private final TripRepository tripRepository;
+    private final TripRequestRepository tripRequestRepository;
 
     private final AtomicInteger docCounter = new AtomicInteger(10);
     private final AtomicInteger ratingCounter = new AtomicInteger(50);
@@ -34,12 +36,16 @@ public class DriverService {
             VehicleRepository vehicleRepository,
             VehicleDocumentationRepository vehicleDocumentationRepository,
             DriverRatingRepository driverRatingRepository,
-            DriverRecommendationRepository driverRecommendationRepository) {
+            DriverRecommendationRepository driverRecommendationRepository,
+            TripRepository tripRepository,
+            TripRequestRepository tripRequestRepository) {
         this.driverRepository = driverRepository;
         this.vehicleRepository = vehicleRepository;
         this.vehicleDocumentationRepository = vehicleDocumentationRepository;
         this.driverRatingRepository = driverRatingRepository;
         this.driverRecommendationRepository = driverRecommendationRepository;
+        this.tripRepository = tripRepository;
+        this.tripRequestRepository = tripRequestRepository;
         
         initDefaultDriverData();
     }
@@ -92,8 +98,16 @@ public class DriverService {
                     features,
                     "AVAILABLE"
             );
-            vehicle.setImageUrl("https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=800&auto=format&fit=crop&q=80");
+            vehicle.setImageUrl("/assets/vehicle-model-1.jpg");
             vehicleRepository.save(vehicle);
+        } else {
+            // Migración: si el vehículo ya existe pero tiene la imagen random de Unsplash, corregirla
+            vehicleRepository.findById(vehicleId).ifPresent(existing -> {
+                if (existing.getImageUrl() == null || existing.getImageUrl().contains("unsplash.com")) {
+                    existing.setImageUrl("/assets/vehicle-model-1.jpg");
+                    vehicleRepository.save(existing);
+                }
+            });
         }
 
         // 3. Documentación en base de datos
@@ -319,25 +333,92 @@ public class DriverService {
     }
 
     public VehicleDto updateVehicleStatus(String status) {
-        Vehicle vehicle = vehicleRepository.findByDriverId(DEFAULT_DRIVER_ID)
+        return updateVehicleStatusForDriver(DEFAULT_DRIVER_ID, status);
+    }
+
+    public VehicleDto updateVehicleStatusForDriver(String driverId, String status) {
+        if (driverId == null || driverId.trim().isEmpty()) {
+            driverId = DEFAULT_DRIVER_ID;
+        }
+
+        final String targetDriverId = driverId;
+        Vehicle vehicle = vehicleRepository.findByDriverId(targetDriverId)
                 .orElseGet(() -> {
                     initDefaultDriverData();
-                    return vehicleRepository.findByDriverId(DEFAULT_DRIVER_ID).orElse(null);
+                    return vehicleRepository.findByDriverId(targetDriverId).orElseGet(() -> {
+                        Vehicle v = new Vehicle();
+                        v.setId("veh-" + targetDriverId);
+                        v.setDriverId(targetDriverId);
+                        v.setBrand("Mercedes-Benz");
+                        v.setModel("Sprinter 516 CDI");
+                        v.setLicensePlate("AF 482 TP");
+                        v.setImageUrl("/assets/vehicle-model-1.jpg");
+                        v.setStatus(status != null ? status.toUpperCase() : "AVAILABLE");
+                        v.setUpdatedAt(LocalDateTime.now());
+                        return vehicleRepository.save(v);
+                    });
                 });
-
-        if (vehicle == null) {
-            return null;
-        }
 
         if ("AVAILABLE".equalsIgnoreCase(status) || "UNAVAILABLE".equalsIgnoreCase(status) || "OUT_OF_SERVICE".equalsIgnoreCase(status)) {
             vehicle.setStatus(status.toUpperCase());
             vehicle.setUpdatedAt(LocalDateTime.now());
             vehicleRepository.save(vehicle);
+
+            // Sincronizar estado del chofer en base de datos
+            driverRepository.findById(targetDriverId).ifPresent(driver -> {
+                driver.setStatus("AVAILABLE".equalsIgnoreCase(status) ? "ACTIVE" : "INACTIVE");
+                driver.setUpdatedAt(LocalDateTime.now());
+                driverRepository.save(driver);
+            });
+
+            // Si el targetDriverId es diferente a DEFAULT_DRIVER_ID, sincronizar también el default
+            if (!DEFAULT_DRIVER_ID.equals(targetDriverId)) {
+                driverRepository.findById(DEFAULT_DRIVER_ID).ifPresent(driver -> {
+                    driver.setStatus("AVAILABLE".equalsIgnoreCase(status) ? "ACTIVE" : "INACTIVE");
+                    driver.setUpdatedAt(LocalDateTime.now());
+                    driverRepository.save(driver);
+                });
+            }
         } else {
             throw new IllegalArgumentException("Estado de vehículo no válido: " + status);
         }
 
         return mapToVehicleDto(vehicle);
+    }
+
+
+    public boolean deleteDriverTrip(String tripId) {
+        try {
+            Optional<Trip> tripOpt = tripRepository.findById(tripId);
+            if (tripOpt.isPresent()) {
+                Trip trip = tripOpt.get();
+                // Liberar solicitudes asociadas para que vuelvan a estado SEARCHING
+                for (Stop stop : trip.getStops()) {
+                    if ("PICKUP".equals(stop.getType())) {
+                        for (TripRequest req : tripRequestRepository.findAll()) {
+                            if ("CONFIRMED".equalsIgnoreCase(req.getStatus()) && req.getOrigin() != null) {
+                                boolean matchCoords = stop.getLatitude() != null && req.getOrigin().getLatitude() != null
+                                        && Math.abs(stop.getLatitude() - req.getOrigin().getLatitude()) < 0.0001
+                                        && stop.getLongitude() != null && req.getOrigin().getLongitude() != null
+                                        && Math.abs(stop.getLongitude() - req.getOrigin().getLongitude()) < 0.0001;
+                                boolean matchAddress = stop.getAddress() != null && req.getOrigin().getAddress() != null
+                                        && stop.getAddress().equalsIgnoreCase(req.getOrigin().getAddress());
+                                if (matchCoords || matchAddress) {
+                                    req.setStatus("SEARCHING");
+                                    tripRequestRepository.save(req);
+                                }
+                            }
+                        }
+                    }
+                }
+                tripRepository.deleteById(tripId);
+                System.out.println("Viaje " + tripId + " eliminado/liberado por el chofer exitosamente.");
+                return true;
+            }
+        } catch (Exception e) {
+            System.err.println("Error al eliminar viaje del chofer: " + e.getMessage());
+        }
+        return false;
     }
 
     // ==========================================

@@ -220,45 +220,73 @@ public class TripService {
         return response;
     }
 
+    private static class StopCandidate {
+        String type; // "PICKUP" or "DROPOFF"
+        Location location;
+        String address;
+        double progress;
+        String reqId;
+
+        public StopCandidate(String type, Location location, String address, double progress, String reqId) {
+            this.type = type;
+            this.location = location;
+            this.address = address;
+            this.progress = progress;
+            this.reqId = reqId;
+        }
+    }
+
     private Trip createDynamicTripFromCluster(List<TripRequest> cluster) {
         String newTripId = "trip-" + tripCounter.incrementAndGet();
         TripRequest seed = cluster.get(0);
-        
-        List<Stop> stops = new ArrayList<>();
-        int order = 1;
 
-        // 1. Agregar paradas de subida (PICKUP) reales para cada solicitud del grupo
+        List<StopCandidate> candidates = new ArrayList<>();
         for (int i = 0; i < cluster.size(); i++) {
             TripRequest req = cluster.get(i);
-            stops.add(new Stop(
-                    "stop-" + newTripId + "-p" + (i + 1),
-                    "PICKUP",
-                    order++,
-                    req.getOrigin().getLatitude(),
-                    req.getOrigin().getLongitude(),
-                    req.getOrigin().getAddress()
-            ));
+            MatchingService.CorridorPoint pCorr = MatchingService.projectOntoCorridor(req.getOrigin(), seed.getOrigin(), seed.getDestination());
+            MatchingService.CorridorPoint dCorr = MatchingService.projectOntoCorridor(req.getDestination(), seed.getOrigin(), seed.getDestination());
+
+            candidates.add(new StopCandidate("PICKUP", req.getOrigin(), req.getOrigin().getAddress(), pCorr.progress, req.getRequestId()));
+            candidates.add(new StopCandidate("DROPOFF", req.getDestination(), req.getDestination().getAddress(), dCorr.progress, req.getRequestId()));
         }
 
-        // 2. Agregar paradas de bajada (DROPOFF) reales para cada solicitud del grupo
-        for (int i = 0; i < cluster.size(); i++) {
-            TripRequest req = cluster.get(i);
+        // Ordenar paradas secuencialmente según el avance a lo largo del corredor (de subida a bajadas intermedias y finales)
+        candidates.sort((s1, s2) -> {
+            int cmp = Double.compare(s1.progress, s2.progress);
+            if (cmp != 0) return cmp;
+            if ("PICKUP".equals(s1.type) && "DROPOFF".equals(s2.type)) return -1;
+            if ("DROPOFF".equals(s1.type) && "PICKUP".equals(s2.type)) return 1;
+            return 0;
+        });
+
+        List<Stop> stops = new ArrayList<>();
+        int order = 1;
+        for (int i = 0; i < candidates.size(); i++) {
+            StopCandidate sc = candidates.get(i);
             stops.add(new Stop(
-                    "stop-" + newTripId + "-d" + (i + 1),
-                    "DROPOFF",
+                    "stop-" + newTripId + "-" + (sc.type.equals("PICKUP") ? "p" : "d") + (i + 1),
+                    sc.type,
                     order++,
-                    req.getDestination().getLatitude(),
-                    req.getDestination().getLongitude(),
-                    req.getDestination().getAddress()
+                    sc.location.getLatitude(),
+                    sc.location.getLongitude(),
+                    sc.address
             ));
         }
 
         // Cantidad exacta de pasajeros asignados a esta combi
         int passengerCount = cluster.size();
 
-        int dist = routeService.calculateDistanceMeters(seed.getOrigin(), seed.getDestination());
+        Location tripStart = stops.get(0) != null ? new Location(stops.get(0).getLatitude(), stops.get(0).getLongitude(), stops.get(0).getAddress()) : seed.getOrigin();
+        Location tripEnd = stops.get(stops.size() - 1) != null ? new Location(stops.get(stops.size() - 1).getLatitude(), stops.get(stops.size() - 1).getLongitude(), stops.get(stops.size() - 1).getAddress()) : seed.getDestination();
+
+        List<Stop> intermediateStops = new ArrayList<>();
+        if (stops.size() > 2) {
+            intermediateStops = stops.subList(1, stops.size() - 1);
+        }
+
+        int dist = routeService.calculateDistanceMeters(tripStart, tripEnd);
         int dur = routeService.calculateDurationSeconds(dist);
-        String polyline = routeService.generatePolyline(seed.getOrigin(), stops, seed.getDestination());
+        String polyline = routeService.generatePolyline(tripStart, intermediateStops, tripEnd);
 
         int estimatedPrice = Math.max(1200, (int)(dist * 0.22));
         int savings = Math.min(45, 30 + (cluster.size() * 3));
@@ -271,14 +299,15 @@ public class TripService {
                 estimatedPrice,
                 savings,
                 seed.getDepartureTime(),
-                seed.getOrigin(),
-                seed.getDestination(),
+                tripStart,
+                tripEnd,
                 dist,
                 dur,
                 polyline,
                 stops
         );
     }
+
 
     public List<TripRequest> getAllRequests() {
         return tripRequestRepository.findAll();
@@ -351,10 +380,17 @@ public class TripService {
             List<Driver> activeDrivers = driverRepository.findAll();
             for (Driver driver : activeDrivers) {
                 if ("ACTIVE".equalsIgnoreCase(driver.getStatus())) {
-                    // Check if driver is already assigned to a CONFIRMED trip in DB
+                    // Verificar estado del vehículo (debe ser AVAILABLE si está registrado)
+                    Optional<Vehicle> vehicleOpt = vehicleRepository.findByDriverId(driver.getId());
+                    if (vehicleOpt.isPresent() && !"AVAILABLE".equalsIgnoreCase(vehicleOpt.get().getStatus())) {
+                        continue;
+                    }
+
+                    // Check if driver is already assigned to a CONFIRMED or ACTIVE trip in DB
                     boolean isAssigned = false;
                     for (Trip trip : tripRepository.findAll()) {
-                        if ("CONFIRMED".equalsIgnoreCase(trip.getStatus()) && driver.getId().equals(trip.getDriverId())) {
+                        if (("CONFIRMED".equalsIgnoreCase(trip.getStatus()) || "ACTIVE".equalsIgnoreCase(trip.getStatus())) 
+                                && driver.getId().equals(trip.getDriverId())) {
                             isAssigned = true;
                             break;
                         }
@@ -378,6 +414,57 @@ public class TripService {
         }
         return null;
     }
+
+    public Map<String, Object> getAvailableCombisInfo() {
+        try {
+            List<Driver> allDrivers = driverRepository.findAll();
+            List<Trip> allTrips = tripRepository.findAll();
+
+            int availableCount = 0;
+            int totalDrivers = allDrivers.size();
+
+            for (Driver driver : allDrivers) {
+                String dStatus = driver.getStatus();
+                if (dStatus != null && ("INACTIVE".equalsIgnoreCase(dStatus) || "UNAVAILABLE".equalsIgnoreCase(dStatus) || "OUT_OF_SERVICE".equalsIgnoreCase(dStatus))) {
+                    continue;
+                }
+
+                Optional<Vehicle> vehicleOpt = vehicleRepository.findByDriverId(driver.getId());
+                if (vehicleOpt.isPresent()) {
+                    String vStatus = vehicleOpt.get().getStatus();
+                    if (vStatus != null && !"AVAILABLE".equalsIgnoreCase(vStatus)) {
+                        continue;
+                    }
+                }
+
+                boolean isAssigned = false;
+                for (Trip trip : allTrips) {
+                    if (("CONFIRMED".equalsIgnoreCase(trip.getStatus()) || "ACTIVE".equalsIgnoreCase(trip.getStatus()))
+                            && driver.getId().equals(trip.getDriverId())) {
+                        isAssigned = true;
+                        break;
+                    }
+                }
+
+                if (!isAssigned) {
+                    availableCount++;
+                }
+            }
+
+            Map<String, Object> res = new HashMap<>();
+            res.put("availableCount", availableCount);
+            res.put("totalCount", totalDrivers);
+            return res;
+        } catch (Exception e) {
+            System.err.println("Error al obtener información de combis disponibles: " + e.getMessage());
+            Map<String, Object> res = new HashMap<>();
+            res.put("availableCount", 0);
+            res.put("totalCount", 0);
+            return res;
+        }
+    }
+
+
 
     private DriverDto mapToDriverDto(Driver driver) {
         return new DriverDto(
@@ -428,8 +515,44 @@ public class TripService {
             return false;
         }
 
+        // Cascada: si la solicitud pertenece a un Trip, eliminar ese Trip también
+        // (comparamos por coordenadas de origen en las paradas PICKUP)
+        List<String> tripIdsToDelete = new ArrayList<>();
+        for (Trip trip : tripRepository.findAll()) {
+            for (Stop stop : trip.getStops()) {
+                if ("PICKUP".equals(stop.getType()) && req.getOrigin() != null) {
+                    boolean coordsMatch = stop.getLatitude() != null
+                            && req.getOrigin().getLatitude() != null
+                            && Math.abs(stop.getLatitude() - req.getOrigin().getLatitude()) < 0.0001
+                            && stop.getLongitude() != null
+                            && req.getOrigin().getLongitude() != null
+                            && Math.abs(stop.getLongitude() - req.getOrigin().getLongitude()) < 0.0001;
+                    boolean addressMatch = stop.getAddress() != null
+                            && req.getOrigin().getAddress() != null
+                            && stop.getAddress().equalsIgnoreCase(req.getOrigin().getAddress());
+                    if (coordsMatch || addressMatch) {
+                        tripIdsToDelete.add(trip.getTripId());
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Borrar los trips encontrados de BD y de memoria
+        for (String tripId : tripIdsToDelete) {
+            try {
+                tripRepository.deleteById(tripId);
+                tripsMap.remove(tripId);
+                System.out.println("Trip " + tripId + " eliminado en cascada por borrado de solicitud " + requestId);
+            } catch (Exception e) {
+                System.err.println("Error al eliminar trip en cascada: " + e.getMessage());
+            }
+        }
+
+        // Borrar la solicitud
         requestsMap.remove(requestId);
         tripRequestRepository.delete(req);
         return true;
     }
 }
+

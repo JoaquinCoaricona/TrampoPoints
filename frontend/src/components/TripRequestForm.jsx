@@ -18,12 +18,22 @@ export default function TripRequestForm({ onSubmit, loading }) {
   const [isOriginSelected, setIsOriginSelected] = useState(false);
   const [isDestSelected, setIsDestSelected] = useState(false);
 
-  const today = new Date();
-  const defaultDate = today.toISOString().split('T')[0];
-  const defaultTime = '08:30';
+  const getNowFormatted = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    return {
+      date: `${year}-${month}-${day}`,
+      time: `${hours}:${minutes}`
+    };
+  };
 
-  const [departureDate, setDepartureDate] = useState(defaultDate);
-  const [departureTimeOnly, setDepartureTimeOnly] = useState(defaultTime);
+  const initialDateTime = getNowFormatted();
+  const [departureDate, setDepartureDate] = useState(initialDateTime.date);
+  const [departureTimeOnly, setDepartureTimeOnly] = useState(initialDateTime.time);
   const [createdSuccess, setCreatedSuccess] = useState(false);
 
   const [originQuery, setOriginQuery] = useState('');
@@ -161,12 +171,12 @@ export default function TripRequestForm({ onSubmit, loading }) {
   };
 
   return (
-    <div className="card glass-card form-card" style={{ background: 'transparent', border: 'none', padding: '0', boxShadow: 'none' }}>
+    <div className="card glass-card form-card" style={{ background: 'transparent', border: 'none', padding: '0 0 60px 0', boxShadow: 'none' }}>
       <style>{`
         .trip-form-container-centered {
           max-width: 960px;
           margin: 0 auto;
-          padding: 20px 0;
+          padding: 20px 0 140px 0; /* Espacio generoso para que el footer quede abajo y los menús de sugerencias tengan lugar */
         }
 
         .trip-form-layout-grid {

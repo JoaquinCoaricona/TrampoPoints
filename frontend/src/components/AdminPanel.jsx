@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import LiveAdminMap from './LiveAdminMap';
 import {
   Search,
   Trash2,
@@ -10,9 +11,12 @@ import {
   Home,
   ChevronRight
 } from 'lucide-react';
+import { getAvailableCombis } from '../services/api';
 
 export default function AdminPanel({
   allRequests,
+  availableCombisCount,
+  onRefreshCombis,
   onRunAlgorithm,
   onUpdateStatus,
   onDeleteRequest,
@@ -22,6 +26,36 @@ export default function AdminPanel({
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [isProcessing, setIsProcessing] = useState(false);
   const [lastAlgorithmResult, setLastAlgorithmResult] = useState(null);
+  const [liveAvailableCount, setLiveAvailableCount] = useState(availableCombisCount ?? 0);
+
+  // Sincronización instantánea con prop si cambia desde App.jsx
+  useEffect(() => {
+    if (typeof availableCombisCount === 'number') {
+      setLiveAvailableCount(availableCombisCount);
+    }
+  }, [availableCombisCount]);
+
+  // Polling en tiempo real continuo directo a BD para choferes disponibles
+  useEffect(() => {
+    let isMounted = true;
+    const fetchLiveCount = async () => {
+      try {
+        const res = await getAvailableCombis();
+        if (isMounted && res && typeof res.availableCount === 'number') {
+          setLiveAvailableCount(res.availableCount);
+        }
+      } catch (e) {
+        console.warn('Error polling combis disponibles en AdminPanel:', e);
+      }
+    };
+
+    fetchLiveCount();
+    const interval = setInterval(fetchLiveCount, 2000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, []);
 
   const filteredRequests = allRequests.filter(req => {
     const matchesSearch =
@@ -46,6 +80,9 @@ export default function AdminPanel({
     try {
       const result = await onRunAlgorithm();
       setLastAlgorithmResult(result);
+      if (onRefreshCombis) {
+        onRefreshCombis();
+      }
     } catch (err) {
       console.error('Error al ejecutar algoritmo en backend:', err);
     } finally {
@@ -287,7 +324,8 @@ export default function AdminPanel({
         /* Stats Strip - flat text aligned, no boxes */
         .admin-stats-summary-flat {
           display: flex;
-          gap: 64px;
+          flex-wrap: wrap;
+          gap: 48px;
           margin-bottom: 36px;
           padding-bottom: 24px;
           border-bottom: 1px solid #1f1f23;
@@ -673,6 +711,14 @@ export default function AdminPanel({
         </div>
       )}
 
+      {/* Live Map */}
+      <div style={{ marginBottom: '28px' }}>
+        <LiveAdminMap
+          allRequests={allRequests}
+          lastAlgorithmResult={lastAlgorithmResult}
+        />
+      </div>
+
       {/* Stats Summary strip - flat text aligned, no boxes */}
       <div className="admin-stats-summary-flat">
         <div className="admin-stat-item">
@@ -689,6 +735,28 @@ export default function AdminPanel({
           <span className="admin-stat-label">Combi Asignada</span>
           <span className="admin-stat-val">{matchedCount}</span>
           <span className="admin-stat-sub text-trend-up">+{Math.round((matchedCount / (totalCount || 1)) * 100)}% asignación</span>
+        </div>
+        <div className="admin-stat-item">
+          <span className="admin-stat-label">Combi Disponible</span>
+          <span
+            className="admin-stat-val"
+            style={{
+              color: liveAvailableCount > 0 ? '#22c55e' : '#ef4444',
+              display: 'flex',
+              alignItems: 'baseline',
+              gap: '6px'
+            }}
+          >
+            {liveAvailableCount}
+          </span>
+          <span
+            className="admin-stat-sub"
+            style={{ color: liveAvailableCount > 0 ? '#22c55e' : '#71717a' }}
+          >
+            {liveAvailableCount > 0
+              ? `${liveAvailableCount} unidad${liveAvailableCount > 1 ? 'es' : ''} lista${liveAvailableCount > 1 ? 's' : ''}`
+              : 'Sin unidades libres'}
+          </span>
         </div>
       </div>
 

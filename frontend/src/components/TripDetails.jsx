@@ -1,5 +1,5 @@
 import React from 'react';
-import { Users, DollarSign, TrendingDown, Clock, MapPin, Navigation, ArrowLeft, CheckCircle } from 'lucide-react';
+import { Users, DollarSign, TrendingDown, Clock, MapPin, Navigation, ArrowLeft, CheckCircle, User } from 'lucide-react';
 import MapView from './MapView';
 
 export default function TripDetails({ tripData, onBack }) {
@@ -14,7 +14,9 @@ export default function TripDetails({ tripData, onBack }) {
     estimatedSavingsPercent,
     departureTime,
     route,
-    stops
+    stops,
+    driver,
+    vehicle
   } = tripData;
 
   const distanceKm = (route.distanceMeters / 1000).toFixed(1);
@@ -396,6 +398,94 @@ export default function TripDetails({ tripData, onBack }) {
           </div>
         </div>
       </div>
+
+      {/* Driver Info Card */}
+      {driver && (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 24,
+          background: '#09090b',
+          border: '1px solid #1c1c22',
+          borderRadius: 12,
+          padding: '18px 24px',
+          marginBottom: 24,
+          flexWrap: 'wrap',
+        }}>
+          {/* Imagen de la combi */}
+          <div style={{
+            flexShrink: 0,
+            width: 120,
+            height: 80,
+            borderRadius: 8,
+            overflow: 'hidden',
+            background: '#111113',
+            border: '1px solid #27272a',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+            {vehicle?.imageUrl ? (
+              <img
+                src={vehicle.imageUrl}
+                alt="Combi asignada"
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                onError={(e) => { e.target.style.display = 'none'; }}
+              />
+            ) : (
+              <span style={{ fontSize: 32 }}>🚌</span>
+            )}
+          </div>
+
+          {/* Info del chofer */}
+          <div style={{ flex: 1, minWidth: 180 }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: '#71717a', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 6 }}>
+              Chofer Asignado
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+              <div style={{
+                width: 34, height: 34, borderRadius: '50%',
+                background: 'linear-gradient(135deg, #6366f1, #818cf8)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0,
+              }}>
+                {driver.avatarUrl ? (
+                  <img src={driver.avatarUrl} alt={driver.name} style={{ width: 34, height: 34, borderRadius: '50%', objectFit: 'cover' }} />
+                ) : (
+                  <User size={18} color="white" />
+                )}
+              </div>
+              <div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: '#f4f4f5' }}>
+                  {driver.name} {driver.lastName}
+                </div>
+                {driver.ratingAverage > 0 && (
+                  <div style={{ fontSize: 12, color: '#fbbf24', marginTop: 1 }}>
+                    ★ {driver.ratingAverage?.toFixed(1)} · {driver.totalRatings || 0} viajes
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Info del vehículo */}
+          {vehicle && (
+            <div style={{ flex: 1, minWidth: 180 }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: '#71717a', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 6 }}>
+                Vehículo
+              </div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: '#f4f4f5', marginBottom: 3 }}>
+                {vehicle.brand} {vehicle.model}
+              </div>
+              <div style={{ fontSize: 12, color: '#a1a1aa', display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                {vehicle.licensePlate && <span>🔖 {vehicle.licensePlate}</span>}
+                {vehicle.color && <span>🎨 {vehicle.color}</span>}
+                {vehicle.year && <span>📅 {vehicle.year}</span>}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Grid: Map & Stops */}
       <div className="trip-details-grid">

@@ -97,14 +97,27 @@ public class DriverController {
      * PUT /api/drivers/current/vehicle/status
      */
     @PutMapping("/current/vehicle/status")
-    public ResponseEntity<?> updateVehicleStatus(@RequestBody UpdateVehicleStatusRequestDto request) {
+    public ResponseEntity<?> updateVehicleStatus(
+            @RequestBody UpdateVehicleStatusRequestDto request,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
         try {
-            VehicleDto vehicle = driverService.updateVehicleStatus(request.getStatus());
+            String driverId = "drv-101";
+            if (authHeader != null && !authHeader.trim().isEmpty()) {
+                UserDto user = authService.getCurrentUser(authHeader);
+                if (user != null && user.getEmail() != null) {
+                    Optional<Driver> driverOpt = driverRepository.findByEmail(user.getEmail());
+                    if (driverOpt.isPresent()) {
+                        driverId = driverOpt.get().getId();
+                    }
+                }
+            }
+            VehicleDto vehicle = driverService.updateVehicleStatusForDriver(driverId, request.getStatus());
             return ResponseEntity.ok(vehicle);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
+
 
     /**
      * Listar documentación del vehículo
@@ -196,4 +209,15 @@ public class DriverController {
             return ResponseEntity.status(500).build();
         }
     }
+
+    /**
+     * Eliminar/cancelar viaje asignado del chofer
+     * DELETE /api/drivers/current/trips/{tripId}
+     */
+    @DeleteMapping("/current/trips/{tripId}")
+    public ResponseEntity<?> deleteDriverTrip(@PathVariable String tripId) {
+        boolean deleted = driverService.deleteDriverTrip(tripId);
+        return ResponseEntity.ok(Map.of("success", deleted));
+    }
 }
+
