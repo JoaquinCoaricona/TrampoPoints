@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { MapPin, Navigation, Clock, PlusCircle, CheckCircle2, Search, Loader2, Sparkles } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { MapPin, Navigation, Clock, Loader2, ArrowRight } from 'lucide-react';
 
 const PRESET_LOCATIONS = [
   { name: 'Obelisco (Av. 9 de Julio)', address: 'Obelisco, Av. 9 de Julio, Buenos Aires', latitude: -34.6037, longitude: -58.3816 },
@@ -7,56 +7,38 @@ const PRESET_LOCATIONS = [
   { name: 'Belgrano (Cabildo y Juramento)', address: 'Belgrano, Av. Cabildo 2000, Buenos Aires', latitude: -34.5614, longitude: -58.4563 },
   { name: 'Pilar (Centro / Parque Ind.)', address: 'Pilar Centro, Tratado del Pilar, Buenos Aires', latitude: -34.4580, longitude: -58.9142 },
   { name: 'San Isidro (Estación)', address: 'San Isidro, Belgrano y Centenario, Buenos Aires', latitude: -34.4719, longitude: -58.5283 },
-  { name: 'Microcentro (Plaza de Mayo)', address: 'Microcentro, Plaza de Mayo, Buenos Aires', latitude: -34.6083, longitude: -58.3712 },
-  { name: 'Recoleta (Av. Las Heras)', address: 'Recoleta, Av. Las Heras y Junín, Buenos Aires', latitude: -34.5875, longitude: -58.3934 },
-  { name: 'Tigre (Puerto de Frutos)', address: 'Tigre, Puerto de Frutos, Buenos Aires', latitude: -34.4251, longitude: -58.5796 },
-  { name: 'Vicente López (Olivos)', address: 'Vicente López, Av. Maipú 2000, Buenos Aires', latitude: -34.5106, longitude: -58.4854 },
-  { name: 'Quilmes Centro', address: 'Quilmes, Peatonal Rivadavia, Buenos Aires', latitude: -34.7242, longitude: -58.2608 },
-  { name: 'San Telmo (Plaza Dorrego)', address: 'San Telmo, Plaza Dorrego, Buenos Aires', latitude: -34.6211, longitude: -58.3731 },
-  { name: 'Caballito (Plaza Primera Junta)', address: 'Caballito, Av. Rivadavia 5200, Buenos Aires', latitude: -34.6186, longitude: -58.4425 },
-  { name: 'Almagro (Av. Corrientes y Medrano)', address: 'Almagro, Av. Corrientes 3900, Buenos Aires', latitude: -34.6108, longitude: -58.4215 },
-  { name: 'Núñez (Estación / Av. del Libertador)', address: 'Núñez, Av. del Libertador 8000, Buenos Aires', latitude: -34.5461, longitude: -58.4625 },
-  { name: 'Morón (Estación Centro)', address: 'Morón Centro, Almirante Brown 800, Buenos Aires', latitude: -34.6514, longitude: -58.6186 },
-  { name: 'Aeropuerto de Ezeiza', address: 'Aeropuerto Internacional de Ezeiza, Buenos Aires', latitude: -34.8150, longitude: -58.5358 },
-  { name: 'Aeroparque Jorge Newbery', address: 'Aeroparque Jorge Newbery, Buenos Aires', latitude: -34.5592, longitude: -58.4156 },
-  { name: 'La Plata (Plaza Moreno)', address: 'La Plata, Plaza Moreno, Calle 12, Buenos Aires', latitude: -34.9214, longitude: -57.9545 }
+  { name: 'Microcentro (Plaza de Mayo)', address: 'Microcentro, Plaza de Mayo, Buenos Aires', latitude: -34.6083, longitude: -58.3712 }
 ];
 
 export default function TripRequestForm({ onSubmit, loading }) {
-  const [origin, setOrigin] = useState({
-    address: PRESET_LOCATIONS[0].address,
-    latitude: PRESET_LOCATIONS[0].latitude,
-    longitude: PRESET_LOCATIONS[0].longitude
-  });
+  const [origin, setOrigin] = useState({ address: '', latitude: 0, longitude: 0 });
+  const [destination, setDestination] = useState({ address: '', latitude: 0, longitude: 0 });
 
-  const [destination, setDestination] = useState({
-    address: PRESET_LOCATIONS[1].address,
-    latitude: PRESET_LOCATIONS[1].latitude,
-    longitude: PRESET_LOCATIONS[1].longitude
-  });
+  const today = new Date();
+  const defaultDate = today.toISOString().split('T')[0];
+  const defaultTime = '08:30';
 
-  const [departureTime, setDepartureTime] = useState('2026-08-22T08:30:00');
+  const [departureDate, setDepartureDate] = useState(defaultDate);
+  const [departureTimeOnly, setDepartureTimeOnly] = useState(defaultTime);
   const [createdSuccess, setCreatedSuccess] = useState(false);
 
-  // Estados de sugerencias y geocodificación
-  const [originQuery, setOriginQuery] = useState(PRESET_LOCATIONS[0].address);
+  const [originQuery, setOriginQuery] = useState('');
   const [originSuggestions, setOriginSuggestions] = useState([]);
   const [isGeocodingOrigin, setIsGeocodingOrigin] = useState(false);
 
-  const [destQuery, setDestQuery] = useState(PRESET_LOCATIONS[1].address);
+  const [destQuery, setDestQuery] = useState('');
   const [destSuggestions, setDestSuggestions] = useState([]);
   const [isGeocodingDest, setIsGeocodingDest] = useState(false);
 
   const originDebounceTimer = useRef(null);
   const destDebounceTimer = useRef(null);
 
-  // Buscar coordenadas para la dirección ingresada
+  const isDriverAwake = originQuery.trim().length > 0 || destQuery.trim().length > 0;
+
   const fetchGeocode = async (queryText, isOrigin) => {
     if (!queryText || queryText.trim().length < 3) return;
 
     const lower = queryText.toLowerCase().trim();
-
-    // 1. Coincidencia rápida en la lista de ubicaciones
     const match = PRESET_LOCATIONS.find(loc =>
       loc.name.toLowerCase().includes(lower) || loc.address.toLowerCase().includes(lower)
     );
@@ -72,7 +54,6 @@ export default function TripRequestForm({ onSubmit, loading }) {
       return;
     }
 
-    // 2. Geocodificación remota con Nominatim OpenStreetMap
     if (isOrigin) setIsGeocodingOrigin(true);
     else setIsGeocodingDest(true);
 
@@ -106,7 +87,6 @@ export default function TripRequestForm({ onSubmit, loading }) {
     setOriginQuery(text);
     setOrigin(prev => ({ ...prev, address: text }));
 
-    // Filtrar sugerencias locales inmediatas
     if (text.length >= 2) {
       const matches = PRESET_LOCATIONS.filter(l =>
         l.name.toLowerCase().includes(text.toLowerCase()) ||
@@ -160,167 +140,490 @@ export default function TripRequestForm({ onSubmit, loading }) {
     setCreatedSuccess(true);
     setTimeout(() => setCreatedSuccess(false), 3000);
 
+    const fullDepartureTime = `${departureDate}T${departureTimeOnly}:00`;
     onSubmit({
       origin,
       destination,
-      departureTime
+      departureTime: fullDepartureTime
     });
   };
 
   return (
-    <div className="card glass-card form-card">
-      <div className="card-header">
-        <div className="title-with-icon">
-          <PlusCircle className="accent-icon" size={24} />
-          <h2>Generar Solicitud de Viaje Compartido</h2>
+    <div className="card glass-card form-card" style={{ background: 'transparent', border: 'none', padding: '0', boxShadow: 'none' }}>
+      <style>{`
+        .trip-form-container-centered {
+          max-width: 960px;
+          margin: 0 auto;
+          padding: 20px 0;
+        }
+
+        .trip-form-layout-grid {
+          display: grid;
+          grid-template-columns: 1fr 340px;
+          gap: 48px;
+          align-items: center;
+        }
+        @media (max-width: 768px) {
+          .trip-form-layout-grid {
+            grid-template-columns: 1fr;
+            gap: 28px;
+          }
+          .trip-form-animation-col {
+            display: flex;
+            justify-content: center;
+          }
+        }
+
+        /* Serpentine road connection layout */
+        .inputs-serpentine-wrap {
+          position: relative;
+          padding-left: 36px;
+        }
+        
+        @keyframes road-scroll {
+          0% { stroke-dashoffset: 0; }
+          100% { stroke-dashoffset: -20; }
+        }
+
+        /* Large styled inputs */
+        .large-input-group {
+          margin-bottom: 28px;
+          position: relative;
+        }
+        .large-input-label {
+          font-size: 18px;
+          font-weight: 700;
+          color: #ffffff;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 10px;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+        .large-form-input {
+          width: 100%;
+          background: #09090b;
+          border: 1px solid #1f1f23;
+          border-radius: 12px;
+          padding: 18px 24px;
+          font-size: 16px;
+          color: #ffffff;
+          outline: none;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .large-form-input:focus {
+          border-color: #cbd5e1;
+          background: #0c0c0e;
+          box-shadow: 0 0 0 1px #cbd5e1;
+        }
+
+        /* Compact Date/Time inputs below */
+        .small-datetime-row {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 16px;
+          margin-bottom: 28px;
+        }
+        .small-input-group {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+        }
+        .small-input-label {
+          font-size: 11px;
+          font-weight: 700;
+          color: #71717a;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+        .small-form-input {
+          background: #09090b;
+          border: 1px solid #1f1f23;
+          border-radius: 8px;
+          padding: 10px 14px;
+          font-size: 13px;
+          color: #cbd5e1;
+          outline: none;
+          transition: border-color 0.2s;
+        }
+        .small-form-input:focus {
+          border-color: #71717a;
+        }
+
+        /* Submit Button animation */
+        .btn-viajar {
+          background: #ffffff;
+          color: #09090b;
+          font-size: 18px;
+          font-weight: 800;
+          padding: 18px 36px;
+          border-radius: 10px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 12px;
+          width: 100%;
+          border: none;
+          cursor: pointer;
+          transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+          box-shadow: 0 4px 12px rgba(255, 255, 255, 0.05);
+        }
+        .btn-viajar:hover:not(:disabled) {
+          background: #cbd5e1;
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(255, 255, 255, 0.1);
+        }
+        .btn-viajar:hover .btn-arrow-icon {
+          transform: translateX(8px);
+        }
+        .btn-viajar:disabled {
+          background: #18181b;
+          color: #71717a;
+          border: 1px solid #27272a;
+          cursor: not-allowed;
+        }
+        .btn-arrow-icon {
+          transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        /* SVG Driver Illustration (Floating, no border/box) */
+        .driver-illustration-wrap {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          width: 340px;
+          height: 340px;
+          background: transparent;
+          position: relative;
+        }
+        .driver-interactive-svg {
+          width: 100%;
+          height: 100%;
+        }
+
+        /* Floating Zzz */
+        @keyframes float-zzz {
+          0% { opacity: 0; transform: translateY(6px) scale(0.85); }
+          50% { opacity: 0.8; }
+          100% { opacity: 0; transform: translateY(-16px) scale(1.15); }
+        }
+        .zzz {
+          font-family: monospace;
+          font-weight: 700;
+          fill: #71717a;
+          animation: float-zzz 3.5s infinite ease-in-out;
+          transform-origin: center;
+        }
+        .z1 { animation-delay: 0s; font-size: 11px; }
+        .z2 { animation-delay: 1.2s; font-size: 15px; }
+        .z3 { animation-delay: 2.4s; font-size: 20px; }
+      `}</style>
+
+      <div className="trip-form-container-centered">
+        {/* Simplified Title */}
+        <div className="card-header" style={{ padding: '0', marginBottom: '32px' }}>
+          <h2 style={{ fontSize: '24px', fontWeight: '700', color: '#ffffff', margin: '0' }}>Generar Solicitud</h2>
         </div>
-        <p className="card-subtitle">
-          Escribe cualquier dirección u origen/destino. Las coordenadas se detectarán automáticamente.
-        </p>
-      </div>
 
-      {createdSuccess && (
-        <div className="banner banner-success margin-bottom-16 flex-center gap-8">
-          <CheckCircle2 size={18} /> Solicitud creada exitosamente. Buscando combis y agrupando viajes...
-        </div>
-      )}
+        {createdSuccess && (
+          <div className="banner banner-success margin-bottom-24" style={{ background: 'rgba(34, 197, 94, 0.04)', color: '#22c55e', border: '1px solid rgba(34, 197, 94, 0.15)', padding: '16px', borderRadius: '8px', fontSize: '13px' }}>
+            Solicitud creada exitosamente. Buscando combis y agrupando viajes...
+          </div>
+        )}
 
-      {/* Botones de Selección Rápida */}
-      <div className="preset-container margin-bottom-16">
-        <span className="preset-label flex-center gap-4 text-xs font-bold">
-          <Sparkles size={14} className="text-amber" /> Lugares Frecuentes Demo:
-        </span>
-        <div className="preset-buttons">
-          {PRESET_LOCATIONS.slice(0, 6).map((preset, idx) => (
-            <button
-              key={idx}
-              type="button"
-              className="btn-preset"
-              onClick={() => {
-                handleSelectPresetLocation(preset, true);
-                const nextDest = PRESET_LOCATIONS[(idx + 3) % PRESET_LOCATIONS.length];
-                handleSelectPresetLocation(nextDest, false);
-              }}
-            >
-              {preset.name.split(' (')[0]}
-            </button>
-          ))}
-        </div>
-      </div>
+        <div className="trip-form-layout-grid">
+          {/* Left Column: Form Fields with serpentine road line on the left */}
+          <div className="trip-form-inputs-col">
+            <form onSubmit={handleSubmit}>
+              
+              <div className="inputs-serpentine-wrap">
+                {/* Winding road loop-the-loop connecting Origen and Destino inputs */}
+                <svg 
+                  style={{
+                    position: 'absolute',
+                    left: '-10px',
+                    top: '0px',
+                    height: '180px',
+                    width: '40px',
+                    overflow: 'visible',
+                    pointerEvents: 'none'
+                  }}
+                >
+                  <path 
+                    d="M 24,56 C -10,56 -15,92 12,103 C 35,114 35,130 12,141 C -15,150 -10,150 24,150" 
+                    fill="none" 
+                    strokeWidth="2.5" 
+                    strokeDasharray="5 5" 
+                    style={{
+                      stroke: isDriverAwake ? '#22c55e' : '#27272a',
+                      transition: 'stroke 0.5s ease',
+                      animation: isDriverAwake ? 'road-scroll 1.5s linear infinite' : 'none'
+                    }}
+                  />
+                </svg>
 
-      <form onSubmit={handleSubmit} className="trip-form">
-        <div className="form-grid">
-          {/* Origin Section */}
-          <div className="form-group relative">
-            <label className="form-label flex-between">
-              <span><MapPin className="text-emerald" size={16} /> Punto de Origen</span>
-              {isGeocodingOrigin && <span className="text-xs text-muted flex-center"><Loader2 size={12} className="spinner" /> Obteniendo Coordenadas...</span>}
-            </label>
-            
-            <input
-              type="text"
-              className="form-input"
-              value={originQuery}
-              onChange={(e) => handleOriginInputChange(e.target.value)}
-              placeholder="Escribe una dirección (Ej: Belgrano, San Isidro, Recoleta, Pilar...)"
-              required
-            />
+                {/* Origen Input */}
+                <div className="large-input-group">
+                  <label className="large-input-label">
+                    <MapPin className="text-emerald" size={20} style={{ color: '#10b981' }} /> Origen
+                  </label>
+                  <input
+                    type="text"
+                    className="large-form-input"
+                    value={originQuery}
+                    onChange={(e) => handleOriginInputChange(e.target.value)}
+                    placeholder="Dirección de origen..."
+                    required
+                  />
 
-            {/* Listado de sugerencias de Origen */}
-            {originSuggestions.length > 0 && (
-              <ul className="suggestions-list card glass-card">
-                {originSuggestions.map((item, idx) => (
-                  <li
-                    key={idx}
-                    className="suggestion-item"
-                    onClick={() => handleSelectPresetLocation({
-                      address: item.display_name || item.address,
-                      latitude: parseFloat(item.lat || item.latitude),
-                      longitude: parseFloat(item.lon || item.longitude)
-                    }, true)}
-                  >
-                    📍 {item.name || item.display_name || item.address}
-                  </li>
-                ))}
-              </ul>
-            )}
+                  {/* Suggestions dropdown */}
+                  {originSuggestions.length > 0 && (
+                    <ul className="suggestions-list card glass-card" style={{ zIndex: 10, left: 0 }}>
+                      {originSuggestions.map((item, idx) => (
+                        <li
+                          key={idx}
+                          className="suggestion-item"
+                          onClick={() => handleSelectPresetLocation({
+                            address: item.display_name || item.address,
+                            latitude: parseFloat(item.lat || item.latitude),
+                            longitude: parseFloat(item.lon || item.longitude)
+                          }, true)}
+                        >
+                          📍 {item.name || item.display_name || item.address}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
 
-            <div className="coords-row margin-top-8">
-              <span className="text-xs text-muted font-mono flex-center gap-4">
-                Lat: <strong>{origin.latitude}</strong> | Lng: <strong>{origin.longitude}</strong>
-              </span>
+                {/* Destino Input */}
+                <div className="large-input-group" style={{ marginBottom: '16px' }}>
+                  <label className="large-input-label">
+                    <Navigation className="text-indigo" size={20} style={{ color: '#6366f1' }} /> Destino
+                  </label>
+                  <input
+                    type="text"
+                    className="large-form-input"
+                    value={destQuery}
+                    onChange={(e) => handleDestInputChange(e.target.value)}
+                    placeholder="Dirección de destino..."
+                    required
+                  />
+
+                  {/* Suggestions dropdown */}
+                  {destSuggestions.length > 0 && (
+                    <ul className="suggestions-list card glass-card" style={{ zIndex: 10, left: 0 }}>
+                      {destSuggestions.map((item, idx) => (
+                        <li
+                          key={idx}
+                          className="suggestion-item"
+                          onClick={() => handleSelectPresetLocation({
+                            address: item.display_name || item.address,
+                            latitude: parseFloat(item.lat || item.latitude),
+                            longitude: parseFloat(item.lon || item.longitude)
+                          }, false)}
+                        >
+                          🏁 {item.name || item.display_name || item.address}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+
+              {/* Compact Date/Time inputs */}
+              <div className="small-datetime-row">
+                <div className="small-input-group">
+                  <label className="small-input-label">
+                    <Clock size={12} /> Fecha de Salida
+                  </label>
+                  <input
+                    type="date"
+                    className="small-form-input"
+                    value={departureDate}
+                    onChange={(e) => setDepartureDate(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="small-input-group">
+                  <label className="small-input-label">
+                    <Clock size={12} /> Hora de Salida
+                  </label>
+                  <input
+                    type="time"
+                    className="small-form-input"
+                    value={departureTimeOnly}
+                    onChange={(e) => setDepartureTimeOnly(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Action submit button */}
+              <button type="submit" className="btn-viajar" disabled={loading}>
+                {loading ? (
+                  <>
+                    <Loader2 size={20} className="spinner" />
+                    <span>Buscando combis...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Viajar</span>
+                    <ArrowRight size={22} className="btn-arrow-icon" />
+                  </>
+                )}
+              </button>
+            </form>
+          </div>
+
+          {/* Right Column: High Detail Driver SVG Illustration (Mirrored, based on reference photo) */}
+          <div className="trip-form-animation-col">
+            <div className="driver-illustration-wrap">
+              <svg 
+                className="driver-interactive-svg"
+                viewBox="0 0 240 240"
+                style={{ strokeLinecap: 'round', strokeLinejoin: 'round' }}
+              >
+                {/* 1. Steering Wheel & Spoke Design (Tilted left, matches photo layout) */}
+                <ellipse cx="108" cy="142" rx="35" ry="46" transform="rotate(-15 108 142)" stroke="#1f1f23" strokeWidth="3" fill="none" />
+                <ellipse cx="108" cy="142" rx="30" ry="40" transform="rotate(-15 108 142)" stroke="#1f1f23" strokeWidth="2" fill="none" />
+                {/* Center Hub */}
+                <ellipse cx="108" cy="142" rx="9" ry="12" transform="rotate(-15 108 142)" stroke="#1f1f23" strokeWidth="2.5" fill="none" />
+                {/* Spokes of the wheel */}
+                <line x1="108" y1="142" x2="80" y2="128" transform="rotate(-15 108 142)" stroke="#1f1f23" strokeWidth="2.5" />
+                <line x1="108" y1="142" x2="136" y2="128" transform="rotate(-15 108 142)" stroke="#1f1f23" strokeWidth="2.5" />
+                <line x1="108" y1="142" x2="108" y2="178" transform="rotate(-15 108 142)" stroke="#1f1f23" strokeWidth="2.5" />
+
+                {/* 2. Steering Column Console */}
+                <path d="M 98,148 L 50,175 C 45,178 30,178 20,178" stroke="#1f1f23" strokeWidth="3" fill="none" />
+                <path d="M 112,152 L 80,184" stroke="#1f1f23" strokeWidth="3" fill="none" />
+
+                {/* 3. Driver Upper Body Group (Waist anchor at (190, 185)) */}
+                {/* Leans forward/left over the wheel when sleeping, sits up when awake */}
+                <g 
+                  style={{
+                    transform: isDriverAwake ? 'rotate(0deg) translate(0px, 0px)' : 'rotate(-16deg) translate(-26px, 12px)',
+                    transformOrigin: '190px 185px',
+                    transition: 'transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)'
+                  }}
+                >
+                  {/* Spine / Torso back curvature */}
+                  <path 
+                    d="M 192,185 C 195,145 186,115 166,95" 
+                    stroke={isDriverAwake ? '#e4e4e7' : '#71717a'} 
+                    strokeWidth="2.5" 
+                    fill="none" 
+                    style={{ transition: 'stroke 0.8s' }} 
+                  />
+                  {/* Chest / Front contour */}
+                  <path 
+                    d="M 148,185 C 146,155 140,128 132,112" 
+                    stroke={isDriverAwake ? '#e4e4e7' : '#71717a'} 
+                    strokeWidth="2.5" 
+                    fill="none" 
+                    style={{ transition: 'stroke 0.8s' }} 
+                  />
+
+                  {/* Hoodie Hood Folds (High Detail) */}
+                  <path 
+                    d="M 166,95 C 172,99 184,108 188,124 C 190,140 178,145 168,138 C 160,132 158,118 158,118" 
+                    stroke={isDriverAwake ? '#e4e4e7' : '#71717a'} 
+                    strokeWidth="2" 
+                    fill="none" 
+                    style={{ transition: 'stroke 0.8s' }} 
+                  />
+                  <path 
+                    d="M 172,105 C 178,110 182,118 182,126" 
+                    stroke={isDriverAwake ? '#a1a1aa' : '#52525b'} 
+                    strokeWidth="1.5" 
+                    fill="none" 
+                    style={{ transition: 'stroke 0.8s' }} 
+                  />
+
+                  {/* Detailed Head & Hair profile (exactly matching the user photo silhouette) */}
+                  {/* Hair waves */}
+                  <path 
+                    d="M 124,70 C 122,60 134,50 144,56 C 150,52 158,56 160,66 C 156,64 148,63 142,69 C 136,64 128,66 124,70 Z" 
+                    stroke={isDriverAwake ? '#e4e4e7' : '#71717a'} 
+                    strokeWidth="2" 
+                    fill="none" 
+                    style={{ transition: 'stroke 0.8s' }} 
+                  />
+                  {/* Wavy locks detail */}
+                  <path 
+                    d="M 132,68 C 136,58 148,58 152,65" 
+                    stroke={isDriverAwake ? '#e4e4e7' : '#71717a'} 
+                    strokeWidth="1.5" 
+                    fill="none" 
+                    style={{ transition: 'stroke 0.8s' }} 
+                  />
+                  
+                  {/* Face Outline: forehead, nose bridge, nose tip, lips, chin, jawline */}
+                  <path 
+                    d="M 148,78 C 146,65 136,65 132,68 C 127,71 123,76 123,80 L 118,83 C 117,84 117,86 119,87 L 123,89 C 123,92 125,96 129,99 C 135,102 147,98 147,88 C 147,84 149,81 148,78 Z" 
+                    stroke={isDriverAwake ? '#e4e4e7' : '#71717a'} 
+                    strokeWidth="2.5" 
+                    fill="none" 
+                    style={{ transition: 'stroke 0.8s' }} 
+                  />
+
+                  {/* Face expression cross-fade */}
+                  {/* Awake Face: Alert eye and Smile */}
+                  <g style={{ opacity: isDriverAwake ? 1 : 0, transition: 'opacity 0.6s' }}>
+                    <circle cx="131" cy="78" r="1.2" fill="#e4e4e7" />
+                    <path d="M 126,89 Q 130,92 133,89" stroke="#e4e4e7" strokeWidth="1.5" fill="none" />
+                  </g>
+
+                  {/* Sleeping Face: Closed eye (matching photo) */}
+                  <g style={{ opacity: isDriverAwake ? 0 : 1, transition: 'opacity 0.6s' }}>
+                    <path d="M 128,79 Q 131,81 133,79" stroke="#71717a" strokeWidth="1.5" fill="none" />
+                  </g>
+                </g>
+
+                {/* 4. Arms & Hands state cross-fade (folding/reaching wheel) */}
+                {/* Awake Arms: Both hands placed on the steering wheel */}
+                <g style={{ opacity: isDriverAwake ? 1 : 0, transform: isDriverAwake ? 'scale(1)' : 'scale(0.92)', transformOrigin: '155px 120px', transition: 'opacity 0.6s, transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)' }}>
+                  {/* Upper Arm to wheel top-right */}
+                  <path d="M 155,120 C 130,105 110,105 92,118" stroke="#e4e4e7" strokeWidth="2.5" fill="none" />
+                  {/* Lower Arm to wheel bottom-right */}
+                  <path d="M 152,132 C 130,122 112,122 96,134" stroke="#e4e4e7" strokeWidth="2.5" fill="none" />
+                </g>
+
+                {/* Sleeping Arm: draped over the steering wheel exactly like the photo */}
+                <g style={{ opacity: isDriverAwake ? 0 : 1, transform: isDriverAwake ? 'scale(1.08)' : 'scale(1)', transformOrigin: '160px 115px', transition: 'opacity 0.6s, transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)' }}>
+                  {/* Shoulder curving down */}
+                  <path d="M 162,115 C 138,102 110,102 86,118" stroke="#71717a" strokeWidth="2.5" fill="none" />
+                  {/* Forearm draped over steering wheel ring */}
+                  <path d="M 86,118 C 72,132 64,152 64,166" stroke="#71717a" strokeWidth="2.5" fill="none" />
+                  {/* Fingers draping down */}
+                  <path d="M 64,166 Q 60,172 61,180" stroke="#71717a" strokeWidth="2" fill="none" />
+                  <path d="M 66,168 L 66,186" stroke="#71717a" strokeWidth="2" />
+                  <path d="M 69,169 L 70,188" stroke="#71717a" strokeWidth="2" />
+                  <path d="M 72,168 L 73,184" stroke="#71717a" strokeWidth="2" />
+                </g>
+
+                {/* 5. Green Alert lines (awake) */}
+                <g style={{ opacity: isDriverAwake ? 1 : 0, transition: 'opacity 0.8s' }}>
+                  <line x1="82" y1="95" x2="72" y2="86" stroke="#22c55e" strokeWidth="1.5" />
+                  <line x1="88" y1="156" x2="78" y2="164" stroke="#22c55e" strokeWidth="1.5" />
+                </g>
+
+                {/* 6. Floating Zzz (sleeping) */}
+                <g style={{ opacity: isDriverAwake ? 0 : 1, transition: 'opacity 0.4s' }}>
+                  <text x="175" y="80" className="zzz z1">z</text>
+                  <text x="185" y="60" className="zzz z2">Z</text>
+                  <text x="200" y="40" className="zzz z3">Z</text>
+                </g>
+              </svg>
             </div>
           </div>
-
-          {/* Destination Section */}
-          <div className="form-group relative">
-            <label className="form-label flex-between">
-              <span><Navigation className="text-indigo" size={16} /> Punto de Destino</span>
-              {isGeocodingDest && <span className="text-xs text-muted flex-center"><Loader2 size={12} className="spinner" /> Obteniendo Coordenadas...</span>}
-            </label>
-
-            <input
-              type="text"
-              className="form-input"
-              value={destQuery}
-              onChange={(e) => handleDestInputChange(e.target.value)}
-              placeholder="Escribe el destino (Ej: Microcentro, Palermo, Pilar, Tigre...)"
-              required
-            />
-
-            {/* Listado de sugerencias de Destino */}
-            {destSuggestions.length > 0 && (
-              <ul className="suggestions-list card glass-card">
-                {destSuggestions.map((item, idx) => (
-                  <li
-                    key={idx}
-                    className="suggestion-item"
-                    onClick={() => handleSelectPresetLocation({
-                      address: item.display_name || item.address,
-                      latitude: parseFloat(item.lat || item.latitude),
-                      longitude: parseFloat(item.lon || item.longitude)
-                    }, false)}
-                  >
-                    🏁 {item.name || item.display_name || item.address}
-                  </li>
-                ))}
-              </ul>
-            )}
-
-            <div className="coords-row margin-top-8">
-              <span className="text-xs text-muted font-mono flex-center gap-4">
-                Lat: <strong>{destination.latitude}</strong> | Lng: <strong>{destination.longitude}</strong>
-              </span>
-            </div>
-          </div>
-
-          {/* Date & Time */}
-          <div className="form-group full-width">
-            <label className="form-label">
-              <Clock className="text-amber" size={16} /> Horario Deseado de Salida
-            </label>
-            <input
-              type="datetime-local"
-              className="form-input"
-              value={departureTime.slice(0, 16)}
-              onChange={(e) => setDepartureTime(e.target.value + ':00')}
-              required
-            />
-          </div>
         </div>
-
-        <button type="submit" className="btn-primary full-width margin-top-16" disabled={loading}>
-          {loading ? (
-            <span className="flex-center">
-              <span className="spinner"></span> Generando Solicitud...
-            </span>
-          ) : (
-            <span className="flex-center font-bold">
-              <PlusCircle size={20} /> Generar Solicitud de Viaje
-            </span>
-          )}
-        </button>
-      </form>
+      </div>
     </div>
   );
 }

@@ -292,13 +292,6 @@ function PassengerApp() {
                 >
                   <ListOrdered size={16} /> Mis Solicitudes ({userRequests.length})
                 </button>
-
-                <button
-                  className={`tab-btn ${activeTab === 'OPTIMIZER' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('OPTIMIZER')}
-                >
-                  <RouteIcon size={16} /> Probar API Optimización
-                </button>
               </>
             )}
           </div>
@@ -310,36 +303,6 @@ function PassengerApp() {
             <ArrowLeft size={14} /> Volver a la Landing
           </button>
         </div>
-
-        {/* User Auth Status Banner */}
-        {isAuthenticated ? (
-          <div 
-            className={`banner ${isAdmin ? 'banner-admin-flat' : 'banner-auth-success'} margin-bottom-24`}
-            style={isAdmin ? { background: 'rgba(255, 255, 255, 0.02)', border: '1px solid #1f1f23', color: '#e4e4e7' } : {}}
-          >
-            {isAdmin ? (
-              <ShieldCheck size={18} className="banner-icon" style={{ color: '#a1a1aa' }} />
-            ) : (
-              <UserCheck size={18} className="banner-icon text-neon-green" />
-            )}
-            <div>
-              Sesión activa como <strong>{user.name}</strong> ({user.email}). {isAdmin ? 'Tenés permisos de Administrador para gestionar todas las solicitudes del sistema.' : 'Tus solicitudes creadas quedarán vinculadas a tu cuenta.'}
-            </div>
-          </div>
-        ) : (
-          <div className="banner banner-auth-prompt margin-bottom-24">
-            <Info size={18} className="banner-icon text-electric-violet" />
-            <div className="flex-between flex-grow">
-              <span>Ingresá a tu cuenta para gestionar reservas o como chofer de combi.</span>
-              <button
-                className="btn-link-action"
-                onClick={() => navigate('/login')}
-              >
-                <LogIn size={14} /> Iniciar Sesión
-              </button>
-            </div>
-          </div>
-        )}
 
         {/* 1. Admin Page */}
         {isAdmin && activeTab === 'ADMIN' && (
