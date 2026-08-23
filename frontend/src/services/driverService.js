@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:8080/api/drivers';
+const API_BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:8080/api') + '/drivers';
 
 function getHeaders(customHeaders = {}) {
   const headers = { 'Content-Type': 'application/json', ...customHeaders };
