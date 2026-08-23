@@ -35,6 +35,7 @@ public class TripController {
             @RequestBody TripRequestDto requestDto,
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
         
+        String userEmail = "invitado@trampopoints.com";
         if (authHeader != null && !authHeader.trim().isEmpty()) {
             UserDto user = authService.getCurrentUser(authHeader);
             if (user != null) {
@@ -43,10 +44,11 @@ public class TripController {
                     return ResponseEntity.status(HttpStatus.FORBIDDEN)
                             .body(Map.of("error", "Los administradores y choferes no pueden crear solicitudes de viaje."));
                 }
+                userEmail = user.getEmail();
             }
         }
         
-        TripRequestResponseDto response = tripService.createTripRequest(requestDto);
+        TripRequestResponseDto response = tripService.createTripRequest(requestDto, userEmail);
         return ResponseEntity.ok(response);
     }
 

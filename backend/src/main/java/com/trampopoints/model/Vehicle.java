@@ -1,28 +1,69 @@
 package com.trampopoints.model;
 
+import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+@Entity
+@Table(name = "vehicles")
 public class Vehicle {
+
+    @Id
+    @Column(name = "id", nullable = false)
     private String id;
+
+    @Column(name = "driver_id", nullable = false)
     private String driverId;
+
+    @Column(name = "brand")
     private String brand;
+
+    @Column(name = "model")
     private String model;
+
+    @Column(name = "year")
     private Integer year;
+
+    @Column(name = "color")
     private String color;
+
+    @Column(name = "license_plate")
     private String licensePlate;
+
+    @Column(name = "image_url")
     private String imageUrl;
+
+    @Column(name = "vehicle_type")
     private String vehicleType; // COMBI, MINIBUS, VAN
 
+    @Column(name = "passenger_capacity")
     private Integer passengerCapacity;
+
+    @Column(name = "seat_count")
     private Integer seatCount;
+
+    @Column(name = "luggage_capacity")
     private String luggageCapacity; // LIGHT, MEDIUM, LARGE
+
+    @Column(name = "approx_cargo_kg")
     private Integer approxCargoKg;
+
+    @Column(name = "allows_bulky_objects")
     private Boolean allowsBulkyObjects;
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "vehicle_features", joinColumns = @JoinColumn(name = "vehicle_id"))
+    @Column(name = "feature")
     private List<String> features = new ArrayList<>(); // AC, HEATING, WIFI, USB, SEATBELTS, ACCESSIBILITY, LUGGAGE_COMPARTMENT
+
+    @Column(name = "status")
     private String status; // AVAILABLE, UNAVAILABLE, OUT_OF_SERVICE
+
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
     public Vehicle() {
@@ -52,148 +93,40 @@ public class Vehicle {
         this.updatedAt = LocalDateTime.now();
     }
 
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public String getDriverId() {
-        return driverId;
-    }
-
-    public void setDriverId(String driverId) {
-        this.driverId = driverId;
-    }
-
-    public String getBrand() {
-        return brand;
-    }
-
-    public void setBrand(String brand) {
-        this.brand = brand;
-    }
-
-    public String getModel() {
-        return model;
-    }
-
-    public void setModel(String model) {
-        this.model = model;
-    }
-
-    public Integer getYear() {
-        return year;
-    }
-
-    public void setYear(Integer year) {
-        this.year = year;
-    }
-
-    public String getColor() {
-        return color;
-    }
-
-    public void setColor(String color) {
-        this.color = color;
-    }
-
-    public String getLicensePlate() {
-        return licensePlate;
-    }
-
-    public void setLicensePlate(String licensePlate) {
-        this.licensePlate = licensePlate;
-    }
-
-    public String getImageUrl() {
-        return imageUrl;
-    }
-
-    public void setImageUrl(String imageUrl) {
-        this.imageUrl = imageUrl;
-    }
-
-    public String getVehicleType() {
-        return vehicleType;
-    }
-
-
-    public void setVehicleType(String vehicleType) {
-        this.vehicleType = vehicleType;
-    }
-
-    public Integer getPassengerCapacity() {
-        return passengerCapacity;
-    }
-
-    public void setPassengerCapacity(Integer passengerCapacity) {
-        this.passengerCapacity = passengerCapacity;
-    }
-
-    public Integer getSeatCount() {
-        return seatCount;
-    }
-
-    public void setSeatCount(Integer seatCount) {
-        this.seatCount = seatCount;
-    }
-
-    public String getLuggageCapacity() {
-        return luggageCapacity;
-    }
-
-    public void setLuggageCapacity(String luggageCapacity) {
-        this.luggageCapacity = luggageCapacity;
-    }
-
-    public Integer getApproxCargoKg() {
-        return approxCargoKg;
-    }
-
-    public void setApproxCargoKg(Integer approxCargoKg) {
-        this.approxCargoKg = approxCargoKg;
-    }
-
-    public Boolean getAllowsBulkyObjects() {
-        return allowsBulkyObjects;
-    }
-
-    public void setAllowsBulkyObjects(Boolean allowsBulkyObjects) {
-        this.allowsBulkyObjects = allowsBulkyObjects;
-    }
-
-    public List<String> getFeatures() {
-        return features;
-    }
-
-    public void setFeatures(List<String> features) {
-        this.features = features;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
+    public String getDriverId() { return driverId; }
+    public void setDriverId(String driverId) { this.driverId = driverId; }
+    public String getBrand() { return brand; }
+    public void setBrand(String brand) { this.brand = brand; }
+    public String getModel() { return model; }
+    public void setModel(String model) { this.model = model; }
+    public Integer getYear() { return year; }
+    public void setYear(Integer year) { this.year = year; }
+    public String getColor() { return color; }
+    public void setColor(String color) { this.color = color; }
+    public String getLicensePlate() { return licensePlate; }
+    public void setLicensePlate(String licensePlate) { this.licensePlate = licensePlate; }
+    public String getImageUrl() { return imageUrl; }
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
+    public String getVehicleType() { return vehicleType; }
+    public void setVehicleType(String vehicleType) { this.vehicleType = vehicleType; }
+    public Integer getPassengerCapacity() { return passengerCapacity; }
+    public void setPassengerCapacity(Integer passengerCapacity) { this.passengerCapacity = passengerCapacity; }
+    public Integer getSeatCount() { return seatCount; }
+    public void setSeatCount(Integer seatCount) { this.seatCount = seatCount; }
+    public String getLuggageCapacity() { return luggageCapacity; }
+    public void setLuggageCapacity(String luggageCapacity) { this.luggageCapacity = luggageCapacity; }
+    public Integer getApproxCargoKg() { return approxCargoKg; }
+    public void setApproxCargoKg(Integer approxCargoKg) { this.approxCargoKg = approxCargoKg; }
+    public Boolean getAllowsBulkyObjects() { return allowsBulkyObjects; }
+    public void setAllowsBulkyObjects(Boolean allowsBulkyObjects) { this.allowsBulkyObjects = allowsBulkyObjects; }
+    public List<String> getFeatures() { return features; }
+    public void setFeatures(List<String> features) { this.features = features; }
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 }

@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import { decodePolyline } from '../utils/polyline';
 
-export default function MapView({ stops, polyline }) {
+export default function MapView({ stops, polyline, height = '100%' }) {
   const mapRef = useRef(null);
   const leafletMapInstance = useRef(null);
   const layerGroupRef = useRef(null);
@@ -100,8 +100,8 @@ export default function MapView({ stops, polyline }) {
   }, [stops, polyline]);
 
   return (
-    <div className="map-wrapper">
-      <div ref={mapRef} className="leaflet-map-container" style={{ height: '420px', width: '100%', borderRadius: '16px' }} />
+    <div className="map-wrapper" style={{ height, width: '100%' }}>
+      <div ref={mapRef} className="leaflet-map-container" style={{ height: '100%', width: '100%', borderRadius: '12px' }} />
     </div>
   );
 }

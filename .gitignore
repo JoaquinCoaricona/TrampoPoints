@@ -39,3 +39,8 @@ yarn-error.log*
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# ==========================================
+# Secret & Configuration Files
+# ==========================================
+backend/src/main/resources/application.properties

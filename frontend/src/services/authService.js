@@ -1,5 +1,8 @@
 const API_BASE_URL = 'http://localhost:8080/api';
 
+// Usamos sessionStorage en lugar de localStorage:
+// - Los datos duran solo mientras el tab/browser está abierto
+// - No persisten datos entre sesiones
 const AUTH_STORAGE_KEY = 'trampopoints_auth_token';
 const USER_STORAGE_KEY = 'trampopoints_auth_user';
 
@@ -22,8 +25,6 @@ export function resolveUserRole(rawRole, email) {
 
 // 1. Iniciar Sesión (POST /api/auth/login)
 export async function loginUser(email, password, desiredRole = null) {
-  const lowerEmail = (email || '').toLowerCase().trim();
-
   try {
     const response = await fetch(`${API_BASE_URL}/auth/login`, {
       method: 'POST',
@@ -37,46 +38,17 @@ export async function loginUser(email, password, desiredRole = null) {
         data.user.role = resolveUserRole(desiredRole || data.user.role, data.user.email);
       }
       if (data.token) {
-        localStorage.setItem(AUTH_STORAGE_KEY, data.token);
-        localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(data.user));
+        sessionStorage.setItem(AUTH_STORAGE_KEY, data.token);
+        sessionStorage.setItem(USER_STORAGE_KEY, JSON.stringify(data.user));
       }
       return data;
     }
+
+    const errBody = await response.json().catch(() => ({}));
+    throw new Error(errBody.error || 'Credenciales inválidas');
   } catch (error) {
-    console.warn('Endpoint /api/auth/login en backend no disponible o error de red, ejecutando autenticación en modo local:', error);
+    throw error;
   }
-
-  // Fallback seguro de autenticación local / demo para Chofer, Pasajero y Administrador
-  const resolvedRole = resolveUserRole(desiredRole, email);
-  let mockUser = null;
-
-  if (resolvedRole === 'ADMIN') {
-    mockUser = {
-      id: 'usr-admin-01',
-      name: 'Administrador General',
-      email: email || 'admin@trampopoints.com',
-      role: 'ADMIN'
-    };
-  } else if (resolvedRole === 'DRIVER') {
-    mockUser = {
-      id: 'usr-drv-101',
-      name: email === 'juan.chofer@trampopoints.com' ? 'Juan Pérez (Chofer)' : (email.split('@')[0].toUpperCase() + ' (Chofer)'),
-      email: email || 'juan.chofer@trampopoints.com',
-      role: 'DRIVER'
-    };
-  } else {
-    mockUser = {
-      id: 'usr-101',
-      name: email === 'juan@email.com' ? 'Juan Pérez (Pasajero)' : email.split('@')[0].toUpperCase(),
-      email: email || 'juan@email.com',
-      role: 'USER'
-    };
-  }
-
-  const mockToken = 'tp_mock_token_' + Date.now();
-  localStorage.setItem(AUTH_STORAGE_KEY, mockToken);
-  localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(mockUser));
-  return { token: mockToken, user: mockUser };
 }
 
 // 2. Registrar Usuario (POST /api/auth/register)
@@ -96,31 +68,22 @@ export async function registerUser(name, email, password, role = 'USER') {
         data.user.role = resolveUserRole(data.user.role || resolvedRole, data.user.email);
       }
       if (data.token) {
-        localStorage.setItem(AUTH_STORAGE_KEY, data.token);
-        localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(data.user));
+        sessionStorage.setItem(AUTH_STORAGE_KEY, data.token);
+        sessionStorage.setItem(USER_STORAGE_KEY, JSON.stringify(data.user));
       }
       return data;
     }
+
+    const errBody = await response.json().catch(() => ({}));
+    throw new Error(errBody.error || 'Error al registrar el usuario');
   } catch (error) {
-    console.warn('Endpoint /api/auth/register en backend no disponible, registrando en modo local:', error);
+    throw error;
   }
-
-  const mockUser = {
-    id: 'usr-' + Math.floor(Math.random() * 900 + 100),
-    name: name || 'Usuario',
-    email: email,
-    role: resolvedRole
-  };
-
-  const mockToken = 'tp_mock_token_' + Date.now();
-  localStorage.setItem(AUTH_STORAGE_KEY, mockToken);
-  localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(mockUser));
-  return { token: mockToken, user: mockUser };
 }
 
 // 3. Obtener Usuario Actual (GET /api/auth/me)
 export async function getCurrentUser(token) {
-  const activeToken = token || localStorage.getItem(AUTH_STORAGE_KEY);
+  const activeToken = token || sessionStorage.getItem(AUTH_STORAGE_KEY);
   if (!activeToken) return null;
 
   try {
@@ -135,17 +98,19 @@ export async function getCurrentUser(token) {
     if (response.ok) {
       const user = await response.json();
       user.role = resolveUserRole(user.role, user.email);
-      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
+      sessionStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
       return user;
+    } else if (response.status === 401) {
+      sessionStorage.removeItem(AUTH_STORAGE_KEY);
+      sessionStorage.removeItem(USER_STORAGE_KEY);
+      return null;
     }
-    // Si la respuesta no es OK (por ejemplo 401) usamos fallback local
-    console.warn('getCurrentUser: respuesta no OK, usando fallback local');
   } catch (error) {
-    console.warn('No se pudo verificar token con backend, utilizando sesión local:', error);
+    console.warn('No se pudo verificar token con backend:', error);
   }
 
-  // Fallback: intentar obtener usuario almacenado en localStorage
-  const stored = localStorage.getItem(USER_STORAGE_KEY);
+  // Fallback (solo si no es un error 401 explícito de token inválido)
+  const stored = sessionStorage.getItem(USER_STORAGE_KEY);
   if (stored) {
     try {
       const parsed = JSON.parse(stored);
@@ -160,7 +125,7 @@ export async function getCurrentUser(token) {
 
 // 4. Cerrar Sesión (POST /api/auth/logout)
 export async function logoutUser() {
-  const token = localStorage.getItem(AUTH_STORAGE_KEY);
+  const token = sessionStorage.getItem(AUTH_STORAGE_KEY);
   if (token) {
     try {
       await fetch(`${API_BASE_URL}/auth/logout`, {
@@ -175,14 +140,14 @@ export async function logoutUser() {
     }
   }
 
-  localStorage.removeItem(AUTH_STORAGE_KEY);
-  localStorage.removeItem(USER_STORAGE_KEY);
+  sessionStorage.removeItem(AUTH_STORAGE_KEY);
+  sessionStorage.removeItem(USER_STORAGE_KEY);
   return { success: true };
 }
 
 export function getStoredAuth() {
-  const token = localStorage.getItem(AUTH_STORAGE_KEY);
-  const userJson = localStorage.getItem(USER_STORAGE_KEY);
+  const token = sessionStorage.getItem(AUTH_STORAGE_KEY);
+  const userJson = sessionStorage.getItem(USER_STORAGE_KEY);
   let user = null;
   if (userJson) {
     try {

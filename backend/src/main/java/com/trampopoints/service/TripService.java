@@ -5,6 +5,8 @@ import com.trampopoints.model.Location;
 import com.trampopoints.model.Stop;
 import com.trampopoints.model.Trip;
 import com.trampopoints.model.TripRequest;
+import com.trampopoints.repository.TripRepository;
+import com.trampopoints.repository.TripRequestRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,8 +19,10 @@ public class TripService {
 
     private final MatchingService matchingService;
     private final RouteService routeService;
+    private final TripRequestRepository tripRequestRepository;
+    private final TripRepository tripRepository;
 
-    // Almacén en memoria de viajes y solicitudes
+    // Almacén en memoria de viajes y solicitudes (sincronizados con DB)
     private final Map<String, Trip> tripsMap = new ConcurrentHashMap<>();
     private final Map<String, TripRequest> requestsMap = new ConcurrentHashMap<>();
     
@@ -26,46 +30,41 @@ public class TripService {
     private final AtomicInteger tripCounter = new AtomicInteger(450);
 
     @Autowired
-    public TripService(MatchingService matchingService, RouteService routeService) {
+    public TripService(
+            MatchingService matchingService,
+            RouteService routeService,
+            TripRequestRepository tripRequestRepository,
+            TripRepository tripRepository) {
         this.matchingService = matchingService;
         this.routeService = routeService;
+        this.tripRequestRepository = tripRequestRepository;
+        this.tripRepository = tripRepository;
+        
+        loadDatabaseData();
         initMockData();
     }
 
-    private void initMockData() {
-        // Pre-sembrar el viaje predeterminado trip-456 de la especificación
-        Location obelisco = new Location(-34.6037, -58.3816, "Obelisco");
-        Location palermo = new Location(-34.5895, -58.3974, "Palermo");
-        
-        List<Stop> stops = new ArrayList<>();
-        stops.add(new Stop("stop-1", "PICKUP", 1, -34.6037, -58.3816, "Obelisco"));
-        stops.add(new Stop("stop-2", "DROPOFF", 2, -34.5895, -58.3974, "Palermo"));
-
-        String polyline = routeService.generatePolyline(obelisco, stops, palermo);
-
-        Trip trip456 = new Trip(
-                "trip-456",
-                "CONFIRMED",
-                1,
-                30,
-                1800,
-                35,
-                "2026-08-22T08:30:00",
-                obelisco,
-                palermo,
-                8500,
-                1800,
-                polyline,
-                stops
-        );
-        tripsMap.put(trip456.getTripId(), trip456);
-
-        // Pre-sembrar la solicitud req-123
-        TripRequest req123 = new TripRequest("req-123", obelisco, palermo, "2026-08-22T08:30:00");
-        requestsMap.put(req123.getRequestId(), req123);
+    private void loadDatabaseData() {
+        // Carga de base de datos a los mapas en memoria en el inicio de la app
+        try {
+            List<TripRequest> reqs = tripRequestRepository.findAll();
+            for (TripRequest req : reqs) {
+                requestsMap.put(req.getRequestId(), req);
+            }
+            List<Trip> tripsList = tripRepository.findAll();
+            for (Trip t : tripsList) {
+                tripsMap.put(t.getTripId(), t);
+            }
+        } catch (Exception e) {
+            System.err.println("Advertencia al cargar datos de base de datos a memoria: " + e.getMessage());
+        }
     }
 
-    public TripRequestResponseDto createTripRequest(TripRequestDto requestDto) {
+    private void initMockData() {
+        // Sin datos precargados; la base de datos PostgreSQL inicia vacía
+    }
+
+    public TripRequestResponseDto createTripRequest(TripRequestDto requestDto, String userEmail) {
         String newRequestId = "req-" + requestCounter.incrementAndGet();
 
         Location origin = new Location(
@@ -86,8 +85,10 @@ public class TripService {
                 destination,
                 requestDto.getDepartureTime()
         );
+        newRequest.setUserEmail(userEmail);
 
         requestsMap.put(newRequestId, newRequest);
+        tripRequestRepository.save(newRequest);
 
         return new TripRequestResponseDto(
                 newRequestId,
@@ -97,52 +98,62 @@ public class TripService {
     }
 
     public MatchResponseDto findMatches(String requestId) {
-        TripRequest req = requestsMap.get(requestId);
+        // Sincronizar desde DB para asegurar que leemos los datos actualizados
+        TripRequest req = tripRequestRepository.findById(requestId).orElse(requestsMap.get(requestId));
         List<TripMatchDto> matches = new ArrayList<>();
 
         if (req != null) {
-            for (Trip trip : tripsMap.values()) {
-                if (matchingService.isCompatible(
-                        req.getOrigin(), req.getDestination(), req.getDepartureTime(),
-                        trip.getOrigin(), trip.getDestination(), trip.getDepartureTime(),
-                        trip.getPassengerCount()
-                )) {
-                    matches.add(new TripMatchDto(
-                            trip.getTripId(),
-                            trip.getPassengerCount(),
-                            trip.getCapacity(),
-                            trip.getEstimatedPricePerPassenger(),
-                            trip.getEstimatedSavingsPercent(),
-                            trip.getDepartureTime()
-                    ));
+            // Buscamos viajes activos en la base de datos
+            List<Trip> activeTrips = tripRepository.findAll();
+            boolean foundAssigned = false;
+
+            // Si está confirmado o ya fue asignado, buscamos el viaje que lo contiene
+            for (Trip trip : activeTrips) {
+                for (Stop stop : trip.getStops()) {
+                    boolean coordsMatch = stop.getLatitude() != null && req.getOrigin().getLatitude() != null &&
+                            Math.abs(stop.getLatitude() - req.getOrigin().getLatitude()) < 0.0001 &&
+                            stop.getLongitude() != null && req.getOrigin().getLongitude() != null &&
+                            Math.abs(stop.getLongitude() - req.getOrigin().getLongitude()) < 0.0001;
+                    
+                    boolean addressMatches = stop.getAddress() != null && req.getOrigin().getAddress() != null &&
+                            stop.getAddress().equalsIgnoreCase(req.getOrigin().getAddress());
+
+                    if ("PICKUP".equals(stop.getType()) && (coordsMatch || addressMatches)) {
+                        matches.add(new TripMatchDto(
+                                trip.getTripId(),
+                                trip.getPassengerCount(),
+                                trip.getCapacity(),
+                                trip.getEstimatedPricePerPassenger(),
+                                trip.getEstimatedSavingsPercent(),
+                                trip.getDepartureTime()
+                        ));
+                        foundAssigned = true;
+                        break;
+                    }
+                }
+                if (foundAssigned) {
+                    break;
                 }
             }
 
-            // Si no hubo coincidencia directa, generar una nueva propuesta de viaje compartida para la solicitud
-            if (matches.isEmpty()) {
-                Trip newTrip = createDynamicTripFromCluster(List.of(req));
-                tripsMap.put(newTrip.getTripId(), newTrip);
-                matches.add(new TripMatchDto(
-                        newTrip.getTripId(),
-                        newTrip.getPassengerCount(),
-                        newTrip.getCapacity(),
-                        newTrip.getEstimatedPricePerPassenger(),
-                        newTrip.getEstimatedSavingsPercent(),
-                        newTrip.getDepartureTime()
-                ));
-            }
-        } else {
-            // Si el requestId es req-123 o genérico sin registrar, retornar el viaje mock trip-456
-            Trip trip = tripsMap.get("trip-456");
-            if (trip != null) {
-                matches.add(new TripMatchDto(
-                        trip.getTripId(),
-                        trip.getPassengerCount(),
-                        trip.getCapacity(),
-                        trip.getEstimatedPricePerPassenger(),
-                        trip.getEstimatedSavingsPercent(),
-                        trip.getDepartureTime()
-                ));
+            // Si no encontramos un viaje asignado directo, buscamos compatibles
+            if (!foundAssigned) {
+                for (Trip trip : activeTrips) {
+                    if (matchingService.isCompatible(
+                            req.getOrigin(), req.getDestination(), req.getDepartureTime(),
+                            trip.getOrigin(), trip.getDestination(), trip.getDepartureTime(),
+                            trip.getPassengerCount()
+                    )) {
+                        matches.add(new TripMatchDto(
+                                trip.getTripId(),
+                                trip.getPassengerCount(),
+                                trip.getCapacity(),
+                                trip.getEstimatedPricePerPassenger(),
+                                trip.getEstimatedSavingsPercent(),
+                                trip.getDepartureTime()
+                        ));
+                    }
+                }
             }
         }
 
@@ -150,10 +161,9 @@ public class TripService {
     }
 
     public TripResponseDto getTripById(String tripId) {
-        Trip trip = tripsMap.get(tripId);
+        Trip trip = tripRepository.findById(tripId).orElse(tripsMap.get(tripId));
         if (trip == null) {
-            // Fallback a trip-456 si no existe
-            trip = tripsMap.get("trip-456");
+            return null;
         }
 
         RouteDto routeDto = new RouteDto(
@@ -248,12 +258,13 @@ public class TripService {
     }
 
     public List<TripRequest> getAllRequests() {
-        return new ArrayList<>(requestsMap.values());
+        return tripRequestRepository.findAll();
     }
 
     public Map<String, Object> processGroupingAlgorithm() {
+        // Consultar directamente de base de datos las solicitudes buscando grupo
         List<TripRequest> searching = new ArrayList<>();
-        for (TripRequest r : requestsMap.values()) {
+        for (TripRequest r : tripRequestRepository.findAll()) {
             if ("SEARCHING".equals(r.getStatus())) {
                 searching.add(r);
             }
@@ -280,11 +291,16 @@ public class TripService {
             }
 
             Trip newTrip = createDynamicTripFromCluster(cluster);
+            tripRepository.save(newTrip); // Persistir combi generada
             tripsMap.put(newTrip.getTripId(), newTrip);
             createdTrips.add(newTrip);
 
             for (TripRequest r : cluster) {
                 r.setStatus("CONFIRMED");
+            }
+            tripRequestRepository.saveAll(cluster); // Actualizar estado de solicitudes a CONFIRMED en DB
+            for (TripRequest r : cluster) {
+                requestsMap.put(r.getRequestId(), r);
             }
         }
 

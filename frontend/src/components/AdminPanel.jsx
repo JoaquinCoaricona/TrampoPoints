@@ -61,7 +61,7 @@ export default function AdminPanel({
           background: transparent;
           border: none;
           border-radius: 0;
-          padding: 0;
+          padding: 0 0 80px 0;
           color: #f4f4f5;
           font-family: system-ui, -apple-system, sans-serif;
         }
@@ -358,10 +358,9 @@ export default function AdminPanel({
         /* Rigid column widths ensuring zero horizontal scrollbar */
         .col-id { width: 8%; }
         .col-user { width: 22%; }
-        .col-route { width: 38%; }
+        .col-route { width: 34%; }
         .col-schedule { width: 14%; }
-        .col-status { width: 10%; }
-        .col-actions { width: 8%; }
+        .col-actions { width: 22%; }
 
         .admin-data-table-flat th {
           padding: 12px 8px;
@@ -516,6 +515,60 @@ export default function AdminPanel({
           background: rgba(239, 68, 68, 0.1);
           border-color: #ef4444;
         }
+
+        .btn-ver-recorrido-flat {
+          background: rgba(34, 197, 94, 0.08);
+          color: #22c55e;
+          border: 1px solid rgba(34, 197, 94, 0.15);
+          padding: 6px 12px;
+          border-radius: 4px;
+          font-size: 12px;
+          font-weight: 600;
+          cursor: pointer;
+          white-space: nowrap;
+          transition: background-color 0.2s, border-color 0.2s;
+        }
+        .btn-ver-recorrido-flat:hover {
+          background: rgba(34, 197, 94, 0.15);
+          border-color: #22c55e;
+        }
+
+        .status-pill-fintech-select {
+          font-size: 11px;
+          font-weight: 700;
+          padding: 6px 12px;
+          border-radius: 4px;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          cursor: pointer;
+          outline: none;
+          display: inline-block;
+          border: 1px solid rgba(228, 228, 231, 0.15);
+          transition: background-color 0.2s, border-color 0.2s;
+          appearance: none;
+          -webkit-appearance: none;
+          background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8'><path fill='%2371717a' d='M0 2l4 4 4-4z'/></svg>");
+          background-repeat: no-repeat;
+          background-position: right 8px center;
+          padding-right: 22px;
+        }
+        .status-pill-fintech-select.searching {
+          background-color: rgba(228, 228, 231, 0.05);
+          color: #a1a1aa;
+          border-color: rgba(228, 228, 231, 0.15);
+        }
+        .status-pill-fintech-select.confirmed {
+          background-color: rgba(34, 197, 94, 0.08);
+          color: #22c55e;
+          border-color: rgba(34, 197, 94, 0.15);
+          background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8'><path fill='%2322c55e' d='M0 2l4 4 4-4z'/></svg>");
+        }
+        .status-pill-fintech-select.cancelled {
+          background-color: rgba(239, 68, 68, 0.08);
+          color: #ef4444;
+          border-color: rgba(239, 68, 68, 0.15);
+          background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8'><path fill='%23ef4444' d='M0 2l4 4 4-4z'/></svg>");
+        }
       `}</style>
 
       {/* Breadcrumbs */}
@@ -587,7 +640,7 @@ export default function AdminPanel({
           ) : (
             <>
               <Zap size={14} />
-              Agrupar Solicitudes
+              Ejecutar Algoritmo
             </>
           )}
         </button>
@@ -658,7 +711,6 @@ export default function AdminPanel({
                 <col className="col-user" />
                 <col className="col-route" />
                 <col className="col-schedule" />
-                <col className="col-status" />
                 <col className="col-actions" />
               </colgroup>
               <thead>
@@ -667,8 +719,7 @@ export default function AdminPanel({
                   <th>Usuario</th>
                   <th>Ruta (Origen ➔ Destino)</th>
                   <th>Horario</th>
-                  <th>Estado</th>
-                  <th>Acciones</th>
+                  <th>Estado y Gestión</th>
                 </tr>
               </thead>
               <tbody>
@@ -695,14 +746,9 @@ export default function AdminPanel({
                       </div>
                     </td>
                     <td>
-                      <span className={`status-pill-fintech ${req.status ? req.status.toLowerCase() : 'searching'}`}>
-                        {req.status || 'SEARCHING'}
-                      </span>
-                    </td>
-                    <td>
                       <div className="actions-flex">
                         <select
-                          className="admin-table-select-flat"
+                          className={`status-pill-fintech-select ${req.status ? req.status.toLowerCase() : 'searching'}`}
                           value={req.status || 'SEARCHING'}
                           onChange={(e) => onUpdateStatus(req.requestId, e.target.value)}
                         >
@@ -710,14 +756,24 @@ export default function AdminPanel({
                           <option value="CONFIRMED">CONFIRMED</option>
                           <option value="CANCELLED">CANCELLED</option>
                         </select>
-                        <button
-                          type="button"
-                          className="btn-action-flat-icon"
-                          onClick={() => onViewMatches(req)}
-                          title="Ver Combi"
-                        >
-                          <Bus size={14} />
-                        </button>
+                        {(req.status === 'CONFIRMED' || req.status === 'MATCHED') ? (
+                          <button
+                            type="button"
+                            className="btn-ver-recorrido-flat"
+                            onClick={() => onViewMatches(req)}
+                          >
+                            Ver Recorrido
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            className="btn-action-flat-icon"
+                            onClick={() => onViewMatches(req)}
+                            title="Ver Combi"
+                          >
+                            <Bus size={14} />
+                          </button>
+                        )}
                         <button
                           type="button"
                           className="btn-action-delete-icon"

@@ -2,13 +2,14 @@ package com.trampopoints.service;
 
 import com.trampopoints.dto.*;
 import com.trampopoints.model.*;
+import com.trampopoints.repository.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -17,196 +18,216 @@ public class DriverService {
 
     private static final String DEFAULT_DRIVER_ID = "drv-101";
 
-    private final Map<String, Driver> driversMap = new ConcurrentHashMap<>();
-    private final Map<String, Vehicle> vehiclesMap = new ConcurrentHashMap<>();
-    private final Map<String, List<VehicleDocumentation>> documentationsMap = new ConcurrentHashMap<>();
-    private final Map<String, List<DriverRating>> ratingsMap = new ConcurrentHashMap<>();
-    private final Map<String, List<DriverRecommendation>> recommendationsMap = new ConcurrentHashMap<>();
+    private final DriverRepository driverRepository;
+    private final VehicleRepository vehicleRepository;
+    private final VehicleDocumentationRepository vehicleDocumentationRepository;
+    private final DriverRatingRepository driverRatingRepository;
+    private final DriverRecommendationRepository driverRecommendationRepository;
 
     private final AtomicInteger docCounter = new AtomicInteger(10);
     private final AtomicInteger ratingCounter = new AtomicInteger(50);
     private final AtomicInteger recommendationCounter = new AtomicInteger(20);
 
-    public DriverService() {
+    @Autowired
+    public DriverService(
+            DriverRepository driverRepository,
+            VehicleRepository vehicleRepository,
+            VehicleDocumentationRepository vehicleDocumentationRepository,
+            DriverRatingRepository driverRatingRepository,
+            DriverRecommendationRepository driverRecommendationRepository) {
+        this.driverRepository = driverRepository;
+        this.vehicleRepository = vehicleRepository;
+        this.vehicleDocumentationRepository = vehicleDocumentationRepository;
+        this.driverRatingRepository = driverRatingRepository;
+        this.driverRecommendationRepository = driverRecommendationRepository;
+        
         initDefaultDriverData();
     }
 
     private void initDefaultDriverData() {
-        // 1. Chofer por defecto
-        Driver driver = new Driver(
-                DEFAULT_DRIVER_ID,
-                "Juan",
-                "Pérez",
-                "juan.chofer@trampopoints.com",
-                "+54 11 4589-2234",
-                "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
-                "ACTIVE",
-                4.8,
-                103,
-                42
-        );
-        driversMap.put(DEFAULT_DRIVER_ID, driver);
+        // 1. Chofer por defecto en base de datos
+        if (!driverRepository.existsById(DEFAULT_DRIVER_ID)) {
+            Driver driver = new Driver(
+                    DEFAULT_DRIVER_ID,
+                    "Juan",
+                    "Pérez",
+                    "juan.chofer@trampopoints.com",
+                    "+54 11 4589-2234",
+                    "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
+                    "ACTIVE",
+                    4.8,
+                    103,
+                    42
+            );
+            driverRepository.save(driver);
+        }
 
-        // 2. Vehículo
+        // 2. Vehículo en base de datos
         String vehicleId = "veh-101";
-        List<String> features = new ArrayList<>(Arrays.asList(
-                "AIRE_ACONDICIONADO",
-                "CALEFACCION",
-                "WIFI",
-                "USB",
-                "CINTURONES_SEGURIDAD",
-                "ESPACIO_EQUIPAJE",
-                "ACCESIBILIDAD_RAMPA"
-        ));
+        if (!vehicleRepository.existsById(vehicleId)) {
+            List<String> features = new ArrayList<>(Arrays.asList(
+                    "AIRE_ACONDICIONADO",
+                    "CALEFACCION",
+                    "WIFI",
+                    "USB",
+                    "CINTURONES_SEGURIDAD",
+                    "ESPACIO_EQUIPAJE",
+                    "ACCESIBILIDAD_RAMPA"
+            ));
 
-        Vehicle vehicle = new Vehicle(
-                vehicleId,
-                DEFAULT_DRIVER_ID,
-                "Mercedes-Benz",
-                "Sprinter 516 CDI Minibús",
-                2024,
-                "Blanco Ártico",
-                "AF 482 TP",
-                "MINIBUS",
-                20,
-                20,
-                "LARGE",
-                850,
-                true,
-                features,
-                "AVAILABLE"
-        );
-        vehicle.setImageUrl("https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=800&auto=format&fit=crop&q=80");
-        vehiclesMap.put(DEFAULT_DRIVER_ID, vehicle);
+            Vehicle vehicle = new Vehicle(
+                    vehicleId,
+                    DEFAULT_DRIVER_ID,
+                    "Mercedes-Benz",
+                    "Sprinter 516 CDI Minibús",
+                    2024,
+                    "Blanco Ártico",
+                    "AF 482 TP",
+                    "MINIBUS",
+                    20,
+                    20,
+                    "LARGE",
+                    850,
+                    true,
+                    features,
+                    "AVAILABLE"
+            );
+            vehicle.setImageUrl("https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=800&auto=format&fit=crop&q=80");
+            vehicleRepository.save(vehicle);
+        }
 
+        // 3. Documentación en base de datos
+        if (vehicleDocumentationRepository.findByVehicleId(vehicleId).isEmpty()) {
+            List<VehicleDocumentation> docs = new ArrayList<>();
+            docs.add(new VehicleDocumentation(
+                    "doc-1",
+                    vehicleId,
+                    "SEGURO",
+                    "Seguro Obligatorio y Responsabilidad Civil Pasajeros",
+                    "POL-984218-AR",
+                    "La Segunda Seguros",
+                    LocalDate.now().minusMonths(6),
+                    LocalDate.now().plusMonths(6),
+                    "VALID",
+                    "Cobertura integral con extensión para transporte interurbano"
+            ));
 
-        // 3. Documentación
-        List<VehicleDocumentation> docs = new ArrayList<>();
-        docs.add(new VehicleDocumentation(
-                "doc-1",
-                vehicleId,
-                "SEGURO",
-                "Seguro Obligatorio y Responsabilidad Civil Pasajeros",
-                "POL-984218-AR",
-                "La Segunda Seguros",
-                LocalDate.now().minusMonths(6),
-                LocalDate.now().plusMonths(6),
-                "VALID",
-                "Cobertura integral con extensión para transporte interurbano"
-        ));
+            docs.add(new VehicleDocumentation(
+                    "doc-2",
+                    vehicleId,
+                    "VTV",
+                    "VTV / Revisión Técnica Obligatoria (RTO)",
+                    "RTO-2026-8819",
+                    "Gobierno de la Ciudad de Buenos Aires",
+                    LocalDate.now().minusMonths(4),
+                    LocalDate.now().plusMonths(8),
+                    "VALID",
+                    "Aprobado sin observaciones mecánicas ni de emisión"
+            ));
 
-        docs.add(new VehicleDocumentation(
-                "doc-2",
-                vehicleId,
-                "VTV",
-                "VTV / Revisión Técnica Obligatoria (RTO)",
-                "RTO-2026-8819",
-                "Gobierno de la Ciudad de Buenos Aires",
-                LocalDate.now().minusMonths(4),
-                LocalDate.now().plusMonths(8),
-                "VALID",
-                "Aprobado sin observaciones mecánicas ni de emisión"
-        ));
+            docs.add(new VehicleDocumentation(
+                    "doc-3",
+                    vehicleId,
+                    "PATENTE",
+                    "Constancia de Radicación y Título del Automotor",
+                    "DOM-AF482TP",
+                    "DNRPA Argentina",
+                    LocalDate.of(2024, 2, 10),
+                    null,
+                    "VALID",
+                    "Patente al día sin infracciones pendientes"
+            ));
 
-        docs.add(new VehicleDocumentation(
-                "doc-3",
-                vehicleId,
-                "PATENTE",
-                "Constancia de Radicación y Título del Automotor",
-                "DOM-AF482TP",
-                "DNRPA Argentina",
-                LocalDate.of(2024, 2, 10),
-                null,
-                "VALID",
-                "Patente al día sin infracciones pendientes"
-        ));
+            docs.add(new VehicleDocumentation(
+                    "doc-4",
+                    vehicleId,
+                    "LICENCIA_PROFESIONAL",
+                    "Licencia Nacional de Conducir Clase D2 (Pasajeros)",
+                    "LIC-34892019",
+                    "Dirección General de Tránsito y Transporte",
+                    LocalDate.now().minusMonths(8),
+                    LocalDate.now().plusMonths(16),
+                    "VALID",
+                    "Habilitación profesional para transporte de pasajeros de mediana y larga distancia"
+            ));
+            vehicleDocumentationRepository.saveAll(docs);
+        }
 
-        docs.add(new VehicleDocumentation(
-                "doc-4",
-                vehicleId,
-                "LICENCIA_PROFESIONAL",
-                "Licencia Nacional de Conducir Clase D2 (Pasajeros)",
-                "LIC-34892019",
-                "Dirección General de Tránsito y Transporte",
-                LocalDate.now().minusMonths(8),
-                LocalDate.now().plusMonths(16),
-                "VALID",
-                "Habilitación profesional para transporte de pasajeros de mediana y larga distancia"
-        ));
+        // 4. Calificaciones y Comentarios en base de datos
+        if (driverRatingRepository.findByDriverId(DEFAULT_DRIVER_ID).isEmpty()) {
+            List<DriverRating> ratings = new ArrayList<>();
+            ratings.add(new DriverRating(
+                    "rate-1",
+                    DEFAULT_DRIVER_ID,
+                    "Sofía Mendoza",
+                    5,
+                    "Excelente servicio, la combi súper limpia y cómoda. Juan muy puntual y respetuoso.",
+                    Arrays.asList("Puntualidad", "Vehículo Limpio", "Manejo Seguro")
+            ));
+            ratings.add(new DriverRating(
+                    "rate-2",
+                    DEFAULT_DRIVER_ID,
+                    "Martín Gómez",
+                    5,
+                    "Muy buen viaje hacia Pilar, el aire acondicionado funcionaba perfecto y llegamos antes de lo previsto.",
+                    Arrays.asList("Aire Acondicionado", "Puntualidad", "Comodidad")
+            ));
+            ratings.add(new DriverRating(
+                    "rate-3",
+                    DEFAULT_DRIVER_ID,
+                    "Lucía Rossi",
+                    5,
+                    "Manejo seguro y profesional. Muy recomendable para viajar todos los días.",
+                    Arrays.asList("Manejo Seguro", "Amabilidad")
+            ));
+            ratings.add(new DriverRating(
+                    "rate-4",
+                    DEFAULT_DRIVER_ID,
+                    "Esteban Morales",
+                    4,
+                    "Vehículo espacioso y con cargadores USB funcionando en cada asiento. Todo de diez.",
+                    Arrays.asList("USB", "Espacioso")
+            ));
+            ratings.add(new DriverRating(
+                    "rate-5",
+                    DEFAULT_DRIVER_ID,
+                    "Carolina Benítez",
+                    5,
+                    "Muy buena coordinación de paradas y trato sumamente cordial.",
+                    Arrays.asList("Puntualidad", "Amabilidad")
+            ));
+            driverRatingRepository.saveAll(ratings);
+        }
 
-        documentationsMap.put(vehicleId, docs);
-
-        // 4. Calificaciones y Comentarios
-        List<DriverRating> ratings = new ArrayList<>();
-        ratings.add(new DriverRating(
-                "rate-1",
-                DEFAULT_DRIVER_ID,
-                "Sofía Mendoza",
-                5,
-                "Excelente servicio, la combi súper limpia y cómoda. Juan muy puntual y respetuoso.",
-                Arrays.asList("Puntualidad", "Vehículo Limpio", "Manejo Seguro")
-        ));
-        ratings.add(new DriverRating(
-                "rate-2",
-                DEFAULT_DRIVER_ID,
-                "Martín Gómez",
-                5,
-                "Muy buen viaje hacia Pilar, el aire acondicionado funcionaba perfecto y llegamos antes de lo previsto.",
-                Arrays.asList("Aire Acondicionado", "Puntualidad", "Comodidad")
-        ));
-        ratings.add(new DriverRating(
-                "rate-3",
-                DEFAULT_DRIVER_ID,
-                "Lucía Rossi",
-                5,
-                "Manejo seguro y profesional. Muy recomendable para viajar todos los días.",
-                Arrays.asList("Manejo Seguro", "Amabilidad")
-        ));
-        ratings.add(new DriverRating(
-                "rate-4",
-                DEFAULT_DRIVER_ID,
-                "Esteban Morales",
-                4,
-                "Vehículo espacioso y con cargadores USB funcionando en cada asiento. Todo de diez.",
-                Arrays.asList("USB", "Espacioso")
-        ));
-        ratings.add(new DriverRating(
-                "rate-5",
-                DEFAULT_DRIVER_ID,
-                "Carolina Benítez",
-                5,
-                "Muy buena coordinación de paradas y trato sumamente cordial.",
-                Arrays.asList("Puntualidad", "Amabilidad")
-        ));
-        ratingsMap.put(DEFAULT_DRIVER_ID, ratings);
-
-        // 5. Recomendaciones Destacadas
-        List<DriverRecommendation> recs = new ArrayList<>();
-        recs.add(new DriverRecommendation(
-                "rec-1",
-                DEFAULT_DRIVER_ID,
-                "Martín Gómez",
-                5,
-                "Excelente servicio y muy puntual. Es la mejor opción para traslados diarios compartidos.",
-                "Pilar ➔ Microcentro"
-        ));
-        recs.add(new DriverRecommendation(
-                "rec-2",
-                DEFAULT_DRIVER_ID,
-                "Lucía Rossi",
-                5,
-                "Vehículo muy cómodo, con WiFi veloz y climatización perfecta. Viaje 100% recomendable.",
-                "San Isidro ➔ Belgrano"
-        ));
-        recs.add(new DriverRecommendation(
-                "rec-3",
-                DEFAULT_DRIVER_ID,
-                "Esteban Morales",
-                4,
-                "Todo perfecto, muy atento con el equipaje y una conducción sumamente responsable.",
-                "Belgrano ➔ Tigre"
-        ));
-        recommendationsMap.put(DEFAULT_DRIVER_ID, recs);
+        // 5. Recomendaciones Destacadas en base de datos
+        if (driverRecommendationRepository.findByDriverId(DEFAULT_DRIVER_ID).isEmpty()) {
+            List<DriverRecommendation> recs = new ArrayList<>();
+            recs.add(new DriverRecommendation(
+                    "rec-1",
+                    DEFAULT_DRIVER_ID,
+                    "Martín Gómez",
+                    5,
+                    "Excelente servicio y muy puntual. Es la mejor opción para traslados diarios compartidos.",
+                    "Pilar ➔ Microcentro"
+            ));
+            recs.add(new DriverRecommendation(
+                    "rec-2",
+                    DEFAULT_DRIVER_ID,
+                    "Lucía Rossi",
+                    5,
+                    "Vehículo muy cómodo, con WiFi veloz y climatización perfecta. Viaje 100% recomendable.",
+                    "San Isidro ➔ Belgrano"
+            ));
+            recs.add(new DriverRecommendation(
+                    "rec-3",
+                    DEFAULT_DRIVER_ID,
+                    "Esteban Morales",
+                    4,
+                    "Todo perfecto, muy atento con el equipaje y una conducción sumamente responsable.",
+                    "Belgrano ➔ Tigre"
+            ));
+            driverRecommendationRepository.saveAll(recs);
+        }
     }
 
     // ==========================================
@@ -214,19 +235,23 @@ public class DriverService {
     // ==========================================
 
     public DriverDto getCurrentDriver() {
-        Driver driver = driversMap.get(DEFAULT_DRIVER_ID);
-        if (driver == null) {
-            initDefaultDriverData();
-            driver = driversMap.get(DEFAULT_DRIVER_ID);
-        }
-        return mapToDriverDto(driver);
+        Driver driver = driverRepository.findById(DEFAULT_DRIVER_ID)
+                .orElseGet(() -> {
+                    initDefaultDriverData();
+                    return driverRepository.findById(DEFAULT_DRIVER_ID).orElse(null);
+                });
+        return driver != null ? mapToDriverDto(driver) : null;
     }
 
     public DriverDto updateDriver(UpdateDriverRequestDto request) {
-        Driver driver = driversMap.get(DEFAULT_DRIVER_ID);
+        Driver driver = driverRepository.findById(DEFAULT_DRIVER_ID)
+                .orElseGet(() -> {
+                    initDefaultDriverData();
+                    return driverRepository.findById(DEFAULT_DRIVER_ID).orElse(null);
+                });
+
         if (driver == null) {
-            initDefaultDriverData();
-            driver = driversMap.get(DEFAULT_DRIVER_ID);
+            return null;
         }
 
         if (request.getName() != null && !request.getName().trim().isEmpty()) {
@@ -246,6 +271,7 @@ public class DriverService {
         }
         driver.setUpdatedAt(LocalDateTime.now());
 
+        driverRepository.save(driver);
         return mapToDriverDto(driver);
     }
 
@@ -254,21 +280,20 @@ public class DriverService {
     // ==========================================
 
     public VehicleDto getVehicle() {
-        Vehicle vehicle = vehiclesMap.get(DEFAULT_DRIVER_ID);
-        if (vehicle == null) {
-            initDefaultDriverData();
-            vehicle = vehiclesMap.get(DEFAULT_DRIVER_ID);
-        }
-        return mapToVehicleDto(vehicle);
+        Vehicle vehicle = vehicleRepository.findByDriverId(DEFAULT_DRIVER_ID)
+                .orElseGet(() -> {
+                    initDefaultDriverData();
+                    return vehicleRepository.findByDriverId(DEFAULT_DRIVER_ID).orElse(null);
+                });
+        return vehicle != null ? mapToVehicleDto(vehicle) : null;
     }
 
     public VehicleDto saveVehicle(SaveVehicleRequestDto request) {
-        Vehicle vehicle = vehiclesMap.get(DEFAULT_DRIVER_ID);
+        Vehicle vehicle = vehicleRepository.findByDriverId(DEFAULT_DRIVER_ID).orElse(null);
         if (vehicle == null) {
             vehicle = new Vehicle();
             vehicle.setId("veh-" + System.currentTimeMillis());
             vehicle.setDriverId(DEFAULT_DRIVER_ID);
-            vehiclesMap.put(DEFAULT_DRIVER_ID, vehicle);
         }
 
         vehicle.setBrand(request.getBrand());
@@ -289,20 +314,25 @@ public class DriverService {
         }
         vehicle.setUpdatedAt(LocalDateTime.now());
 
+        vehicleRepository.save(vehicle);
         return mapToVehicleDto(vehicle);
     }
 
-
     public VehicleDto updateVehicleStatus(String status) {
-        Vehicle vehicle = vehiclesMap.get(DEFAULT_DRIVER_ID);
+        Vehicle vehicle = vehicleRepository.findByDriverId(DEFAULT_DRIVER_ID)
+                .orElseGet(() -> {
+                    initDefaultDriverData();
+                    return vehicleRepository.findByDriverId(DEFAULT_DRIVER_ID).orElse(null);
+                });
+
         if (vehicle == null) {
-            initDefaultDriverData();
-            vehicle = vehiclesMap.get(DEFAULT_DRIVER_ID);
+            return null;
         }
 
         if ("AVAILABLE".equalsIgnoreCase(status) || "UNAVAILABLE".equalsIgnoreCase(status) || "OUT_OF_SERVICE".equalsIgnoreCase(status)) {
             vehicle.setStatus(status.toUpperCase());
             vehicle.setUpdatedAt(LocalDateTime.now());
+            vehicleRepository.save(vehicle);
         } else {
             throw new IllegalArgumentException("Estado de vehículo no válido: " + status);
         }
@@ -315,10 +345,10 @@ public class DriverService {
     // ==========================================
 
     public List<VehicleDocumentationDto> getVehicleDocumentations() {
-        Vehicle vehicle = vehiclesMap.get(DEFAULT_DRIVER_ID);
+        Vehicle vehicle = vehicleRepository.findByDriverId(DEFAULT_DRIVER_ID).orElse(null);
         String vehicleId = vehicle != null ? vehicle.getId() : "veh-101";
 
-        List<VehicleDocumentation> docs = documentationsMap.getOrDefault(vehicleId, new ArrayList<>());
+        List<VehicleDocumentation> docs = vehicleDocumentationRepository.findByVehicleId(vehicleId);
         LocalDate today = LocalDate.now();
 
         return docs.stream().map(doc -> {
@@ -353,26 +383,18 @@ public class DriverService {
     }
 
     public VehicleDocumentationDto saveDocumentation(SaveDocumentationRequestDto request) {
-        Vehicle vehicle = vehiclesMap.get(DEFAULT_DRIVER_ID);
+        Vehicle vehicle = vehicleRepository.findByDriverId(DEFAULT_DRIVER_ID).orElse(null);
         String vehicleId = vehicle != null ? vehicle.getId() : "veh-101";
-
-        List<VehicleDocumentation> docs = documentationsMap.computeIfAbsent(vehicleId, k -> new ArrayList<>());
 
         VehicleDocumentation docToSave = null;
         if (request.getId() != null) {
-            for (VehicleDocumentation d : docs) {
-                if (d.getId().equals(request.getId())) {
-                    docToSave = d;
-                    break;
-                }
-            }
+            docToSave = vehicleDocumentationRepository.findById(request.getId()).orElse(null);
         }
 
         if (docToSave == null) {
             docToSave = new VehicleDocumentation();
             docToSave.setId("doc-" + docCounter.incrementAndGet());
             docToSave.setVehicleId(vehicleId);
-            docs.add(docToSave);
         }
 
         docToSave.setDocumentType(request.getDocumentType());
@@ -397,6 +419,8 @@ public class DriverService {
         }
         docToSave.setStatus(status);
 
+        vehicleDocumentationRepository.save(docToSave);
+
         return new VehicleDocumentationDto(
                 docToSave.getId(),
                 docToSave.getVehicleId(),
@@ -413,12 +437,9 @@ public class DriverService {
     }
 
     public boolean deleteDocumentation(String docId) {
-        Vehicle vehicle = vehiclesMap.get(DEFAULT_DRIVER_ID);
-        String vehicleId = vehicle != null ? vehicle.getId() : "veh-101";
-
-        List<VehicleDocumentation> docs = documentationsMap.get(vehicleId);
-        if (docs != null) {
-            return docs.removeIf(d -> d.getId().equals(docId));
+        if (vehicleDocumentationRepository.existsById(docId)) {
+            vehicleDocumentationRepository.deleteById(docId);
+            return true;
         }
         return false;
     }
@@ -428,8 +449,8 @@ public class DriverService {
     // ==========================================
 
     public DriverRatingSummaryDto getRatingSummary() {
-        Driver driver = driversMap.get(DEFAULT_DRIVER_ID);
-        List<DriverRating> ratings = ratingsMap.getOrDefault(DEFAULT_DRIVER_ID, new ArrayList<>());
+        Driver driver = driverRepository.findById(DEFAULT_DRIVER_ID).orElse(null);
+        List<DriverRating> ratings = driverRatingRepository.findByDriverId(DEFAULT_DRIVER_ID);
 
         List<DriverRatingDto> recentDtos = ratings.stream().map(r -> new DriverRatingDto(
                 r.getId(),
@@ -440,7 +461,6 @@ public class DriverService {
                 r.getCreatedAt()
         )).collect(Collectors.toList());
 
-        // Desglose de estrellas (87 de 5 estrellas, 12 de 4 estrellas, etc.)
         return new DriverRatingSummaryDto(
                 driver != null ? driver.getRatingAverage() : 4.8,
                 driver != null ? driver.getTotalRatings() : 103,
@@ -454,7 +474,7 @@ public class DriverService {
     }
 
     public List<DriverRecommendationDto> getRecommendations() {
-        List<DriverRecommendation> recs = recommendationsMap.getOrDefault(DEFAULT_DRIVER_ID, new ArrayList<>());
+        List<DriverRecommendation> recs = driverRecommendationRepository.findByDriverId(DEFAULT_DRIVER_ID);
         return recs.stream().map(r -> new DriverRecommendationDto(
                 r.getId(),
                 r.getPassengerName(),
@@ -536,5 +556,4 @@ public class DriverService {
                 vehicle.getStatus()
         );
     }
-
 }

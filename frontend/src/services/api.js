@@ -2,7 +2,7 @@ const API_BASE_URL = 'http://localhost:8080/api';
 
 function getHeaders(customHeaders = {}) {
   const headers = { 'Content-Type': 'application/json', ...customHeaders };
-  const token = localStorage.getItem('trampopoints_auth_token');
+  const token = sessionStorage.getItem('trampopoints_auth_token');
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }

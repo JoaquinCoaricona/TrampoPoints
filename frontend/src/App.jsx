@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation, useParams } from 'react-router-dom';
 import Header from './components/Header';
 import AuthModal from './components/AuthModal';
 
@@ -22,6 +22,9 @@ import RequestPage from './pages/RequestPage';
 import MyRequestsPage from './pages/MyRequestsPage';
 import AdminPage from './pages/AdminPage';
 import OptimizerPage from './pages/OptimizerPage';
+import RequestConfirmation from './components/RequestConfirmation';
+import MatchList from './components/MatchList';
+import TripDetails from './components/TripDetails';
 
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { resolveUserRole } from './services/authService';
@@ -34,44 +37,10 @@ import {
   UserCheck,
   LogIn,
   ShieldCheck,
-  ArrowLeft
+  ArrowLeft,
+  Loader2
 } from 'lucide-react';
 import './App.css';
-
-const LOCAL_STORAGE_REQUESTS_KEY = 'trampopoints_requests_store';
-
-const SEEDED_DEMO_REQUESTS = [
-  {
-    requestId: 'req-101',
-    userName: 'Juan Pérez',
-    userEmail: 'juan@email.com',
-    origin: { latitude: -34.5620, longitude: -58.4560, address: 'Av. Cabildo y Juramento, Belgrano' },
-    destination: { latitude: -34.6080, longitude: -58.3720, address: 'Plaza de Mayo, Microcentro' },
-    departureTime: '2026-08-22T08:30:00',
-    status: 'SEARCHING',
-    createdAt: '08:15'
-  },
-  {
-    requestId: 'req-102',
-    userName: 'María González',
-    userEmail: 'maria@email.com',
-    origin: { latitude: -34.5614, longitude: -58.4563, address: 'Juramento y Vuelta de Obligado, Belgrano' },
-    destination: { latitude: -34.6040, longitude: -58.3750, address: 'Florida y Corrientes, Microcentro' },
-    departureTime: '2026-08-22T08:30:00',
-    status: 'SEARCHING',
-    createdAt: '08:16'
-  },
-  {
-    requestId: 'req-103',
-    userName: 'Carlos Rodríguez',
-    userEmail: 'carlos@email.com',
-    origin: { latitude: -34.5630, longitude: -58.4550, address: 'Ciudad de la Paz y Echeverría, Belgrano' },
-    destination: { latitude: -34.6085, longitude: -58.3715, address: 'Leandro N. Alem y Rivadavia, Casa Rosada' },
-    departureTime: '2026-08-22T08:30:00',
-    status: 'SEARCHING',
-    createdAt: '08:17'
-  }
-];
 
 // Landing Page Wrapper (Preserves Protected Landing without changes)
 function LandingPageWrapper() {
@@ -96,22 +65,117 @@ function LandingPageWrapper() {
   );
 }
 
+// Sub-Wrappers using URL parameters for Passenger system sub-states
+
+function ConfirmationWrapper({ allRequests }) {
+  const { requestId } = useParams();
+  const navigate = useNavigate();
+  const requestData = allRequests.find(r => r.requestId === requestId);
+
+  return (
+    <RequestConfirmation
+      requestData={requestData}
+      onCreateAnother={() => navigate('/app')}
+      onViewMyRequests={() => navigate('/app/requests')}
+    />
+  );
+}
+
+function MatchesWrapper() {
+  const { requestId } = useParams();
+  const navigate = useNavigate();
+  const [matches, setMatches] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadMatches() {
+      setLoading(true);
+      try {
+        const res = await getTripMatches(requestId);
+        const tripMatches = res.matches || [];
+        setMatches(tripMatches);
+        
+        // Si ya está asignada a una sola combi (ej. por confirmación del algoritmo),
+        // llevamos al usuario directamente a ver el mapa/recorrido del viaje asignado.
+        if (tripMatches.length === 1) {
+          navigate(`/app/trip/${tripMatches[0].tripId}`, { replace: true });
+        }
+      } catch (err) {
+        console.error("Error cargando coincidencias:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadMatches();
+  }, [requestId, navigate]);
+
+  if (loading) {
+    return (
+      <div className="flex-center padding-48 flex-col gap-12" style={{ minHeight: '300px' }}>
+        <Loader2 className="spinner color-white" size={32} />
+        <p className="color-zinc-400 text-sm">Consultando recorridos de combis disponibles...</p>
+      </div>
+    );
+  }
+
+  return (
+    <MatchList
+      requestId={requestId}
+      matches={matches}
+      onSelectTrip={(tripId) => navigate(`/app/trip/${tripId}`)}
+      onReset={() => navigate('/app')}
+    />
+  );
+}
+
+function TripDetailsWrapper() {
+  const { tripId } = useParams();
+  const navigate = useNavigate();
+  const [tripData, setTripData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadTrip() {
+      setLoading(true);
+      try {
+        const res = await getTripDetails(tripId);
+        setTripData(res);
+      } catch (err) {
+        console.error("Error al cargar detalles del viaje:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadTrip();
+  }, [tripId]);
+
+  if (loading) {
+    return (
+      <div className="flex-center padding-48 flex-col gap-12" style={{ minHeight: '300px' }}>
+        <Loader2 className="spinner color-white" size={32} />
+        <p className="color-zinc-400 text-sm">Cargando paradas y mapa del recorrido...</p>
+      </div>
+    );
+  }
+
+  return (
+    <TripDetails
+      tripData={tripData}
+      onBack={() => navigate(-1)}
+    />
+  );
+}
+
 // Passenger & Admin Application View (/app)
 function PassengerApp() {
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const userRole = resolveUserRole(user?.role, user?.email);
   const isAdmin = userRole === 'ADMIN';
 
-  const [activeTab, setActiveTab] = useState('CREATE'); // 'CREATE' | 'ADMIN' | 'MY_REQUESTS' | 'OPTIMIZER'
-  const [viewState, setViewState] = useState('FORM'); // 'FORM' | 'CONFIRMATION' | 'MATCHES' | 'DETAILS'
-
   const [loading, setLoading] = useState(false);
   const [allRequests, setAllRequests] = useState([]);
-  const [lastCreatedRequest, setLastCreatedRequest] = useState(null);
-  const [currentRequestId, setCurrentRequestId] = useState(null);
-  const [matches, setMatches] = useState([]);
-  const [selectedTrip, setSelectedTrip] = useState(null);
 
   // Enforce authentication and role limits for the system flow
   useEffect(() => {
@@ -119,36 +183,27 @@ function PassengerApp() {
       navigate('/login', { replace: true });
     } else if (userRole === 'DRIVER') {
       navigate('/driver', { replace: true });
-    } else if (isAdmin) {
-      setActiveTab('ADMIN');
-    } else if (userRole === 'USER') {
-      setActiveTab('CREATE');
+    } else if (isAdmin && location.pathname === '/app') {
+      navigate('/app/admin', { replace: true });
     }
-  }, [isAuthenticated, userRole, isAdmin, navigate]);
+  }, [isAuthenticated, userRole, isAdmin, location.pathname, navigate]);
 
-
-  useEffect(() => {
+  const fetchAllRequests = async () => {
     try {
-      const stored = localStorage.getItem(LOCAL_STORAGE_REQUESTS_KEY);
-      if (stored) {
-        setAllRequests(JSON.parse(stored));
-      } else {
-        setAllRequests(SEEDED_DEMO_REQUESTS);
-        localStorage.setItem(LOCAL_STORAGE_REQUESTS_KEY, JSON.stringify(SEEDED_DEMO_REQUESTS));
+      const data = await getAllTripRequests();
+      if (Array.isArray(data)) {
+        setAllRequests(data);
       }
-    } catch {
-      setAllRequests(SEEDED_DEMO_REQUESTS);
-    }
-  }, []);
-
-  const saveRequestsToStorage = (updatedRequests) => {
-    setAllRequests(updatedRequests);
-    try {
-      localStorage.setItem(LOCAL_STORAGE_REQUESTS_KEY, JSON.stringify(updatedRequests));
-    } catch (e) {
-      console.warn('Error guardando solicitudes en LocalStorage:', e);
+    } catch (err) {
+      console.warn('No se pudieron obtener las solicitudes del backend:', err);
     }
   };
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchAllRequests();
+    }
+  }, [isAuthenticated]);
 
   const handleCreateRequest = async (formData) => {
     setLoading(true);
@@ -168,42 +223,10 @@ function PassengerApp() {
         createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
 
-      const updatedList = [newRequestItem, ...allRequests];
-      saveRequestsToStorage(updatedList);
-
-      setLastCreatedRequest(newRequestItem);
-      setCurrentRequestId(newReqId);
-      setViewState('CONFIRMATION');
+      setAllRequests(prev => [newRequestItem, ...prev]);
+      navigate(`/app/confirmation/${newReqId}`);
     } catch (err) {
       console.error('Error al procesar la solicitud de viaje:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleViewRequestMatches = async (requestItem) => {
-    setLoading(true);
-    setCurrentRequestId(requestItem.requestId);
-    setActiveTab('CREATE');
-    try {
-      const matchesRes = await getTripMatches(requestItem.requestId);
-      setMatches(matchesRes.matches || []);
-      setViewState('MATCHES');
-    } catch (err) {
-      console.error('Error al consultar las coincidencias:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSelectTrip = async (tripId) => {
-    setLoading(true);
-    try {
-      const tripData = await getTripDetails(tripId);
-      setSelectedTrip(tripData);
-      setViewState('DETAILS');
-    } catch (err) {
-      console.error('Error al obtener los detalles del viaje:', err);
     } finally {
       setLoading(false);
     }
@@ -215,7 +238,7 @@ function PassengerApp() {
       try {
         const refreshedRequests = await getAllTripRequests();
         if (refreshedRequests && refreshedRequests.length > 0) {
-          saveRequestsToStorage(refreshedRequests);
+          setAllRequests(refreshedRequests);
         }
       } catch (e) {
         console.warn('No se pudieron refrescar solicitudes desde backend:', e);
@@ -237,20 +260,12 @@ function PassengerApp() {
 
   const handleUpdateStatusByAdmin = (requestId, newStatus) => {
     const updated = allRequests.map(r => r.requestId === requestId ? { ...r, status: newStatus } : r);
-    saveRequestsToStorage(updated);
+    setAllRequests(updated);
   };
 
   const handleDeleteRequestByAdmin = (requestId) => {
     const updated = allRequests.filter(r => r.requestId !== requestId);
-    saveRequestsToStorage(updated);
-  };
-
-  const handleResetForm = () => {
-    setViewState('FORM');
-    setCurrentRequestId(null);
-    setLastCreatedRequest(null);
-    setMatches([]);
-    setSelectedTrip(null);
+    setAllRequests(updated);
   };
 
   const userRequests = allRequests.filter(r =>
@@ -262,86 +277,92 @@ function PassengerApp() {
       <Header />
 
       <main className="main-content container margin-top-20">
-        {/* Navigation Tabs */}
-        <div className="nav-tabs-container margin-bottom-24 flex-between align-center flex-wrap gap-12">
-          <div className="flex-center gap-10 flex-wrap">
-            {isAdmin && (
+        {/* Navigation Tabs (solo para pasajeros) */}
+        {!isAdmin && isAuthenticated && (
+          <div className="nav-tabs-container margin-bottom-24 flex-between align-center flex-wrap gap-12">
+            <div className="flex-center gap-10 flex-wrap">
               <button
-                className={`tab-btn tab-btn-admin ${activeTab === 'ADMIN' ? 'active' : ''}`}
-                onClick={() => setActiveTab('ADMIN')}
+                className={`tab-btn ${location.pathname === '/app' || location.pathname === '/app/' ? 'active' : ''}`}
+                onClick={() => navigate('/app')}
               >
-                <ShieldCheck size={16} /> Panel Administrador ({allRequests.length})
+                <PlusCircle size={16} /> Pedir Viaje
               </button>
-            )}
 
-            {isAuthenticated && userRole === 'USER' && (
-              <>
-                <button
-                  className={`tab-btn ${activeTab === 'CREATE' ? 'active' : ''}`}
-                  onClick={() => { setActiveTab('CREATE'); setViewState('FORM'); }}
-                >
-                  <PlusCircle size={16} /> Pedir Viaje
-                </button>
-
-                <button
-                  className={`tab-btn ${activeTab === 'MY_REQUESTS' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('MY_REQUESTS')}
-                >
-                  <ListOrdered size={16} /> Mis Solicitudes ({userRequests.length})
-                </button>
-              </>
-            )}
+              <button
+                className={`tab-btn ${location.pathname.includes('/requests') ? 'active' : ''}`}
+                onClick={() => navigate('/app/requests')}
+              >
+                <ListOrdered size={16} /> Mis Solicitudes ({userRequests.length})
+              </button>
+            </div>
           </div>
-
-          <button
-            className="btn-secondary text-xs flex-center gap-6"
-            onClick={() => navigate('/')}
-          >
-            <ArrowLeft size={14} /> Volver a la Landing
-          </button>
-        </div>
-
-        {/* 1. Admin Page */}
-        {isAdmin && activeTab === 'ADMIN' && (
-          <AdminPage
-            allRequests={allRequests}
-            onRunAlgorithm={handleRunGroupingAlgorithm}
-            onUpdateStatus={handleUpdateStatusByAdmin}
-            onDeleteRequest={handleDeleteRequestByAdmin}
-            onViewMatches={handleViewRequestMatches}
-          />
         )}
 
-        {/* 2. Create Trip / Details */}
-        {!isAdmin && activeTab === 'CREATE' && (
-          <RequestPage
-            viewState={viewState}
-            setViewState={setViewState}
-            lastCreatedRequest={lastCreatedRequest}
-            currentRequestId={currentRequestId}
-            matches={matches}
-            selectedTrip={selectedTrip}
-            loading={loading}
-            onSubmitRequest={handleCreateRequest}
-            onSelectTrip={handleSelectTrip}
-            onResetForm={handleResetForm}
-            onViewMyRequests={() => setActiveTab(isAdmin ? 'ADMIN' : 'MY_REQUESTS')}
-          />
-        )}
+        {/* Nested Routing structure for sub-panels and detail maps */}
+        <Routes>
+          {/* Admin routes */}
+          <Route path="admin" element={
+            isAdmin ? (
+              <AdminPage
+                allRequests={allRequests}
+                onRunAlgorithm={handleRunGroupingAlgorithm}
+                onUpdateStatus={handleUpdateStatusByAdmin}
+                onDeleteRequest={handleDeleteRequestByAdmin}
+                onViewMatches={(req) => navigate(`/app/matches/${req.requestId}`)}
+              />
+            ) : (
+              <Navigate to="/app" replace />
+            )
+          } />
 
-        {/* 3. My Requests Page */}
-        {!isAdmin && activeTab === 'MY_REQUESTS' && (
-          <MyRequestsPage
-            userRequests={userRequests}
-            onNewRequest={() => { setActiveTab('CREATE'); setViewState('FORM'); }}
-            onViewMatches={handleViewRequestMatches}
-          />
-        )}
+          {/* Rutas compartidas (Mapa de viaje y coincidencias accesibles por todos) */}
+          <Route path="matches/:requestId" element={<MatchesWrapper />} />
+          <Route path="trip/:tripId" element={<TripDetailsWrapper />} />
 
-        {/* 4. Optimizer Page */}
-        {!isAdmin && activeTab === 'OPTIMIZER' && (
-          <OptimizerPage />
-        )}
+          {/* Passenger routes */}
+          <Route index element={
+            isAdmin ? (
+              <Navigate to="/app/admin" replace />
+            ) : (
+              <RequestPage
+                viewState="FORM"
+                loading={loading}
+                onSubmitRequest={handleCreateRequest}
+              />
+            )
+          } />
+          
+          <Route path="requests" element={
+            isAdmin ? (
+              <Navigate to="/app/admin" replace />
+            ) : (
+              <MyRequestsPage
+                userRequests={userRequests}
+                onNewRequest={() => navigate('/app')}
+                onViewMatches={(req) => navigate(`/app/matches/${req.requestId}`)}
+              />
+            )
+          } />
+
+          <Route path="confirmation/:requestId" element={
+            isAdmin ? (
+              <Navigate to="/app/admin" replace />
+            ) : (
+              <ConfirmationWrapper allRequests={allRequests} />
+            )
+          } />
+
+          <Route path="optimizer" element={
+            isAdmin ? (
+              <Navigate to="/app/admin" replace />
+            ) : (
+              <OptimizerPage />
+            )
+          } />
+
+          {/* Fallback local */}
+          <Route path="*" element={<Navigate to={isAdmin ? "/app/admin" : "/app"} replace />} />
+        </Routes>
       </main>
     </div>
   );
