@@ -138,10 +138,13 @@ export async function getCurrentUser(token) {
       localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
       return user;
     }
+    // Si la respuesta no es OK (por ejemplo 401) usamos fallback local
+    console.warn('getCurrentUser: respuesta no OK, usando fallback local');
   } catch (error) {
     console.warn('No se pudo verificar token con backend, utilizando sesión local:', error);
   }
 
+  // Fallback: intentar obtener usuario almacenado en localStorage
   const stored = localStorage.getItem(USER_STORAGE_KEY);
   if (stored) {
     try {

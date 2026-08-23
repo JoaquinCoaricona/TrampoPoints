@@ -46,7 +46,7 @@ export default function DriverRatings() {
           {/* Left Column: Big Clean Score */}
           <div className="ratings-hero-col flex-column gap-12">
             <span className="section-eyebrow text-electric-violet">Resumen de Calificaciones</span>
-            <div className="flex-center gap-40 margin-top-12">
+            <div className="flex-center margin-top-12" style={{ gap: '72px' }}>
               <div className="score-hero-display text-electric-violet">
                 {ratingAverage?.toFixed(1) || '4.8'}
               </div>
@@ -154,12 +154,12 @@ export default function DriverRatings() {
                 </div>
               </div>
 
-              <blockquote className="review-quote-paragraph">
+              <blockquote className="review-quote-paragraph" style={{ marginTop: '20px' }}>
                 "{review.comment}"
               </blockquote>
 
               {review.tags && review.tags.length > 0 && (
-                <div className="review-tags-row margin-top-4">
+                <div className="review-tags-row" style={{ marginTop: '24px' }}>
                   {review.tags.map((tag, idx) => (
                     <span key={idx} className="tag-inline-chip text-xs">
                       {tag}

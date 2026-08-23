@@ -198,7 +198,7 @@ export default function DriverDocumentation({ onUpdateSuccess }) {
           docs.map((doc) => (
             <div key={doc.id} className="doc-entry-row flex-between align-start flex-wrap gap-24">
               {/* Left Column: Icon + Document details with distinct lines */}
-              <div className="doc-details-col flex-start gap-32">
+              <div className="doc-details-col flex-start" style={{ gap: '64px' }}>
                 <div className="doc-shield-icon">
                   <ShieldCheck size={24} className="text-neon-green" />
                 </div>

@@ -30,6 +30,7 @@ export default function DriverVehicle({ onUpdateSuccess }) {
   const [saving, setSaving] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [error, setError] = useState(null);
+  const [selectedModel, setSelectedModel] = useState(1);
 
   useEffect(() => {
     loadVehicle();
@@ -103,30 +104,66 @@ export default function DriverVehicle({ onUpdateSuccess }) {
       )}
 
       {/* ── BLOQUE 1: Identidad de la Unidad ── */}
-      <section className="margin-bottom-48">
-        <span className="section-eyebrow text-neon-green margin-bottom-12" style={{ display: 'block' }}>
-          Unidad Asignada
-        </span>
-        <h1 className="vehicle-name-title">
-          {vehicle?.brand || 'Mercedes-Benz'} {vehicle?.model || 'Sprinter 516 CDI Minibús'}
-        </h1>
-        <div className="vehicle-summary-meta flex-center gap-14 flex-wrap" style={{ marginTop: '12px' }}>
-          <span className="text-main font-semibold">{vehicle?.passengerCapacity || 20} pasajeros</span>
-          <span className="meta-dot">·</span>
-          <span className="text-main font-semibold">Patente {vehicle?.licensePlate || 'AF 482 TP'}</span>
-          <span className="meta-dot">·</span>
-          <span>{vehicle?.color || 'Blanco Ártico'}</span>
-          <span className="meta-dot">·</span>
-          <span>Año {vehicle?.year || 2023}</span>
+      <section className="margin-bottom-48 flex-between flex-wrap gap-24">
+        <div className="vehicle-details flex-column gap-8">
+          <span className="section-eyebrow text-neon-green margin-bottom-12" style={{ display: 'block' }}>
+            Unidad Asignada
+          </span>
+          <h1 className="vehicle-name-title">
+            {vehicle?.brand || 'Mercedes-Benz'} {vehicle?.model || 'Sprinter 516 CDI Minibús'}
+          </h1>
+          <div className="vehicle-summary-meta flex-center gap-14 flex-wrap" style={{ marginTop: '12px' }}>
+            <span className="text-main font-semibold">{vehicle?.passengerCapacity || 20} pasajeros</span>
+            <span className="meta-dot">·</span>
+            <span className="text-main font-semibold">Patente {vehicle?.licensePlate || 'AF 482 TP'}</span>
+            <span className="meta-dot">·</span>
+            <span>{vehicle?.color || 'Blanco Ártico'}</span>
+            <span className="meta-dot">·</span>
+            <span>Año {vehicle?.year || 2023}</span>
+          </div>
+        </div>
+        <div className="vehicle-model-preview flex-center" style={{ 
+          mixBlendMode: 'screen', 
+          backgroundColor: 'transparent',
+          position: 'relative',
+          padding: '24px'
+        }}>
+          <img 
+            src={`/assets/vehicle-model-${selectedModel}.jpg`} 
+            alt="Modelo de vehículo" 
+            style={{ width: '260px', transition: 'all 0.4s ease' }} 
+          />
         </div>
       </section>
 
-      {/* ── BLOQUE 2: Showroom 3D sin caja exterior ── */}
+      {/* ── BLOQUE 2: Selección de modelo interactiva ── */}
       <section className="margin-bottom-56">
-        <Vehicle3DViewer
-          vehicle={vehicle}
-          onVehicleChange={(partial) => setVehicle((prev) => ({ ...prev, ...partial }))}
-        />
+        <div className="model-selection-grid">
+          {[
+            { id: 1, name: 'Minibús Estándar', desc: '15-20 asientos' },
+            { id: 2, name: 'Traffic / Van', desc: '8-12 asientos' },
+            { id: 3, name: 'Minibús Premium', desc: 'Lujo · 15-20 asientos' }
+          ].map((m) => (
+            <div 
+              key={m.id}
+              className={`model-card ${selectedModel === m.id ? 'selected' : ''}`}
+              onClick={() => setSelectedModel(m.id)}
+            >
+              <img 
+                src={`/assets/vehicle-model-${m.id}.jpg`} 
+                alt={m.name} 
+                className="model-image-render"
+              />
+              <div className="model-card-title">{m.name}</div>
+              <div className="text-xs text-muted" style={{ marginTop: '4px' }}>{m.desc}</div>
+              {selectedModel === m.id && (
+                <div className="model-selected-indicator flex-center">
+                  <CheckCircle2 size={16} className="text-neon-green" />
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
       </section>
 
       <div className="hairline-divider margin-bottom-48" />

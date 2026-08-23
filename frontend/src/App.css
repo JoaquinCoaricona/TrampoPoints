@@ -5196,16 +5196,72 @@ html, body, #root, .app-layout, .tramo-landing-root {
 .margin-bottom-40 { margin-bottom: 40px !important; }
 .margin-bottom-48 { margin-bottom: 48px !important; }
 .margin-bottom-56 { margin-bottom: 56px !important; }
-.margin-bottom-64 { margin-bottom: 64px !important; }
+.margin-bottom-64 { margin-bottom: 64px !important; }/* Model Selection interactive logic for DriverVehicle */
+.model-selection-grid {
+  display: flex;
+  gap: 20px;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+}
 
+.model-card {
+  position: relative;
+  background-color: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 16px;
+  cursor: pointer;
+  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), border-color 0.2s ease, background-color 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 220px;
+  overflow: hidden;
+}
 
+.model-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(255, 255, 255, 0.2);
+  background-color: rgba(255, 255, 255, 0.04);
+}
 
+.model-card.selected {
+  border-color: #19E6A0; /* Neon green - subtle border */
+  background-color: rgba(25, 230, 160, 0.05); /* Slight tint */
+  transform: translateY(-4px);
+}
 
+.model-image-render {
+  width: 100%;
+  mix-blend-mode: screen; /* Drops the black background */
+  transition: transform 0.4s ease;
+  margin-bottom: 8px;
+}
 
+.model-card:hover .model-image-render {
+  transform: scale(1.05);
+}
 
+.model-card.selected .model-image-render {
+  transform: scale(1.08);
+}
 
+.model-card-title {
+  margin-top: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #F8FAFC;
+  text-align: center;
+}
 
+.model-selected-indicator {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  animation: scaleIn 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
 
-
-
-
+@keyframes scaleIn {
+  from { transform: scale(0); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
