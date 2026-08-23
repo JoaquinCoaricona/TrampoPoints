@@ -113,21 +113,18 @@ function PassengerApp() {
   const [matches, setMatches] = useState([]);
   const [selectedTrip, setSelectedTrip] = useState(null);
 
-  // Redirect drivers to driver portal
+  // Enforce authentication and role limits for the system flow
   useEffect(() => {
-    if (isAuthenticated && userRole === 'DRIVER') {
+    if (!isAuthenticated) {
+      navigate('/login', { replace: true });
+    } else if (userRole === 'DRIVER') {
       navigate('/driver', { replace: true });
-    }
-  }, [isAuthenticated, userRole, navigate]);
-
-  // Set default tab based on admin status
-  useEffect(() => {
-    if (isAdmin) {
+    } else if (isAdmin) {
       setActiveTab('ADMIN');
-    } else {
+    } else if (userRole === 'USER') {
       setActiveTab('CREATE');
     }
-  }, [isAdmin]);
+  }, [isAuthenticated, userRole, isAdmin, navigate]);
 
 
   useEffect(() => {
@@ -277,7 +274,7 @@ function PassengerApp() {
               </button>
             )}
 
-            {!isAdmin && (
+            {isAuthenticated && userRole === 'USER' && (
               <>
                 <button
                   className={`tab-btn ${activeTab === 'CREATE' ? 'active' : ''}`}

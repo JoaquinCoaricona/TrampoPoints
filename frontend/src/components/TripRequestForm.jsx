@@ -14,6 +14,10 @@ export default function TripRequestForm({ onSubmit, loading }) {
   const [origin, setOrigin] = useState({ address: '', latitude: 0, longitude: 0 });
   const [destination, setDestination] = useState({ address: '', latitude: 0, longitude: 0 });
 
+  // Validaciones para obligar a seleccionar una opción de la lista
+  const [isOriginSelected, setIsOriginSelected] = useState(false);
+  const [isDestSelected, setIsDestSelected] = useState(false);
+
   const today = new Date();
   const defaultDate = today.toISOString().split('T')[0];
   const defaultTime = '08:30';
@@ -45,10 +49,12 @@ export default function TripRequestForm({ onSubmit, loading }) {
 
     if (match) {
       if (isOrigin) {
-        setOrigin({ address: queryText, latitude: match.latitude, longitude: match.longitude });
+        setOrigin({ address: match.address, latitude: match.latitude, longitude: match.longitude });
+        setIsOriginSelected(true);
         setOriginSuggestions([]);
       } else {
-        setDestination({ address: queryText, latitude: match.latitude, longitude: match.longitude });
+        setDestination({ address: match.address, latitude: match.latitude, longitude: match.longitude });
+        setIsDestSelected(true);
         setDestSuggestions([]);
       }
       return;
@@ -86,6 +92,7 @@ export default function TripRequestForm({ onSubmit, loading }) {
   const handleOriginInputChange = (text) => {
     setOriginQuery(text);
     setOrigin(prev => ({ ...prev, address: text }));
+    setIsOriginSelected(false); // Pierde la selección al editar el texto manual
 
     if (text.length >= 2) {
       const matches = PRESET_LOCATIONS.filter(l =>
@@ -106,6 +113,7 @@ export default function TripRequestForm({ onSubmit, loading }) {
   const handleDestInputChange = (text) => {
     setDestQuery(text);
     setDestination(prev => ({ ...prev, address: text }));
+    setIsDestSelected(false); // Pierde la selección al editar el texto manual
 
     if (text.length >= 2) {
       const matches = PRESET_LOCATIONS.filter(l =>
@@ -127,16 +135,20 @@ export default function TripRequestForm({ onSubmit, loading }) {
     if (isOrigin) {
       setOriginQuery(preset.address);
       setOrigin({ address: preset.address, latitude: preset.latitude, longitude: preset.longitude });
+      setIsOriginSelected(true);
       setOriginSuggestions([]);
     } else {
       setDestQuery(preset.address);
       setDestination({ address: preset.address, latitude: preset.latitude, longitude: preset.longitude });
+      setIsDestSelected(true);
       setDestSuggestions([]);
     }
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (!isOriginSelected || !isDestSelected) return;
+
     setCreatedSuccess(true);
     setTimeout(() => setCreatedSuccess(false), 3000);
 
@@ -380,6 +392,13 @@ export default function TripRequestForm({ onSubmit, loading }) {
                     required
                   />
 
+                  {/* Warning if typed but not selected from dropdown */}
+                  {originQuery.trim().length >= 3 && !isOriginSelected && (
+                    <span style={{ fontSize: '12px', color: '#f87171', marginTop: '6px', display: 'block' }}>
+                      ⚠️ Seleccioná una dirección sugerida de la lista.
+                    </span>
+                  )}
+
                   {/* Suggestions dropdown */}
                   {originSuggestions.length > 0 && (
                     <ul className="suggestions-list card glass-card" style={{ zIndex: 10, left: 0 }}>
@@ -413,6 +432,13 @@ export default function TripRequestForm({ onSubmit, loading }) {
                     placeholder="Dirección de destino..."
                     required
                   />
+
+                  {/* Warning if typed but not selected from dropdown */}
+                  {destQuery.trim().length >= 3 && !isDestSelected && (
+                    <span style={{ fontSize: '12px', color: '#f87171', marginTop: '6px', display: 'block' }}>
+                      ⚠️ Seleccioná una dirección sugerida de la lista.
+                    </span>
+                  )}
 
                   {/* Suggestions dropdown */}
                   {destSuggestions.length > 0 && (
@@ -464,8 +490,12 @@ export default function TripRequestForm({ onSubmit, loading }) {
                 </div>
               </div>
 
-              {/* Action submit button */}
-              <button type="submit" className="btn-viajar" disabled={loading}>
+              {/* Action submit button - Disabled until BOTH directions are selected */}
+              <button 
+                type="submit" 
+                className="btn-viajar" 
+                disabled={loading || !isOriginSelected || !isDestSelected}
+              >
                 {loading ? (
                   <>
                     <Loader2 size={20} className="spinner" />
@@ -504,7 +534,6 @@ export default function TripRequestForm({ onSubmit, loading }) {
                 <path d="M 112,152 L 80,184" stroke="#1f1f23" strokeWidth="3" fill="none" />
 
                 {/* 3. Driver Upper Body Group (Waist anchor at (190, 185)) */}
-                {/* Leans forward/left over the wheel when sleeping, sits up when awake */}
                 <g 
                   style={{
                     transform: isDriverAwake ? 'rotate(0deg) translate(0px, 0px)' : 'rotate(-16deg) translate(-26px, 12px)',
@@ -529,7 +558,7 @@ export default function TripRequestForm({ onSubmit, loading }) {
                     style={{ transition: 'stroke 0.8s' }} 
                   />
 
-                  {/* Hoodie Hood Folds (High Detail) */}
+                  {/* Hoodie Hood Folds */}
                   <path 
                     d="M 166,95 C 172,99 184,108 188,124 C 190,140 178,145 168,138 C 160,132 158,118 158,118" 
                     stroke={isDriverAwake ? '#e4e4e7' : '#71717a'} 
@@ -545,8 +574,7 @@ export default function TripRequestForm({ onSubmit, loading }) {
                     style={{ transition: 'stroke 0.8s' }} 
                   />
 
-                  {/* Detailed Head & Hair profile (exactly matching the user photo silhouette) */}
-                  {/* Hair waves */}
+                  {/* Detailed Head & Hair profile */}
                   <path 
                     d="M 124,70 C 122,60 134,50 144,56 C 150,52 158,56 160,66 C 156,64 148,63 142,69 C 136,64 128,66 124,70 Z" 
                     stroke={isDriverAwake ? '#e4e4e7' : '#71717a'} 
@@ -554,7 +582,6 @@ export default function TripRequestForm({ onSubmit, loading }) {
                     fill="none" 
                     style={{ transition: 'stroke 0.8s' }} 
                   />
-                  {/* Wavy locks detail */}
                   <path 
                     d="M 132,68 C 136,58 148,58 152,65" 
                     stroke={isDriverAwake ? '#e4e4e7' : '#71717a'} 
@@ -563,7 +590,7 @@ export default function TripRequestForm({ onSubmit, loading }) {
                     style={{ transition: 'stroke 0.8s' }} 
                   />
                   
-                  {/* Face Outline: forehead, nose bridge, nose tip, lips, chin, jawline */}
+                  {/* Face Outline */}
                   <path 
                     d="M 148,78 C 146,65 136,65 132,68 C 127,71 123,76 123,80 L 118,83 C 117,84 117,86 119,87 L 123,89 C 123,92 125,96 129,99 C 135,102 147,98 147,88 C 147,84 149,81 148,78 Z" 
                     stroke={isDriverAwake ? '#e4e4e7' : '#71717a'} 
@@ -573,47 +600,39 @@ export default function TripRequestForm({ onSubmit, loading }) {
                   />
 
                   {/* Face expression cross-fade */}
-                  {/* Awake Face: Alert eye and Smile */}
                   <g style={{ opacity: isDriverAwake ? 1 : 0, transition: 'opacity 0.6s' }}>
                     <circle cx="131" cy="78" r="1.2" fill="#e4e4e7" />
                     <path d="M 126,89 Q 130,92 133,89" stroke="#e4e4e7" strokeWidth="1.5" fill="none" />
                   </g>
 
-                  {/* Sleeping Face: Closed eye (matching photo) */}
                   <g style={{ opacity: isDriverAwake ? 0 : 1, transition: 'opacity 0.6s' }}>
                     <path d="M 128,79 Q 131,81 133,79" stroke="#71717a" strokeWidth="1.5" fill="none" />
                   </g>
                 </g>
 
-                {/* 4. Arms & Hands state cross-fade (folding/reaching wheel) */}
-                {/* Awake Arms: Both hands placed on the steering wheel */}
+                {/* Awake Arms: placed on the steering wheel */}
                 <g style={{ opacity: isDriverAwake ? 1 : 0, transform: isDriverAwake ? 'scale(1)' : 'scale(0.92)', transformOrigin: '155px 120px', transition: 'opacity 0.6s, transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)' }}>
-                  {/* Upper Arm to wheel top-right */}
                   <path d="M 155,120 C 130,105 110,105 92,118" stroke="#e4e4e7" strokeWidth="2.5" fill="none" />
-                  {/* Lower Arm to wheel bottom-right */}
                   <path d="M 152,132 C 130,122 112,122 96,134" stroke="#e4e4e7" strokeWidth="2.5" fill="none" />
                 </g>
 
-                {/* Sleeping Arm: draped over the steering wheel exactly like the photo */}
+                {/* Sleeping Arm draped over the steering wheel */}
                 <g style={{ opacity: isDriverAwake ? 0 : 1, transform: isDriverAwake ? 'scale(1.08)' : 'scale(1)', transformOrigin: '160px 115px', transition: 'opacity 0.6s, transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)' }}>
-                  {/* Shoulder curving down */}
                   <path d="M 162,115 C 138,102 110,102 86,118" stroke="#71717a" strokeWidth="2.5" fill="none" />
-                  {/* Forearm draped over steering wheel ring */}
                   <path d="M 86,118 C 72,132 64,152 64,166" stroke="#71717a" strokeWidth="2.5" fill="none" />
-                  {/* Fingers draping down */}
                   <path d="M 64,166 Q 60,172 61,180" stroke="#71717a" strokeWidth="2" fill="none" />
                   <path d="M 66,168 L 66,186" stroke="#71717a" strokeWidth="2" />
                   <path d="M 69,169 L 70,188" stroke="#71717a" strokeWidth="2" />
                   <path d="M 72,168 L 73,184" stroke="#71717a" strokeWidth="2" />
                 </g>
 
-                {/* 5. Green Alert lines (awake) */}
+                {/* Awake Sparks */}
                 <g style={{ opacity: isDriverAwake ? 1 : 0, transition: 'opacity 0.8s' }}>
                   <line x1="82" y1="95" x2="72" y2="86" stroke="#22c55e" strokeWidth="1.5" />
                   <line x1="88" y1="156" x2="78" y2="164" stroke="#22c55e" strokeWidth="1.5" />
                 </g>
 
-                {/* 6. Floating Zzz (sleeping) */}
+                {/* Floating Zzz */}
                 <g style={{ opacity: isDriverAwake ? 0 : 1, transition: 'opacity 0.4s' }}>
                   <text x="175" y="80" className="zzz z1">z</text>
                   <text x="185" y="60" className="zzz z2">Z</text>

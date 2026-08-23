@@ -17,12 +17,6 @@ export default function MyRequestsPage({
           <h2 className="text-gradient-white text-22 font-extrabold">Mis Solicitudes de Viaje Cargadas</h2>
           <p className="text-muted text-xs margin-top-2">Historial de reservas e itinerarios solicitados</p>
         </div>
-        <button 
-          className="btn-primary flex-center gap-6"
-          onClick={onNewRequest}
-        >
-          <PlusCircle size={16} /> Nueva Solicitud
-        </button>
       </div>
 
       <div className="requests-list flex-column gap-16 margin-top-20">
