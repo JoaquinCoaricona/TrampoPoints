@@ -5138,7 +5138,205 @@ html, body, #root, .app-layout, .tramo-landing-root {
   }
 }
 
+/* ========================================================
+   MODEL SELECTION INTERACTIVE LOGIC (DRIVER VEHICLE)
+   ======================================================== */
+.model-selection-grid {
+  display: flex;
+  gap: 20px;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+}
 
+.model-card {
+  position: relative;
+  background-color: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 16px;
+  cursor: pointer;
+  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), border-color 0.2s ease, background-color 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 220px;
+  overflow: hidden;
+}
+
+.model-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(255, 255, 255, 0.2);
+  background-color: rgba(255, 255, 255, 0.04);
+}
+
+.model-card.selected {
+  border-color: #19E6A0;
+  background-color: rgba(25, 230, 160, 0.05);
+  transform: translateY(-4px);
+}
+
+.model-image-render {
+  width: 100%;
+  mix-blend-mode: screen;
+  transition: transform 0.4s ease;
+  margin-bottom: 8px;
+}
+
+.model-card:hover .model-image-render {
+  transform: scale(1.05);
+}
+
+.model-card.selected .model-image-render {
+  transform: scale(1.08);
+}
+
+.model-card-title {
+  margin-top: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #F8FAFC;
+  text-align: center;
+}
+
+.model-selected-indicator {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  animation: scaleIn 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* ========================================================
+   LOGOUT CONFIRM MODAL OVERRIDES
+   ======================================================== */
+.logout-modal-card {
+  max-width: 440px !important;
+  padding: 36px !important;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.logout-modal-header {
+  text-align: center;
+}
+
+.logout-icon-wrapper {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(244, 63, 94, 0.15);
+  border: 1px solid rgba(244, 63, 94, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px auto;
+}
+
+.logout-modal-title {
+  font-size: 22px;
+  color: #f8fafc;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.logout-modal-subtitle {
+  font-size: 14px;
+  color: #94a3b8;
+  line-height: 1.5;
+}
+
+.logout-user-preview-card {
+  background: rgba(15, 23, 42, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.preview-user-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #f8fafc;
+}
+
+.preview-user-email {
+  font-size: 13px;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.logout-notice-box {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: rgba(245, 158, 11, 0.06);
+  border: none;
+  border-left: 4px solid #f59e0b;
+  padding: 16px;
+  border-radius: 6px;
+}
+
+.logout-notice-box .text-muted {
+  line-height: 1.5;
+  color: #94a3b8;
+}
+
+.logout-modal-actions {
+  display: flex;
+  gap: 16px;
+}
+
+.logout-modal-actions button {
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-danger-action {
+  background: linear-gradient(135deg, #e11d48, #be123c);
+  border: none;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 0 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(225, 29, 72, 0.35);
+}
+
+.btn-danger-action:hover {
+  background: linear-gradient(135deg, #f43f5e, #e11d48);
+  transform: translateY(-1px);
+}
+
+.badge-pill {
+  border-radius: 9999px;
+  padding: 4px 10px;
+  border: none;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.badge-pill.driver {
+  background: rgba(99, 102, 241, 0.15);
+  color: #818cf8;
+}
+
+.badge-pill.admin {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+}
+
+.badge-pill.user {
+  background: rgba(148, 163, 184, 0.15);
+  color: #94a3b8;
+}
 
 /* Form Styles & Helpers */
 .form-grid-2cols {

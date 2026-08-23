@@ -58,7 +58,7 @@ export default function LogoutConfirmModal({ isOpen, onClose, onConfirm, user })
 
         {/* User preview card */}
         {user && (
-          <div className="logout-user-preview-card flex-between align-center margin-bottom-20">
+          <div className="logout-user-preview-card flex-between align-center">
             <div className="flex-center gap-12">
               <div
                 className={`user-avatar ${isAdmin ? 'avatar-admin' : isDriver ? 'avatar-driver' : ''}`}
@@ -66,24 +66,24 @@ export default function LogoutConfirmModal({ isOpen, onClose, onConfirm, user })
                 {getUserInitials(user.name)}
               </div>
               <div className="flex-column">
-                <strong className="preview-user-name">{user.name}</strong>
-                <span className="preview-user-email text-xs text-muted">{user.email}</span>
+                <strong className="preview-user-name">{user.name.replace(/\s*\(Chofer\)/i, '')}</strong>
+                <span className="preview-user-email">{user.email}</span>
               </div>
             </div>
 
             <div>
               {isDriver && (
-                <span className="badge badge-indigo text-xs flex-center gap-4">
+                <span className="badge-pill driver flex-center gap-4">
                   <Bus size={12} /> CHOFER
                 </span>
               )}
               {isAdmin && (
-                <span className="badge badge-amber text-xs flex-center gap-4">
+                <span className="badge-pill admin flex-center gap-4">
                   <ShieldCheck size={12} /> ADMIN
                 </span>
               )}
               {!isDriver && !isAdmin && (
-                <span className="badge badge-subtle text-xs flex-center gap-4">
+                <span className="badge-pill user flex-center gap-4">
                   <User size={12} /> PASAJERO
                 </span>
               )}
@@ -91,9 +91,9 @@ export default function LogoutConfirmModal({ isOpen, onClose, onConfirm, user })
           </div>
         )}
 
-        <div className="logout-notice-box margin-bottom-24">
-          <AlertTriangle size={16} className="text-amber flex-shrink-0" />
-          <span className="text-xs text-muted">
+        <div className="logout-notice-box">
+          <AlertTriangle size={18} className="text-amber flex-shrink-0" />
+          <span className="text-muted">
             {isDriver
               ? 'Al salir, dejarás de estar en el módulo de gestión de tu combi y tendrás que volver a iniciar sesión.'
               : 'Podrás volver a ingresar en cualquier momento para consultar tus solicitudes y viajes.'}
@@ -101,7 +101,7 @@ export default function LogoutConfirmModal({ isOpen, onClose, onConfirm, user })
         </div>
 
         {/* Actions */}
-        <div className="logout-modal-actions flex-between gap-12">
+        <div className="logout-modal-actions">
           <button
             type="button"
             className="btn-secondary flex-1"

@@ -105,9 +105,9 @@ export default function DriverDashboard({ dashboardData: propData, onRefresh: pr
 
       {/* 2. Operación Actual (Hero Dominante de la Página) */}
       <section className="dash-operation-spotlight margin-bottom-56">
-        <div className="operation-headline-wrap flex-column gap-10">
+        <div className="operation-headline-wrap flex-column gap-16">
           <span className="section-eyebrow text-neon-green">Unidad Asignada</span>
-          <h2 className="operation-vehicle-name">
+          <h2 className="operation-vehicle-name margin-bottom-12">
             {vehicle?.brand || 'Mercedes-Benz'} {vehicle?.model || 'Sprinter 516 CDI'}
           </h2>
           <div className="operation-metadata-line flex-center gap-14 text-muted flex-wrap">
@@ -116,12 +116,6 @@ export default function DriverDashboard({ dashboardData: propData, onRefresh: pr
             <span className="text-main font-medium">Patente {vehicle?.licensePlate || 'AF 482 TP'}</span>
             <span className="meta-dot">·</span>
             <span>{vehicle?.color || 'Blanco Ártico'}</span>
-          </div>
-          <div className="margin-top-6">
-            <Link to="/driver/vehicle" className="inline-action-link text-neon-green flex-center gap-6">
-              <span>Personalizar y ver en 3D</span>
-              <ArrowRight size={15} />
-            </Link>
           </div>
         </div>
 
