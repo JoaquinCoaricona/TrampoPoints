@@ -791,15 +791,16 @@
 }
 
 .tab-btn-admin {
-  background: rgba(245, 158, 11, 0.15) !important;
-  color: #fbbf24 !important;
-  border: 1px solid rgba(245, 158, 11, 0.3) !important;
+  background: rgba(255, 255, 255, 0.03) !important;
+  color: #cbd5e1 !important;
+  border: 1px solid #1f1f23 !important;
 }
 
 .tab-btn-admin.active {
-  background: linear-gradient(135deg, #f59e0b, #d97706) !important;
-  color: white !important;
-  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4) !important;
+  background: #ffffff !important;
+  color: #09090b !important;
+  border: 1px solid #ffffff !important;
+  box-shadow: none !important;
 }
 
 .avatar-admin {

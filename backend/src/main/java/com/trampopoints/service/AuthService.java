@@ -5,6 +5,7 @@ import com.trampopoints.dto.LoginRequestDto;
 import com.trampopoints.dto.RegisterRequestDto;
 import com.trampopoints.dto.UserDto;
 import com.trampopoints.model.User;
+import com.trampopoints.model.UserRole;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -40,7 +41,7 @@ public class AuthService {
         String email = "juan@email.com";
         String salt = securityService.generateSalt();
         String hash = securityService.hashPassword("password123", salt);
-        User defaultUser = new User(defaultUserId, "Juan Pérez (Pasajero)", email, hash, salt, "USER");
+        User defaultUser = new User(defaultUserId, "Juan Pérez (Pasajero)", email, hash, salt, UserRole.USER);
         usersById.put(defaultUserId, defaultUser);
         emailToUserId.put(email.toLowerCase().trim(), defaultUserId);
 
@@ -49,7 +50,7 @@ public class AuthService {
         String adminEmail = "admin@trampopoints.com";
         String adminSalt = securityService.generateSalt();
         String adminHash = securityService.hashPassword("admin123", adminSalt);
-        User adminUser = new User(adminId, "Administrador General", adminEmail, adminHash, adminSalt, "ADMIN");
+        User adminUser = new User(adminId, "Administrador General", adminEmail, adminHash, adminSalt, UserRole.ADMIN);
         usersById.put(adminId, adminUser);
         emailToUserId.put(adminEmail.toLowerCase().trim(), adminId);
 
@@ -58,7 +59,7 @@ public class AuthService {
         String driverEmail = "juan.chofer@trampopoints.com";
         String driverSalt = securityService.generateSalt();
         String driverHash = securityService.hashPassword("password123", driverSalt);
-        User driverUser = new User(driverUserId, "Juan Pérez (Chofer)", driverEmail, driverHash, driverSalt, "DRIVER");
+        User driverUser = new User(driverUserId, "Juan Pérez (Chofer)", driverEmail, driverHash, driverSalt, UserRole.DRIVER);
         usersById.put(driverUserId, driverUser);
         emailToUserId.put(driverEmail.toLowerCase().trim(), driverUserId);
     }
@@ -99,14 +100,14 @@ public class AuthService {
             }
         }
 
-        User newUser = new User(userId, request.getName().trim(), normalizedEmail, hash, salt, role);
+        User newUser = new User(userId, request.getName().trim(), normalizedEmail, hash, salt, UserRole.valueOf(role));
         usersById.put(userId, newUser);
         emailToUserId.put(normalizedEmail, userId);
 
         String token = securityService.generateAuthToken();
         tokenToUserId.put(token, userId);
 
-        UserDto userDto = new UserDto(newUser.getId(), newUser.getName(), newUser.getEmail(), newUser.getRole());
+        UserDto userDto = new UserDto(newUser.getId(), newUser.getName(), newUser.getEmail(), newUser.getRole().name());
         return new AuthResponseDto(token, userDto);
     }
 
@@ -137,7 +138,7 @@ public class AuthService {
         String token = securityService.generateAuthToken();
         tokenToUserId.put(token, userId);
 
-        UserDto userDto = new UserDto(user.getId(), user.getName(), user.getEmail(), user.getRole());
+        UserDto userDto = new UserDto(user.getId(), user.getName(), user.getEmail(), user.getRole().name());
         return new AuthResponseDto(token, userDto);
     }
 
@@ -161,7 +162,7 @@ public class AuthService {
             return null;
         }
 
-        return new UserDto(user.getId(), user.getName(), user.getEmail(), user.getRole());
+        return new UserDto(user.getId(), user.getName(), user.getEmail(), user.getRole().name());
     }
 
     /**

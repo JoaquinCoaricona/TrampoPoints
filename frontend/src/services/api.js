@@ -1,15 +1,19 @@
 const API_BASE_URL = 'http://localhost:8080/api';
 
-/**
- * Cliente HTTP REST para los contratos del MVP de TrampoPoints.
- * Conexión exclusiva con el Backend Spring Boot en http://localhost:8080.
- */
+function getHeaders(customHeaders = {}) {
+  const headers = { 'Content-Type': 'application/json', ...customHeaders };
+  const token = localStorage.getItem('trampopoints_auth_token');
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
+}
 
 // 1. Crear solicitud de viaje (POST /api/trips/requests)
 export async function createTripRequest(data) {
   const response = await fetch(`${API_BASE_URL}/trips/requests`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getHeaders(),
     body: JSON.stringify(data),
   });
 
@@ -21,7 +25,9 @@ export async function createTripRequest(data) {
 
 // 1b. Obtener todas las solicitudes del sistema (GET /api/trips/requests/all)
 export async function getAllTripRequests() {
-  const response = await fetch(`${API_BASE_URL}/trips/requests/all`);
+  const response = await fetch(`${API_BASE_URL}/trips/requests/all`, {
+    headers: getHeaders()
+  });
 
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);
@@ -31,7 +37,9 @@ export async function getAllTripRequests() {
 
 // 2. Buscar viajes compatibles (GET /api/trips/matches/{requestId})
 export async function getTripMatches(requestId) {
-  const response = await fetch(`${API_BASE_URL}/trips/matches/${requestId}`);
+  const response = await fetch(`${API_BASE_URL}/trips/matches/${requestId}`, {
+    headers: getHeaders()
+  });
 
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);
@@ -41,7 +49,9 @@ export async function getTripMatches(requestId) {
 
 // 3. Obtener un viaje por ID (GET /api/trips/{tripId})
 export async function getTripDetails(tripId) {
-  const response = await fetch(`${API_BASE_URL}/trips/${tripId}`);
+  const response = await fetch(`${API_BASE_URL}/trips/${tripId}`, {
+    headers: getHeaders()
+  });
 
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);
@@ -53,7 +63,7 @@ export async function getTripDetails(tripId) {
 export async function optimizeRoute(data) {
   const response = await fetch(`${API_BASE_URL}/routes/optimize`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getHeaders(),
     body: JSON.stringify(data),
   });
 
@@ -67,7 +77,7 @@ export async function optimizeRoute(data) {
 export async function processGroupingAlgorithm() {
   const response = await fetch(`${API_BASE_URL}/trips/process-grouping`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getHeaders(),
   });
 
   if (!response.ok) {
@@ -75,3 +85,4 @@ export async function processGroupingAlgorithm() {
   }
   return await response.json();
 }
+

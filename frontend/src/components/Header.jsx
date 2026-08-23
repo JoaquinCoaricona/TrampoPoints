@@ -31,57 +31,38 @@ export default function Header() {
 
   return (
     <>
-      <header className="app-header">
+      <header className="app-header" style={{ background: '#09090b', borderBottom: '1px solid #1f1f23', padding: '12px 0' }}>
         <div className="header-container">
-          <Link to={isDriver ? '/driver' : '/'} className="brand-link flex-center gap-12">
-            <div className="brand-text">
-              <h1>
-                Tramo<span className="text-neon-green">Points</span>
-              </h1>
-              <span className="subtitle">Plataforma de Viajes Compartidos</span>
+          <Link to={isDriver ? '/driver' : '/'} className="brand-link flex-center gap-12" style={{ textDecoration: 'none' }}>
+            <div className="brand-logo-only" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Bus size={24} style={{ color: '#ffffff' }} />
+              <span style={{ fontSize: '16px', fontWeight: '800', color: '#ffffff', letterSpacing: '-0.3px' }}>TP</span>
             </div>
           </Link>
 
           <div className="header-actions flex-center gap-12">
-            <div className="header-status hide-mobile">
-              <div className="status-badge">
-                <span className="dot pulse"></span>
-                <span>Sistema Activo</span>
-              </div>
-            </div>
-
             {/* User Auth Section */}
             {isAuthenticated ? (
-              <div className="user-profile-header flex-center gap-10">
-                {/* Redesigned User Capsule with Role Badge */}
-                <div className={`user-role-capsule ${isAdmin ? 'capsule-admin' : isDriver ? 'capsule-driver' : 'capsule-user'}`}>
-                  <div className="capsule-avatar-wrap">
-                    <div className="capsule-avatar">
-                      {getUserInitials(user.name)}
-                    </div>
-                    <span className="capsule-online-dot"></span>
+              <div className="user-profile-header flex-center gap-16" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div style={{
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '50%',
+                    border: '1px solid #27272a',
+                    background: '#09090b',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '11px',
+                    fontWeight: '600',
+                    color: '#ffffff'
+                  }}>
+                    {getUserInitials(user.name)}
                   </div>
-
-                  <div className="capsule-details hide-mobile">
-                    <div className="capsule-name-row flex-center gap-6">
-                      <span className="capsule-user-name">{user.name}</span>
-                      {isDriver && (
-                        <span className="badge-role-tag badge-role-driver">
-                          <Bus size={11} /> CHOFER VERIFICADO
-                        </span>
-                      )}
-                      {isAdmin && (
-                        <span className="badge-role-tag badge-role-admin">
-                          <ShieldCheck size={11} /> ADMINISTRADOR
-                        </span>
-                      )}
-                      {!isAdmin && !isDriver && (
-                        <span className="badge-role-tag badge-role-passenger">
-                          <User size={11} /> PASAJERO
-                        </span>
-                      )}
-                    </div>
-                    <span className="capsule-user-email">{user.email}</span>
+                  <div className="hide-mobile" style={{ display: 'flex', flexDirection: 'column', gap: '1px', textAlign: 'left' }}>
+                    <span style={{ fontSize: '13px', fontWeight: '500', color: '#e4e4e7' }}>{user.name}</span>
+                    <span style={{ fontSize: '11px', color: '#71717a' }}>{user.email}</span>
                   </div>
                 </div>
 
@@ -90,9 +71,20 @@ export default function Header() {
                   className="btn-header-logout"
                   onClick={() => setShowLogoutModal(true)}
                   title="Cerrar sesión"
-                  aria-label="Cerrar sesión"
+                  style={{
+                    background: 'transparent',
+                    border: '1px solid #1f1f23',
+                    padding: '6px 12px',
+                    borderRadius: '6px',
+                    color: '#a1a1aa',
+                    fontSize: '12px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px'
+                  }}
                 >
-                  <LogOut size={15} />
+                  <LogOut size={13} />
                   <span className="hide-mobile">Salir</span>
                 </button>
               </div>

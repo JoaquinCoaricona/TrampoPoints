@@ -8,11 +8,11 @@ public class User {
     private String email;
     private String passwordHash;
     private String salt;
-    private String role; // "USER", "ADMIN", "DRIVER"
+    private UserRole role; // USER, ADMIN, DRIVER
     private LocalDateTime createdAt;
 
     public User() {
-        this.role = "USER";
+        this.role = UserRole.USER;
         this.createdAt = LocalDateTime.now();
     }
 
@@ -22,17 +22,17 @@ public class User {
         this.email = email;
         this.passwordHash = passwordHash;
         this.salt = salt;
-        this.role = "USER";
+        this.role = UserRole.USER;
         this.createdAt = LocalDateTime.now();
     }
 
-    public User(String id, String name, String email, String passwordHash, String salt, String role) {
+    public User(String id, String name, String email, String passwordHash, String salt, UserRole role) {
         this.id = id;
         this.name = name;
         this.email = email;
         this.passwordHash = passwordHash;
         this.salt = salt;
-        this.role = role != null ? role : "USER";
+        this.role = role != null ? role : UserRole.USER;
         this.createdAt = LocalDateTime.now();
     }
 
@@ -76,11 +76,11 @@ public class User {
         this.salt = salt;
     }
 
-    public String getRole() {
+    public UserRole getRole() {
         return role;
     }
 
-    public void setRole(String role) {
+    public void setRole(UserRole role) {
         this.role = role;
     }
 

@@ -113,6 +113,23 @@ function PassengerApp() {
   const [matches, setMatches] = useState([]);
   const [selectedTrip, setSelectedTrip] = useState(null);
 
+  // Redirect drivers to driver portal
+  useEffect(() => {
+    if (isAuthenticated && userRole === 'DRIVER') {
+      navigate('/driver', { replace: true });
+    }
+  }, [isAuthenticated, userRole, navigate]);
+
+  // Set default tab based on admin status
+  useEffect(() => {
+    if (isAdmin) {
+      setActiveTab('ADMIN');
+    } else {
+      setActiveTab('CREATE');
+    }
+  }, [isAdmin]);
+
+
   useEffect(() => {
     try {
       const stored = localStorage.getItem(LOCAL_STORAGE_REQUESTS_KEY);
@@ -260,26 +277,30 @@ function PassengerApp() {
               </button>
             )}
 
-            <button
-              className={`tab-btn ${activeTab === 'CREATE' ? 'active' : ''}`}
-              onClick={() => { setActiveTab('CREATE'); setViewState('FORM'); }}
-            >
-              <PlusCircle size={16} /> Pedir Viaje
-            </button>
+            {!isAdmin && (
+              <>
+                <button
+                  className={`tab-btn ${activeTab === 'CREATE' ? 'active' : ''}`}
+                  onClick={() => { setActiveTab('CREATE'); setViewState('FORM'); }}
+                >
+                  <PlusCircle size={16} /> Pedir Viaje
+                </button>
 
-            <button
-              className={`tab-btn ${activeTab === 'MY_REQUESTS' ? 'active' : ''}`}
-              onClick={() => setActiveTab('MY_REQUESTS')}
-            >
-              <ListOrdered size={16} /> Mis Solicitudes ({userRequests.length})
-            </button>
+                <button
+                  className={`tab-btn ${activeTab === 'MY_REQUESTS' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('MY_REQUESTS')}
+                >
+                  <ListOrdered size={16} /> Mis Solicitudes ({userRequests.length})
+                </button>
 
-            <button
-              className={`tab-btn ${activeTab === 'OPTIMIZER' ? 'active' : ''}`}
-              onClick={() => setActiveTab('OPTIMIZER')}
-            >
-              <RouteIcon size={16} /> Probar API Optimización
-            </button>
+                <button
+                  className={`tab-btn ${activeTab === 'OPTIMIZER' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('OPTIMIZER')}
+                >
+                  <RouteIcon size={16} /> Probar API Optimización
+                </button>
+              </>
+            )}
           </div>
 
           <button
@@ -292,9 +313,12 @@ function PassengerApp() {
 
         {/* User Auth Status Banner */}
         {isAuthenticated ? (
-          <div className={`banner ${isAdmin ? 'banner-amber' : 'banner-auth-success'} margin-bottom-24`}>
+          <div 
+            className={`banner ${isAdmin ? 'banner-admin-flat' : 'banner-auth-success'} margin-bottom-24`}
+            style={isAdmin ? { background: 'rgba(255, 255, 255, 0.02)', border: '1px solid #1f1f23', color: '#e4e4e7' } : {}}
+          >
             {isAdmin ? (
-              <ShieldCheck size={18} className="banner-icon text-amber" />
+              <ShieldCheck size={18} className="banner-icon" style={{ color: '#a1a1aa' }} />
             ) : (
               <UserCheck size={18} className="banner-icon text-neon-green" />
             )}
@@ -329,7 +353,7 @@ function PassengerApp() {
         )}
 
         {/* 2. Create Trip / Details */}
-        {activeTab === 'CREATE' && (
+        {!isAdmin && activeTab === 'CREATE' && (
           <RequestPage
             viewState={viewState}
             setViewState={setViewState}
@@ -346,7 +370,7 @@ function PassengerApp() {
         )}
 
         {/* 3. My Requests Page */}
-        {activeTab === 'MY_REQUESTS' && (
+        {!isAdmin && activeTab === 'MY_REQUESTS' && (
           <MyRequestsPage
             userRequests={userRequests}
             onNewRequest={() => { setActiveTab('CREATE'); setViewState('FORM'); }}
@@ -355,7 +379,7 @@ function PassengerApp() {
         )}
 
         {/* 4. Optimizer Page */}
-        {activeTab === 'OPTIMIZER' && (
+        {!isAdmin && activeTab === 'OPTIMIZER' && (
           <OptimizerPage />
         )}
       </main>
