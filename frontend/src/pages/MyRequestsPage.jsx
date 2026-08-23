@@ -4,7 +4,8 @@ import { PlusCircle, Clock, MapPin, Navigation } from 'lucide-react';
 export default function MyRequestsPage({
   userRequests,
   onNewRequest,
-  onViewMatches
+  onViewMatches,
+  onDeleteRequest
 }) {
   if (userRequests.length === 0) {
     return null;
@@ -303,12 +304,34 @@ export default function MyRequestsPage({
                   </span>
                 </div>
 
-                <button
-                  className="request-action"
-                  onClick={() => onViewMatches(req)}
-                >
-                  Ver recorrido asignado
-                </button>
+                <div className="request-actions-row" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                  <button
+                    className="request-action"
+                    onClick={() => onViewMatches(req)}
+                  >
+                    Ver recorrido asignado
+                  </button>
+                  <button
+                    className="request-action"
+                    onClick={() => onDeleteRequest && onDeleteRequest(req.requestId)}
+                    style={{
+                      borderColor: 'rgba(244, 63, 94, 0.2)',
+                      background: 'rgba(244, 63, 94, 0.05)',
+                      color: '#f43f5e',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.target.style.background = 'rgba(244, 63, 94, 0.1)';
+                      e.target.style.borderColor = 'rgba(244, 63, 94, 0.4)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.background = 'rgba(244, 63, 94, 0.05)';
+                      e.target.style.borderColor = 'rgba(244, 63, 94, 0.2)';
+                    }}
+                  >
+                    Cancelar solicitud
+                  </button>
+                </div>
               </div>
             </div>
           );

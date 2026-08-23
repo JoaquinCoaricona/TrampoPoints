@@ -92,4 +92,33 @@ public class TripController {
         TripResponseDto response = tripService.getTripById(tripId);
         return ResponseEntity.ok(response);
     }
+
+    /**
+     * 1d. Eliminar solicitud de viaje
+     * DELETE /api/trips/requests/{requestId}
+     */
+    @DeleteMapping("/requests/{requestId}")
+    public ResponseEntity<?> deleteTripRequest(
+            @PathVariable String requestId,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        
+        if (authHeader == null || authHeader.trim().isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "No autorizado."));
+        }
+        
+        UserDto user = authService.getCurrentUser(authHeader);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "Sesión inválida o expirada."));
+        }
+        
+        boolean deleted = tripService.deleteTripRequest(requestId, user);
+        if (deleted) {
+            return ResponseEntity.ok(Map.of("success", true, "message", "Solicitud eliminada con éxito."));
+        } else {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", "No tienes permisos para eliminar esta solicitud o no fue encontrada."));
+        }
+    }
 }

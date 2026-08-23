@@ -12,6 +12,8 @@ public class TripResponseDto {
     private String departureTime;
     private RouteDto route;
     private List<StopDto> stops;
+    private DriverDto driver;
+    private VehicleDto vehicle;
 
     public TripResponseDto() {}
 
@@ -99,5 +101,21 @@ public class TripResponseDto {
 
     public void setStops(List<StopDto> stops) {
         this.stops = stops;
+    }
+
+    public DriverDto getDriver() {
+        return driver;
+    }
+
+    public void setDriver(DriverDto driver) {
+        this.driver = driver;
+    }
+
+    public VehicleDto getVehicle() {
+        return vehicle;
+    }
+
+    public void setVehicle(VehicleDto vehicle) {
+        this.vehicle = vehicle;
     }
 }

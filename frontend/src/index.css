@@ -92,3 +92,190 @@ input, select, textarea {
   font-family: inherit;
   color: inherit;
 }
+
+/* ==========================================
+   Driver Dashboard Enhancements
+   ========================================== */
+
+.driver-notification-banner {
+  background: rgba(124, 77, 255, 0.08);
+  border: 1px solid var(--electric-violet-border);
+  border-left: 4px solid var(--electric-violet);
+  padding: 16px 24px;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 32px 0 rgba(124, 77, 255, 0.05);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.driver-notification-banner:hover {
+  background: rgba(124, 77, 255, 0.12);
+  border-color: rgba(124, 77, 255, 0.4);
+  transform: translateY(-2px);
+}
+
+.driver-notification-banner .banner-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.driver-notification-banner .banner-desc {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.driver-notification-banner .banner-btn {
+  background: var(--electric-violet);
+  color: white;
+  padding: 10px 18px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(124, 77, 255, 0.3);
+}
+
+.driver-notification-banner .banner-btn:hover {
+  background: var(--electric-violet-hover);
+  transform: translateX(4px);
+  box-shadow: 0 4px 20px rgba(124, 77, 255, 0.5);
+}
+
+/* Trips List Section */
+.driver-trips-section {
+  margin-top: 32px;
+}
+
+.driver-trips-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.driver-trip-card {
+  background: rgba(13, 19, 26, 0.6);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.driver-trip-card:hover {
+  border-color: var(--neon-green-border);
+  background: rgba(13, 19, 26, 0.9);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.driver-trip-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.driver-trip-id {
+  font-family: monospace;
+  font-size: 13px;
+  color: var(--text-dim);
+  background: rgba(255, 255, 255, 0.03);
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+}
+
+.driver-trip-time {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--neon-green);
+  background: var(--neon-green-subtle);
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--neon-green-border);
+}
+
+.driver-trip-addresses {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: relative;
+  padding-left: 20px;
+}
+
+.driver-trip-addresses::before {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: 10px;
+  bottom: 10px;
+  width: 2px;
+  background: linear-gradient(to bottom, var(--neon-green), var(--electric-violet));
+}
+
+.driver-address-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 14px;
+}
+
+.driver-address-indicator {
+  position: absolute;
+  left: 2px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--bg-carbon-950);
+  border: 2px solid var(--neon-green);
+  z-index: 2;
+}
+
+.driver-address-indicator.dest {
+  border-color: var(--electric-violet);
+  margin-top: 4px;
+}
+
+.driver-trip-stats-row {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  font-size: 13px;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border-hairline);
+  padding-top: 16px;
+  margin-top: 4px;
+}
+
+.driver-trip-stat {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.driver-trip-action {
+  align-self: flex-end;
+  background: transparent;
+  color: var(--neon-green);
+  border: 1px solid var(--neon-green-border);
+  padding: 10px 20px;
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.driver-trip-action:hover {
+  background: var(--neon-green-subtle);
+  border-color: var(--neon-green);
+  box-shadow: 0 0 12px rgba(25, 230, 160, 0.15);
+}

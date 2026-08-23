@@ -59,6 +59,9 @@ public class Trip {
     @CollectionTable(name = "trip_stops", joinColumns = @JoinColumn(name = "trip_id"))
     private List<Stop> stops = new ArrayList<>();
 
+    @Column(name = "driver_id")
+    private String driverId;
+
     public Trip() {}
 
     public Trip(String tripId, String status, Integer passengerCount, Integer capacity,
@@ -134,4 +137,6 @@ public class Trip {
     public void setPolyline(String polyline) { this.polyline = polyline; }
     public List<Stop> getStops() { return stops; }
     public void setStops(List<Stop> stops) { this.stops = stops; }
+    public String getDriverId() { return driverId; }
+    public void setDriverId(String driverId) { this.driverId = driverId; }
 }

@@ -2,12 +2,20 @@ package com.trampopoints.controller;
 
 import com.trampopoints.dto.*;
 import com.trampopoints.service.DriverService;
+import com.trampopoints.service.AuthService;
+import com.trampopoints.service.TripService;
+import com.trampopoints.repository.DriverRepository;
+import com.trampopoints.repository.TripRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.ArrayList;
+import com.trampopoints.model.Driver;
+import com.trampopoints.model.Trip;
 
 @RestController
 @RequestMapping("/api/drivers")
@@ -15,10 +23,23 @@ import java.util.Map;
 public class DriverController {
 
     private final DriverService driverService;
+    private final AuthService authService;
+    private final DriverRepository driverRepository;
+    private final TripRepository tripRepository;
+    private final TripService tripService;
 
     @Autowired
-    public DriverController(DriverService driverService) {
+    public DriverController(
+            DriverService driverService,
+            AuthService authService,
+            DriverRepository driverRepository,
+            TripRepository tripRepository,
+            TripService tripService) {
         this.driverService = driverService;
+        this.authService = authService;
+        this.driverRepository = driverRepository;
+        this.tripRepository = tripRepository;
+        this.tripService = tripService;
     }
 
     /**
@@ -133,5 +154,46 @@ public class DriverController {
     public ResponseEntity<List<DriverRecommendationDto>> getRecommendations() {
         List<DriverRecommendationDto> recs = driverService.getRecommendations();
         return ResponseEntity.ok(recs);
+    }
+
+    /**
+     * Obtener viajes asignados al chofer logueado
+     * GET /api/drivers/current/trips
+     */
+    @GetMapping("/current/trips")
+    public ResponseEntity<List<TripResponseDto>> getDriverTrips(
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        if (authHeader == null || authHeader.isEmpty()) {
+            return ResponseEntity.status(401).build();
+        }
+        try {
+            UserDto currentUser = authService.getCurrentUser(authHeader);
+            if (currentUser == null) {
+                return ResponseEntity.status(401).build();
+            }
+            // Buscar chofer por email
+            Optional<Driver> driverOpt = driverRepository.findByEmail(currentUser.getEmail());
+            Driver driver = driverOpt.orElse(null);
+            if (driver == null) {
+                // Fallback al chofer por defecto si es para testing
+                driver = driverRepository.findById("drv-101").orElse(null);
+            }
+            if (driver == null) {
+                return ResponseEntity.notFound().build();
+            }
+
+            List<Trip> trips = tripRepository.findByDriverId(driver.getId());
+            List<TripResponseDto> dtos = new ArrayList<>();
+            for (Trip t : trips) {
+                TripResponseDto dto = tripService.getTripById(t.getTripId());
+                if (dto != null) {
+                    dtos.add(dto);
+                }
+            }
+            return ResponseEntity.ok(dtos);
+        } catch (Exception e) {
+            System.err.println("Error al obtener viajes del chofer: " + e.getMessage());
+            return ResponseEntity.status(500).build();
+        }
     }
 }

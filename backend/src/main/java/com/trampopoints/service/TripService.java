@@ -5,8 +5,12 @@ import com.trampopoints.model.Location;
 import com.trampopoints.model.Stop;
 import com.trampopoints.model.Trip;
 import com.trampopoints.model.TripRequest;
+import com.trampopoints.model.Driver;
+import com.trampopoints.model.Vehicle;
 import com.trampopoints.repository.TripRepository;
 import com.trampopoints.repository.TripRequestRepository;
+import com.trampopoints.repository.DriverRepository;
+import com.trampopoints.repository.VehicleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +25,8 @@ public class TripService {
     private final RouteService routeService;
     private final TripRequestRepository tripRequestRepository;
     private final TripRepository tripRepository;
+    private final DriverRepository driverRepository;
+    private final VehicleRepository vehicleRepository;
 
     // Almacén en memoria de viajes y solicitudes (sincronizados con DB)
     private final Map<String, Trip> tripsMap = new ConcurrentHashMap<>();
@@ -34,11 +40,15 @@ public class TripService {
             MatchingService matchingService,
             RouteService routeService,
             TripRequestRepository tripRequestRepository,
-            TripRepository tripRepository) {
+            TripRepository tripRepository,
+            DriverRepository driverRepository,
+            VehicleRepository vehicleRepository) {
         this.matchingService = matchingService;
         this.routeService = routeService;
         this.tripRequestRepository = tripRequestRepository;
         this.tripRepository = tripRepository;
+        this.driverRepository = driverRepository;
+        this.vehicleRepository = vehicleRepository;
         
         loadDatabaseData();
         initMockData();
@@ -184,7 +194,7 @@ public class TripService {
             ));
         }
 
-        return new TripResponseDto(
+        TripResponseDto response = new TripResponseDto(
                 trip.getTripId(),
                 trip.getStatus(),
                 trip.getPassengerCount(),
@@ -195,6 +205,19 @@ public class TripService {
                 routeDto,
                 stopDtos
         );
+
+        if (trip.getDriverId() != null) {
+            Optional<Driver> driverOpt = driverRepository.findById(trip.getDriverId());
+            if (driverOpt.isPresent()) {
+                response.setDriver(mapToDriverDto(driverOpt.get()));
+                Optional<Vehicle> vehicleOpt = vehicleRepository.findByDriverId(trip.getDriverId());
+                if (vehicleOpt.isPresent()) {
+                    response.setVehicle(mapToVehicleDto(vehicleOpt.get()));
+                }
+            }
+        }
+
+        return response;
     }
 
     private Trip createDynamicTripFromCluster(List<TripRequest> cluster) {
@@ -272,6 +295,7 @@ public class TripService {
 
         List<Trip> createdTrips = new ArrayList<>();
         List<TripRequest> unassigned = new ArrayList<>(searching);
+        List<TripRequest> skipped = new ArrayList<>();
 
         while (!unassigned.isEmpty()) {
             TripRequest seed = unassigned.remove(0);
@@ -290,7 +314,16 @@ public class TripService {
                 }
             }
 
+            // Buscar chofer disponible
+            Driver availableDriver = findFirstAvailableDriver(createdTrips);
+            if (availableDriver == null) {
+                // No hay chofer disponible, se skipea este grupo (permanecen en SEARCHING)
+                skipped.addAll(cluster);
+                continue;
+            }
+
             Trip newTrip = createDynamicTripFromCluster(cluster);
+            newTrip.setDriverId(availableDriver.getId());
             tripRepository.save(newTrip); // Persistir combi generada
             tripsMap.put(newTrip.getTripId(), newTrip);
             createdTrips.add(newTrip);
@@ -305,10 +338,98 @@ public class TripService {
         }
 
         Map<String, Object> result = new HashMap<>();
-        result.put("processedCount", searching.size());
+        result.put("processedCount", searching.size() - skipped.size());
         result.put("tripsCreatedCount", createdTrips.size());
         result.put("trips", createdTrips);
-        result.put("message", "Se agruparon " + searching.size() + " solicitudes afines en " + createdTrips.size() + " combis.");
+        result.put("message", "Se agruparon " + (searching.size() - skipped.size()) + " solicitudes afines en " + createdTrips.size() + " combis." +
+                (skipped.size() > 0 ? " Se omitieron " + skipped.size() + " solicitudes por falta de choferes disponibles." : ""));
         return result;
+    }
+
+    private Driver findFirstAvailableDriver(List<Trip> createdTrips) {
+        try {
+            List<Driver> activeDrivers = driverRepository.findAll();
+            for (Driver driver : activeDrivers) {
+                if ("ACTIVE".equalsIgnoreCase(driver.getStatus())) {
+                    // Check if driver is already assigned to a CONFIRMED trip in DB
+                    boolean isAssigned = false;
+                    for (Trip trip : tripRepository.findAll()) {
+                        if ("CONFIRMED".equalsIgnoreCase(trip.getStatus()) && driver.getId().equals(trip.getDriverId())) {
+                            isAssigned = true;
+                            break;
+                        }
+                    }
+                    // Check if driver is already assigned in newly created trips in this run
+                    if (!isAssigned) {
+                        for (Trip trip : createdTrips) {
+                            if (driver.getId().equals(trip.getDriverId())) {
+                                isAssigned = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (!isAssigned) {
+                        return driver;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Error al buscar chofer disponible: " + e.getMessage());
+        }
+        return null;
+    }
+
+    private DriverDto mapToDriverDto(Driver driver) {
+        return new DriverDto(
+                driver.getId(),
+                driver.getName(),
+                driver.getLastName(),
+                driver.getEmail(),
+                driver.getPhone(),
+                driver.getAvatarUrl(),
+                driver.getStatus(),
+                driver.getRatingAverage(),
+                driver.getTotalRatings(),
+                driver.getTripsCompleted()
+        );
+    }
+
+    private VehicleDto mapToVehicleDto(Vehicle vehicle) {
+        return new VehicleDto(
+                vehicle.getId(),
+                vehicle.getDriverId(),
+                vehicle.getBrand(),
+                vehicle.getModel(),
+                vehicle.getYear(),
+                vehicle.getColor(),
+                vehicle.getLicensePlate(),
+                vehicle.getImageUrl(),
+                vehicle.getVehicleType(),
+                vehicle.getPassengerCapacity(),
+                vehicle.getSeatCount(),
+                vehicle.getLuggageCapacity(),
+                vehicle.getApproxCargoKg(),
+                vehicle.getAllowsBulkyObjects(),
+                new ArrayList<>(vehicle.getFeatures()),
+                vehicle.getStatus()
+        );
+    }
+
+    public boolean deleteTripRequest(String requestId, UserDto user) {
+        TripRequest req = tripRequestRepository.findById(requestId).orElse(requestsMap.get(requestId));
+        if (req == null) {
+            return false;
+        }
+
+        boolean isAdmin = "ADMIN".equalsIgnoreCase(user.getRole());
+        boolean isOwner = req.getUserEmail() != null && req.getUserEmail().equalsIgnoreCase(user.getEmail());
+
+        if (!isAdmin && !isOwner) {
+            return false;
+        }
+
+        requestsMap.remove(requestId);
+        tripRequestRepository.delete(req);
+        return true;
     }
 }

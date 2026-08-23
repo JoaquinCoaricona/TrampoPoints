@@ -28,7 +28,7 @@ import TripDetails from './components/TripDetails';
 
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { resolveUserRole } from './services/authService';
-import { createTripRequest, getTripMatches, getTripDetails, getAllTripRequests, processGroupingAlgorithm } from './services/api';
+import { createTripRequest, getTripMatches, getTripDetails, getAllTripRequests, processGroupingAlgorithm, deleteTripRequest } from './services/api';
 import {
   PlusCircle,
   ListOrdered,
@@ -263,9 +263,30 @@ function PassengerApp() {
     setAllRequests(updated);
   };
 
-  const handleDeleteRequestByAdmin = (requestId) => {
-    const updated = allRequests.filter(r => r.requestId !== requestId);
-    setAllRequests(updated);
+  const handleDeleteRequestByAdmin = async (requestId) => {
+    if (window.confirm(`¿Estás seguro de que querés eliminar la solicitud ${requestId}?`)) {
+      try {
+        await deleteTripRequest(requestId);
+        const updated = allRequests.filter(r => r.requestId !== requestId);
+        setAllRequests(updated);
+      } catch (err) {
+        console.error('Error al eliminar la solicitud en el backend:', err);
+        alert('No se pudo eliminar la solicitud. Intente nuevamente.');
+      }
+    }
+  };
+
+  const handleDeleteRequestByUser = async (requestId) => {
+    if (window.confirm('¿Estás seguro de que querés cancelar esta solicitud de viaje?')) {
+      try {
+        await deleteTripRequest(requestId);
+        const updated = allRequests.filter(r => r.requestId !== requestId);
+        setAllRequests(updated);
+      } catch (err) {
+        console.error('Error al cancelar la solicitud en el backend:', err);
+        alert('No se pudo cancelar la solicitud. Intente nuevamente.');
+      }
+    }
   };
 
   const userRequests = allRequests.filter(r =>
@@ -340,6 +361,7 @@ function PassengerApp() {
                 userRequests={userRequests}
                 onNewRequest={() => navigate('/app')}
                 onViewMatches={(req) => navigate(`/app/matches/${req.requestId}`)}
+                onDeleteRequest={handleDeleteRequestByUser}
               />
             )
           } />
@@ -391,6 +413,7 @@ export default function App() {
               <Route path="documents" element={<DriverDocumentation />} />
               <Route path="ratings" element={<DriverRatings />} />
               <Route path="recommendations" element={<DriverRecommendations />} />
+              <Route path="trip/:tripId" element={<TripDetailsWrapper />} />
             </Route>
           </Route>
 

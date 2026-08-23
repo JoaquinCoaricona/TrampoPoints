@@ -86,3 +86,16 @@ export async function processGroupingAlgorithm() {
   return await response.json();
 }
 
+// 6. Eliminar solicitud de viaje (DELETE /api/trips/requests/{requestId})
+export async function deleteTripRequest(requestId) {
+  const response = await fetch(`${API_BASE_URL}/trips/requests/${requestId}`, {
+    method: 'DELETE',
+    headers: getHeaders()
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  return await response.json();
+}
+

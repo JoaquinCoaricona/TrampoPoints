@@ -1,5 +1,14 @@
 const API_BASE_URL = 'http://localhost:8080/api/drivers';
 
+function getHeaders(customHeaders = {}) {
+  const headers = { 'Content-Type': 'application/json', ...customHeaders };
+  const token = sessionStorage.getItem('trampopoints_auth_token');
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
+}
+
 /**
  * Cliente HTTP REST para el Módulo del Chofer de TrampoPoints.
  */
@@ -7,7 +16,9 @@ const API_BASE_URL = 'http://localhost:8080/api/drivers';
 // 1. Obtener Dashboard completo
 export async function getDriverDashboard() {
   try {
-    const response = await fetch(`${API_BASE_URL}/current/dashboard`);
+    const response = await fetch(`${API_BASE_URL}/current/dashboard`, {
+      headers: getHeaders()
+    });
     if (!response.ok) throw new Error(`HTTP error ${response.status}`);
     return await response.json();
   } catch (err) {
@@ -19,7 +30,9 @@ export async function getDriverDashboard() {
 // 2. Obtener Perfil del Chofer
 export async function getDriverProfile() {
   try {
-    const response = await fetch(`${API_BASE_URL}/current`);
+    const response = await fetch(`${API_BASE_URL}/current`, {
+      headers: getHeaders()
+    });
     if (!response.ok) throw new Error(`HTTP error ${response.status}`);
     return await response.json();
   } catch (err) {
@@ -33,7 +46,7 @@ export async function updateDriverProfile(data) {
   try {
     const response = await fetch(`${API_BASE_URL}/current`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getHeaders(),
       body: JSON.stringify(data)
     });
     if (!response.ok) throw new Error(`HTTP error ${response.status}`);
@@ -47,7 +60,9 @@ export async function updateDriverProfile(data) {
 // 4. Obtener Vehículo
 export async function getVehicle() {
   try {
-    const response = await fetch(`${API_BASE_URL}/current/vehicle`);
+    const response = await fetch(`${API_BASE_URL}/current/vehicle`, {
+      headers: getHeaders()
+    });
     if (!response.ok) throw new Error(`HTTP error ${response.status}`);
     return await response.json();
   } catch (err) {
@@ -61,7 +76,7 @@ export async function saveVehicle(data) {
   try {
     const response = await fetch(`${API_BASE_URL}/current/vehicle`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getHeaders(),
       body: JSON.stringify(data)
     });
     if (!response.ok) throw new Error(`HTTP error ${response.status}`);
@@ -77,7 +92,7 @@ export async function updateVehicleStatus(status) {
   try {
     const response = await fetch(`${API_BASE_URL}/current/vehicle/status`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getHeaders(),
       body: JSON.stringify({ status })
     });
     if (!response.ok) throw new Error(`HTTP error ${response.status}`);
@@ -91,7 +106,9 @@ export async function updateVehicleStatus(status) {
 // 7. Listar Documentación
 export async function getDocumentations() {
   try {
-    const response = await fetch(`${API_BASE_URL}/current/vehicle/documentations`);
+    const response = await fetch(`${API_BASE_URL}/current/vehicle/documentations`, {
+      headers: getHeaders()
+    });
     if (!response.ok) throw new Error(`HTTP error ${response.status}`);
     return await response.json();
   } catch (err) {
@@ -105,7 +122,7 @@ export async function saveDocumentation(data) {
   try {
     const response = await fetch(`${API_BASE_URL}/current/vehicle/documentations`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getHeaders(),
       body: JSON.stringify(data)
     });
     if (!response.ok) throw new Error(`HTTP error ${response.status}`);
@@ -126,7 +143,8 @@ export async function saveDocumentation(data) {
 export async function deleteDocumentation(docId) {
   try {
     const response = await fetch(`${API_BASE_URL}/current/vehicle/documentations/${docId}`, {
-      method: 'DELETE'
+      method: 'DELETE',
+      headers: getHeaders()
     });
     if (!response.ok) throw new Error(`HTTP error ${response.status}`);
     return await response.json();
@@ -139,7 +157,9 @@ export async function deleteDocumentation(docId) {
 // 10. Obtener Calificaciones y Métricas
 export async function getDriverRatings() {
   try {
-    const response = await fetch(`${API_BASE_URL}/current/ratings`);
+    const response = await fetch(`${API_BASE_URL}/current/ratings`, {
+      headers: getHeaders()
+    });
     if (!response.ok) throw new Error(`HTTP error ${response.status}`);
     return await response.json();
   } catch (err) {
@@ -151,12 +171,28 @@ export async function getDriverRatings() {
 // 11. Obtener Recomendaciones de Pasajeros
 export async function getDriverRecommendations() {
   try {
-    const response = await fetch(`${API_BASE_URL}/current/recommendations`);
+    const response = await fetch(`${API_BASE_URL}/current/recommendations`, {
+      headers: getHeaders()
+    });
     if (!response.ok) throw new Error(`HTTP error ${response.status}`);
     return await response.json();
   } catch (err) {
     console.warn('Error al obtener recomendaciones:', err);
     return getFallbackRecommendations();
+  }
+}
+
+// 12. Obtener Viajes del Chofer
+export async function getDriverTrips() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/current/trips`, {
+      headers: getHeaders()
+    });
+    if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+    return await response.json();
+  } catch (err) {
+    console.warn('Error al obtener viajes del chofer:', err);
+    return [];
   }
 }
 

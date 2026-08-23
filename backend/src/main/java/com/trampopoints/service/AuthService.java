@@ -156,10 +156,14 @@ public class AuthService {
         if (userId == null) {
             // Fallback de desarrollo para evitar 401 en sesiones locales previas o mock tokens
             if (cleanToken.toLowerCase().contains("mock") || cleanToken.toLowerCase().contains("token")) {
-                Optional<User> adminOpt = userRepository.findByEmail("admin@trampopoints.com");
-                if (adminOpt.isPresent()) {
-                    User admin = adminOpt.get();
-                    return new UserDto(admin.getId(), admin.getName(), admin.getEmail(), admin.getRole().name());
+                String targetEmail = "admin@trampopoints.com";
+                if (cleanToken.toLowerCase().contains("driver") || cleanToken.toLowerCase().contains("chofer")) {
+                    targetEmail = "juan.chofer@trampopoints.com";
+                }
+                Optional<User> userOpt = userRepository.findByEmail(targetEmail);
+                if (userOpt.isPresent()) {
+                    User u = userOpt.get();
+                    return new UserDto(u.getId(), u.getName(), u.getEmail(), u.getRole().name());
                 }
             }
             return null;

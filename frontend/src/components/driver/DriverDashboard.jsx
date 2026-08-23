@@ -12,7 +12,7 @@ import {
   Clock,
   AlertTriangle
 } from 'lucide-react';
-import { updateVehicleStatus } from '../../services/driverService';
+import { updateVehicleStatus, getDriverTrips } from '../../services/driverService';
 
 export default function DriverDashboard({ dashboardData: propData, onRefresh: propRefresh }) {
   const navigate = useNavigate();
@@ -20,6 +20,25 @@ export default function DriverDashboard({ dashboardData: propData, onRefresh: pr
   const dashboardData = propData || outletCtx.dashboardData;
   const onRefresh = propRefresh || outletCtx.onRefresh;
   const [updatingStatus, setUpdatingStatus] = useState(false);
+
+  const [trips, setTrips] = React.useState([]);
+  const [loadingTrips, setLoadingTrips] = React.useState(true);
+
+  React.useEffect(() => {
+    async function loadTrips() {
+      try {
+        const data = await getDriverTrips();
+        setTrips(data || []);
+      } catch (err) {
+        console.error('Error al cargar viajes del chofer:', err);
+      } finally {
+        setLoadingTrips(false);
+      }
+    }
+    loadTrips();
+  }, []);
+
+  const activeTrip = trips.find(t => t.status === 'CONFIRMED' || t.status === 'ACTIVE');
 
   if (!dashboardData) {
     return (
@@ -47,6 +66,24 @@ export default function DriverDashboard({ dashboardData: propData, onRefresh: pr
 
   return (
     <div className="driver-editorial-dashboard">
+      {activeTrip && (
+        <div className="driver-notification-banner margin-bottom-32 flex-between align-center gap-16">
+          <div className="flex-center gap-12">
+            <span className="dot pulse"></span>
+            <div className="flex-column gap-2">
+              <span className="banner-title" style={{ textAlign: 'left', display: 'block' }}>¡Nuevo viaje asignado!</span>
+              <span className="banner-desc text-muted" style={{ textAlign: 'left', display: 'block' }}>
+                Tenes un recorrido confirmado desde <strong>{activeTrip.stops[0]?.address || 'Origen'}</strong> a las <strong>{activeTrip.departureTime}</strong>.
+              </span>
+            </div>
+          </div>
+          <Link to={`/driver/trip/${activeTrip.tripId}`} className="banner-btn flex-center gap-6">
+            <span>Ver Recorrido</span>
+            <ArrowRight size={14} />
+          </Link>
+        </div>
+      )}
+
       {/* 1. Header: Saludo Directo + Estado Operativo */}
       <header className="dash-hero-header flex-between align-center flex-wrap gap-24 margin-bottom-48">
         <div className="flex-column gap-6">
@@ -154,6 +191,69 @@ export default function DriverDashboard({ dashboardData: propData, onRefresh: pr
             </span>
           </div>
         </div>
+      </section>
+
+      <div className="hairline-divider margin-bottom-48" />
+
+      {/* Viajes Asignados Section */}
+      <section className="driver-trips-section margin-bottom-56">
+        <span className="section-eyebrow text-muted margin-bottom-16 block">Mis Viajes Asignados</span>
+        {loadingTrips ? (
+          <div className="skeleton-box shimmer-wave" style={{ height: '100px', borderRadius: '10px' }} />
+        ) : trips.length === 0 ? (
+          <div className="driver-trip-card flex-center text-muted" style={{ padding: '40px' }}>
+            <Bus size={24} className="text-dim margin-bottom-8" />
+            <span>No tenés ningún viaje asignado en este momento.</span>
+          </div>
+        ) : (
+          <div className="driver-trips-list">
+            {trips.map((trip) => (
+              <div key={trip.tripId} className="driver-trip-card">
+                <div className="driver-trip-card-header">
+                  <div className="flex-center gap-10">
+                    <span className="driver-trip-id">ID: {trip.tripId}</span>
+                    <span className="driver-trip-time">{trip.departureTime}</span>
+                  </div>
+                  <span className="status-live-pill text-neon-green">
+                    {trip.status === 'CONFIRMED' ? 'Confirmado' : trip.status}
+                  </span>
+                </div>
+                <div className="driver-trip-addresses">
+                  <div className="driver-address-row">
+                    <span className="driver-address-indicator"></span>
+                    <div className="flex-column">
+                      <span className="text-sm font-semibold text-main">Origen</span>
+                      <span className="text-xs text-muted">{trip.stops[0]?.address || 'Dirección de Origen'}</span>
+                    </div>
+                  </div>
+                  <div className="driver-address-row">
+                    <span className="driver-address-indicator dest"></span>
+                    <div className="flex-column">
+                      <span className="text-sm font-semibold text-main">Destino</span>
+                      <span className="text-xs text-muted">{trip.stops[trip.stops.length - 1]?.address || 'Dirección de Destino'}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="driver-trip-stats-row flex-between align-center flex-wrap gap-12">
+                  <div className="flex-center gap-24">
+                    <div className="driver-trip-stat">
+                      <User size={14} className="text-muted" />
+                      <span>{trip.passengerCount} / {trip.capacity} Pasajeros</span>
+                    </div>
+                    <div className="driver-trip-stat">
+                      <MapPin size={14} className="text-muted" />
+                      <span>{trip.stops.length} Paradas</span>
+                    </div>
+                  </div>
+                  <Link to={`/driver/trip/${trip.tripId}`} className="driver-trip-action flex-center gap-6">
+                    <span>Ver Recorrido</span>
+                    <ChevronRight size={14} />
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
 
       <div className="hairline-divider margin-bottom-48" />
