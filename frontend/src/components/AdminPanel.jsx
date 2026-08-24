@@ -11,7 +11,7 @@ import {
   Home,
   ChevronRight
 } from 'lucide-react';
-import { getAvailableCombis } from '../services/api';
+import { getAvailableCombis, getAllTripRequests } from '../services/api';
 
 export default function AdminPanel({
   allRequests,
@@ -72,6 +72,38 @@ export default function AdminPanel({
   const totalCount = allRequests.length;
   const searchingCount = allRequests.filter(r => r.status === 'SEARCHING').length;
   const matchedCount = allRequests.filter(r => r.status === 'MATCHED' || r.status === 'CONFIRMED').length;
+
+  const [liveMatchedCount, setLiveMatchedCount] = useState(matchedCount);
+
+  // Sincronización inicial o por prop
+  useEffect(() => {
+    if (typeof matchedCount === 'number') {
+      setLiveMatchedCount(matchedCount);
+    }
+  }, [matchedCount]);
+
+  // Polling en tiempo real continuo directo a BD para combis asignadas
+  useEffect(() => {
+    let isMounted = true;
+    const fetchLiveMatchedCount = async () => {
+      try {
+        const res = await getAllTripRequests();
+        if (isMounted && Array.isArray(res)) {
+          const currentMatchedCount = res.filter(r => r.status === 'MATCHED' || r.status === 'CONFIRMED').length;
+          setLiveMatchedCount(currentMatchedCount);
+        }
+      } catch (e) {
+        console.warn('Error polling combis asignadas en AdminPanel:', e);
+      }
+    };
+
+    fetchLiveMatchedCount();
+    const interval = setInterval(fetchLiveMatchedCount, 2000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, []);
 
   const handleExecuteAlgorithm = async () => {
     setIsProcessing(true);
@@ -733,8 +765,8 @@ export default function AdminPanel({
         </div>
         <div className="admin-stat-item">
           <span className="admin-stat-label">Combi Asignada</span>
-          <span className="admin-stat-val">{matchedCount}</span>
-          <span className="admin-stat-sub text-trend-up">+{Math.round((matchedCount / (totalCount || 1)) * 100)}% asignación</span>
+          <span className="admin-stat-val">{liveMatchedCount}</span>
+          <span className="admin-stat-sub text-trend-up">+{Math.round((liveMatchedCount / (totalCount || 1)) * 100)}% asignación</span>
         </div>
         <div className="admin-stat-item">
           <span className="admin-stat-label">Combi Disponible</span>
