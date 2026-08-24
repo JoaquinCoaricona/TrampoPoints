@@ -46,15 +46,16 @@ import './App.css';
 // Landing Page Wrapper (Preserves Protected Landing without changes)
 function LandingPageWrapper() {
   const navigate = useNavigate();
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, loading } = useAuth();
   const userRole = resolveUserRole(user?.role, user?.email);
 
   // If already logged in as driver, forward directly to driver portal
   useEffect(() => {
+    if (loading) return;
     if (isAuthenticated && userRole === 'DRIVER') {
       navigate('/driver', { replace: true });
     }
-  }, [isAuthenticated, userRole, navigate]);
+  }, [isAuthenticated, userRole, navigate, loading]);
 
   return (
     <div className="landing-page-wrap">
@@ -200,7 +201,7 @@ function TripDetailsWrapper() {
 
 // Passenger & Admin Application View (/app)
 function PassengerApp() {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const userRole = resolveUserRole(user?.role, user?.email);
@@ -216,6 +217,7 @@ function PassengerApp() {
 
   // Enforce authentication and role limits for the system flow
   useEffect(() => {
+    if (authLoading) return;
     if (!isAuthenticated) {
       navigate('/login', { replace: true });
     } else if (userRole === 'DRIVER') {
@@ -223,7 +225,7 @@ function PassengerApp() {
     } else if (isAdmin && location.pathname === '/app') {
       navigate('/app/admin', { replace: true });
     }
-  }, [isAuthenticated, userRole, isAdmin, location.pathname, navigate]);
+  }, [isAuthenticated, userRole, isAdmin, location.pathname, navigate, authLoading]);
 
   const fetchAllRequests = async () => {
     try {
