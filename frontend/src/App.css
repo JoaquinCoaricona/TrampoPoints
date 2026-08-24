@@ -3031,6 +3031,13 @@
   background-color: #05080C;
   position: relative;
   overflow: hidden;
+}
+
+.login-content-wrapper {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -3338,14 +3345,17 @@
 /* --- Mobile Responsiveness for Login View --- */
 @media (max-width: 600px) {
   .login-page-root {
+    overflow-y: auto;
+  }
+  .login-content-wrapper {
     padding: 24px 16px;
     justify-content: flex-start;
     padding-top: 80px;
-    overflow-y: auto;
   }
   .login-top-bar {
     top: 16px;
     left: 16px;
+    position: absolute;
   }
   .login-card {
     padding: 24px 16px;
