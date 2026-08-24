@@ -3335,6 +3335,45 @@
   color: #8B5CF6;
 }
 
+/* --- Mobile Responsiveness for Login View --- */
+@media (max-width: 600px) {
+  .login-page-root {
+    padding: 24px 16px;
+    justify-content: flex-start;
+    padding-top: 80px;
+    overflow-y: auto;
+  }
+  .login-top-bar {
+    top: 16px;
+    left: 16px;
+  }
+  .login-card {
+    padding: 24px 16px;
+  }
+  .login-title {
+    font-size: 26px;
+  }
+  .demo-buttons-grid,
+  .role-selection-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px;
+    width: 100%;
+  }
+  .btn-demo-card {
+    width: 100%;
+  }
+  .login-mode-tab {
+    padding: 10px 8px;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+  .login-ambient-violet,
+  .login-ambient-green {
+    display: none;
+  }
+}
+
 /* 2. DRIVER LAYOUT & SUBNAV WITH NAVLINKS */
 .driver-layout-root {
   min-height: 100vh;
