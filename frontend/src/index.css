@@ -56,6 +56,18 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  -ms-overflow-style: none !important; /* IE and Edge */
+  scrollbar-width: none !important; /* Firefox */
+}
+
+/* Forcefully hide webkit scrollbars globally */
+::-webkit-scrollbar,
+*::-webkit-scrollbar,
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
 body {
@@ -70,6 +82,10 @@ body {
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  /* Hides scrollbar globally */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 h1, h2, h3, h4, h5, h6 {
