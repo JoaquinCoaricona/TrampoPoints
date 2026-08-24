@@ -82,10 +82,25 @@ export default function DriverVehicle({ onUpdateSuccess }) {
 
   if (loading) {
     return (
-      <div className="driver-subpage-container flex-column gap-32">
-        <div className="skeleton-box shimmer-wave" style={{ height: '80px', borderRadius: '6px' }} />
-        <div className="skeleton-box shimmer-wave" style={{ height: '420px', borderRadius: '6px' }} />
-        <div className="skeleton-box shimmer-wave" style={{ height: '240px', borderRadius: '6px' }} />
+      <div className="driver-subpage-container" style={{ opacity: 0.7, pointerEvents: 'none' }}>
+        <section className="margin-bottom-48 flex-between flex-wrap gap-24">
+          <div className="vehicle-details flex-column gap-12">
+            <div className="skeleton-box shimmer-wave" style={{ width: '120px', height: '14px', borderRadius: '4px' }} />
+            <div className="skeleton-box shimmer-wave" style={{ width: '300px', height: '36px', borderRadius: '6px' }} />
+            <div className="skeleton-box shimmer-wave" style={{ width: '260px', height: '20px', borderRadius: '4px' }} />
+          </div>
+          <div className="vehicle-model-preview flex-center" style={{ padding: '24px' }}>
+            <div className="skeleton-box shimmer-wave" style={{ width: '260px', height: '160px', borderRadius: '12px' }} />
+          </div>
+        </section>
+
+        <section className="margin-bottom-56">
+          <div className="model-selection-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
+            <div className="skeleton-box shimmer-wave" style={{ height: '240px', borderRadius: '16px' }} />
+            <div className="skeleton-box shimmer-wave" style={{ height: '240px', borderRadius: '16px' }} />
+            <div className="skeleton-box shimmer-wave" style={{ height: '240px', borderRadius: '16px' }} />
+          </div>
+        </section>
       </div>
     );
   }
@@ -182,7 +197,9 @@ export default function DriverVehicle({ onUpdateSuccess }) {
         <div className="flex-column gap-24">
           <div className="flex-column gap-6">
             <span className="section-eyebrow text-muted">Ficha Técnica</span>
+            <br></br>
             <p className="text-sm text-muted">Identificación de la unidad y capacidad habilitada.</p>
+            <br></br>
           </div>
 
           <div className="form-grid-2cols">
@@ -266,7 +283,9 @@ export default function DriverVehicle({ onUpdateSuccess }) {
         <div className="flex-column gap-24">
           <div className="flex-column gap-6">
             <span className="section-eyebrow text-electric-violet">Equipamiento & Confort</span>
+            <br></br>
             <p className="text-sm text-muted">Servicios a bordo visibles para los pasajeros.</p>
+            <br></br>
           </div>
 
           <div className="amenities-list-wrap">

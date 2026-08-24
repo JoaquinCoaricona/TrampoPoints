@@ -24,18 +24,7 @@ import videoFondoLanding from '../assets/video_fondo_landing.mp4';
 import videoRecorridoLineas from '../assets/recorrido_lineas.mp4';
 import passengersComfortImg from '../assets/passengers_comfort.jpg';
 
-// MINI LOGO TP IDÉNTICO A LA REFERENCIA
-function MiniLogoTP({ size = 44, className = '' }) {
-  return (
-    <div className={`tp-mini-logo-box ${className}`} style={{ width: size, height: size }}>
-      <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect width="100" height="100" rx="24" fill="#151d2a" stroke="rgba(255, 255, 255, 0.18)" strokeWidth="4" />
-        <path d="M26 26H74V38H54V74H40V38H26V26Z" fill="#34d399" />
-        <path d="M40 38H66C72.6 38 78 43.4 78 50C78 56.6 72.6 62 66 62H54V50H66C66 50 66 50 66 50Z" fill="#34d399" />
-      </svg>
-    </div>
-  );
-}
+import MiniLogoTP from '../components/MiniLogoTP';
 
 // COMPONENTE DE VIDEO DE FONDO CON VELOCIDAD 0.5X Y DEGRADADOS DE TRANSICIÓN SUAVE
 function SectionVideoBg({ opacity = 0.20 }) {
@@ -120,24 +109,9 @@ export default function LandingPage({
     setOpenFaqIndex(openFaqIndex === index ? null : index);
   };
 
-  const faqs = [
-    {
-      question: '¿Cómo se calcula el costo del viaje?',
-      answer: 'El costo total trazado por OSRM se divide equitativamente entre los pasajeros del grupo (hasta 75% menos que Uber/Taxi).'
-    },
-    {
-      question: '¿El asiento está garantizado?',
-      answer: 'Sí. Al confirmarse el grupo, tu lugar en la combi de 30 asientos queda 100% reservado.'
-    },
-    {
-      question: '¿Los choferes están verificados?',
-      answer: 'Sí. Todos cuentan con licencia profesional D2, VTV, seguro y documentación auditada.'
-    },
-    {
-      question: '¿Dónde me subo a la combi?',
-      answer: 'El algoritmo OSRM fija esquinas iluminadas a menos de 300m de tu origen.'
-    }
-  ];
+  const [lang, setLang] = useState('es');
+  const t = TRANSLATIONS[lang];
+  const faqs = FAQS_DATA[lang];
 
   return (
     <div className="tramo-landing-root text-white">
@@ -155,21 +129,39 @@ export default function LandingPage({
         </div>
 
         <nav className="tramo-nav-menu">
-          <a href="#inicio" className="tramo-nav-item">Solicitar Viaje</a>
-          <a href="#red-combis" className="tramo-nav-item">Nuestra Red</a>
-          <a href="#servicios" className="tramo-nav-item">Servicios</a>
-          <a href="#algoritmo" className="tramo-nav-item">Algoritmo OSRM</a>
-          <a href="#arquitectura" className="tramo-nav-item">Arquitectura</a>
-          <a href="#comparativa" className="tramo-nav-item">Precios</a>
+          <a href="#inicio" className="tramo-nav-item">{t.nav.inicio}</a>
+          <a href="#plataforma" className="tramo-nav-item">{t.nav.plataforma}</a>
+          <a href="#como-funciona" className="tramo-nav-item">{t.nav.comoFunciona}</a>
+          <a href="#precios" className="tramo-nav-item">{t.nav.precios}</a>
+          <a href="#faq" className="tramo-nav-item">{t.nav.faq}</a>
         </nav>
 
-        <div className="tramo-nav-right">
-          <button
-            type="button"
-            className="btn-tramo-outline"
-            onClick={onOpenAuthModal}
+        <div className="tramo-nav-right" style={{ display: 'flex', alignItems: 'center' }}>
+          <button 
+            type="button" 
+            onClick={() => setLang(lang === 'es' ? 'en' : 'es')}
+            title={lang === 'es' ? 'Switch to English' : 'Cambiar a Español'}
+            style={{ 
+              background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', 
+              color: 'white', borderRadius: '30px', padding: '6px 14px', 
+              cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px',
+              fontSize: '14px', fontWeight: '600', transition: 'all 0.3s ease', outline: 'none',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+            }}
+            onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.15)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.4)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+            onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'; e.currentTarget.style.transform = 'none'; }}
           >
-            Acceso Usuarios / Choferes
+            {lang === 'es' ? (
+              <>
+                <img src="https://flagcdn.com/w40/us.png" alt="English" style={{ width: '20px', borderRadius: '2px' }} />
+                <span>English</span>
+              </>
+            ) : (
+              <>
+                <img src="https://flagcdn.com/w40/ar.png" alt="Español" style={{ width: '20px', borderRadius: '2px' }} />
+                <span>Español</span>
+              </>
+            )}
           </button>
         </div>
       </header>
@@ -192,10 +184,14 @@ export default function LandingPage({
             <MiniLogoTP size={52} />
           </div>
 
-          <h1 className="tramo-headline-exact">
-            Viajá Inteligente.<br />
-            Ahorro del 75%.
-          </h1>
+            <h1 className="tramo-headline-exact">
+
+              Tramo<span className="text-neon-green">Points</span>.<br />
+
+              {t.hero.subtitle}
+
+
+            </h1>
 
           <div className="tramo-stats-row-exact">
             <div className="tramo-stat-pill">
@@ -204,7 +200,7 @@ export default function LandingPage({
               </div>
               <div className="stat-text-box">
                 <strong className="stat-number">3M+</strong>
-                <span className="stat-label">Viajes Compartidos</span>
+                <span className="stat-label">{t.hero.stats1}</span>
               </div>
             </div>
 
@@ -214,7 +210,7 @@ export default function LandingPage({
               </div>
               <div className="stat-text-box">
                 <strong className="stat-number">96%</strong>
-                <span className="stat-label">Puntualidad</span>
+                <span className="stat-label">{t.hero.stats2}</span>
               </div>
             </div>
 
@@ -223,8 +219,8 @@ export default function LandingPage({
                 <Wallet size={22} />
               </div>
               <div className="stat-text-box">
-                <strong className="stat-title-strong">Ahorro Promedio</strong>
-                <span className="stat-label-bold">del 75%</span>
+                <strong className="stat-title-strong">{t.hero.stats3}</strong>
+                <span className="stat-label-bold">{t.hero.stats3Val}</span>
               </div>
             </div>
           </div>
@@ -235,7 +231,7 @@ export default function LandingPage({
               className="btn-gold-emerald-pill"
               onClick={() => onEnterApp('CREATE')}
             >
-              Empezar Solicitud de Viaje
+              {t.hero.cta}
             </button>
           </div>
         </div>
@@ -580,163 +576,155 @@ export default function LandingPage({
       <div className="lp-lower">
 
         {/* ——— SECTION 1: FEATURES ——— */}
-        <section className="lp-section">
+        <section id="plataforma" className="lp-section">
           <div className="lp-inner">
-            <span className="lp-badge">Plataforma</span>
-            <h2 className="lp-h2">Todo lo que necesitás<br/>para viajar mejor</h2>
+            <span className="lp-badge">{t.section1.badge}</span>
+            <h2 className="lp-h2" style={{ whiteSpace: 'pre-line' }}>{t.section1.title}</h2>
             <p className="lp-subtitle">
-              TramoPoints combina inteligencia artificial, rutas OSRM y grupos inteligentes para ofrecerte viajes compartidos premium a una fracción del costo.
+              {t.section1.subtitle}
             </p>
 
             <div className="lp-features-grid">
               <div className="lp-feature-card">
                 <div className="lp-feature-icon green"><MapPin size={22} /></div>
-                <h3>Geocodificación en Tiempo Real</h3>
-                <p>Ubicamos paradas seguras a menos de 300m de tu posición usando datos cartográficos vivos.</p>
+                <h3>{t.section1.f1}</h3>
+                <p>{t.section1.f1d}</p>
               </div>
               <div className="lp-feature-card">
                 <div className="lp-feature-icon amber"><Cpu size={22} /></div>
-                <h3>Clustering Inteligente</h3>
-                <p>Agrupamos pasajeros cercanos automáticamente para optimizar rutas y reducir costos.</p>
+                <h3>{t.section1.f2}</h3>
+                <p>{t.section1.f2d}</p>
               </div>
               <div className="lp-feature-card">
                 <div className="lp-feature-icon indigo"><Navigation size={22} /></div>
-                <h3>Rutas OSRM Optimizadas</h3>
-                <p>Calculamos el trayecto más eficiente en milisegundos con el motor de ruteo OSRM.</p>
+                <h3>{t.section1.f3}</h3>
+                <p>{t.section1.f3d}</p>
               </div>
               <div className="lp-feature-card">
                 <div className="lp-feature-icon green"><ShieldCheck size={22} /></div>
-                <h3>Choferes Verificados</h3>
-                <p>Licencia D2, VTV al día, seguro obligatorio y documentación auditada.</p>
+                <h3>{t.section1.f4}</h3>
+                <p>{t.section1.f4d}</p>
               </div>
               <div className="lp-feature-card">
                 <div className="lp-feature-icon amber"><Users size={22} /></div>
-                <h3>Paneles Multi-Rol</h3>
-                <p>Dashboard dedicado para pasajeros, choferes y administradores con datos en tiempo real.</p>
+                <h3>{t.section1.f5}</h3>
+                <p>{t.section1.f5d}</p>
               </div>
               <div className="lp-feature-card">
                 <div className="lp-feature-icon indigo"><Activity size={22} /></div>
-                <h3>Seguimiento GPS en Vivo</h3>
-                <p>Rastreá tu combi en tiempo real desde la app. Sabé exactamente cuándo llega.</p>
+                <h3>{t.section1.f6}</h3>
+                <p>{t.section1.f6d}</p>
               </div>
             </div>
           </div>
         </section>
 
         {/* ——— SECTION 2: HOW IT WORKS ——— */}
-        <section className="lp-section">
+        <section id="como-funciona" className="lp-section">
           <div className="lp-video-bg">
             <video autoPlay loop muted playsInline><source src={videoRecorridoLineas} type="video/mp4" /></video>
           </div>
           <div className="lp-inner">
-            <span className="lp-badge">Cómo Funciona</span>
-            <h2 className="lp-h2">De la solicitud al viaje<br/>en 4 pasos</h2>
+            <span className="lp-badge">{t.section2.badge}</span>
+            <h2 className="lp-h2" style={{ whiteSpace: 'pre-line' }}>{t.section2.title}</h2>
             <p className="lp-subtitle">
-              Nuestro algoritmo procesa tu pedido y arma el grupo perfecto en segundos.
+              {t.section2.subtitle}
             </p>
 
             <div className="lp-steps">
               <div className="lp-step">
                 <div className="lp-step-num">01</div>
-                <h4>Solicitás</h4>
-                <p>Ingresás origen, destino y horario preferido desde la app.</p>
+                <h4>{t.section2.s1}</h4>
+                <p>{t.section2.s1d}</p>
               </div>
               <div className="lp-step">
                 <div className="lp-step-num">02</div>
-                <h4>Agrupamos</h4>
-                <p>El AI agrupa pasajeros cercanos con destinos similares.</p>
+                <h4>{t.section2.s2}</h4>
+                <p>{t.section2.s2d}</p>
               </div>
               <div className="lp-step">
                 <div className="lp-step-num">03</div>
-                <h4>Optimizamos</h4>
-                <p>OSRM calcula la ruta más eficiente y asigna paradas seguras.</p>
+                <h4>{t.section2.s3}</h4>
+                <p>{t.section2.s3d}</p>
               </div>
               <div className="lp-step">
                 <div className="lp-step-num">04</div>
-                <h4>Viajás</h4>
-                <p>Tu combi pasa por la esquina indicada. Seguimiento GPS en vivo.</p>
+                <h4>{t.section2.s4}</h4>
+                <p>{t.section2.s4d}</p>
               </div>
             </div>
 
             <button className="lp-cta-btn" onClick={() => onEnterApp('CREATE')}>
-              Solicitar Mi Viaje
+              {t.section2.cta}
             </button>
           </div>
         </section>
 
         {/* ——— SECTION 3: COMPARISON TABLE ——— */}
-        <section className="lp-section">
+        <section id="precios" className="lp-section">
           <div className="lp-inner">
-            <span className="lp-badge">Precios</span>
-            <h2 className="lp-h2">TramoPoints vs. Alternativas</h2>
+            <span className="lp-badge">{t.section3.badge}</span>
+            <h2 className="lp-h2">{t.section3.title}</h2>
             <p className="lp-subtitle">
-              Comparación directa de costo, tiempo y confort para tus trayectos diarios.
+              {t.section3.subtitle}
             </p>
 
             <div className="lp-table-wrap">
               <table className="lp-table">
                 <thead>
                   <tr>
-                    <th>Atributo</th>
-                    <th>TramoPoints</th>
-                    <th>Uber / Taxi</th>
+                    <th>{t.section3.th1}</th>
+                    <th>{t.section3.th2}</th>
+                    <th>{t.section3.th3}</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr>
-                    <td>Costo promedio</td>
-                    <td>$18 – $28</td>
-                    <td>$70 – $120</td>
+                    <td>{t.section3.tr1c1}</td>
+                    <td>{t.section3.tr1c2}</td>
+                    <td>{t.section3.tr1c3}</td>
                   </tr>
                   <tr>
-                    <td>Tiempo de espera</td>
-                    <td>Horarios fijos y puntuales</td>
-                    <td>Variable por demanda</td>
+                    <td>{t.section3.tr2c1}</td>
+                    <td>{t.section3.tr2c2}</td>
+                    <td>{t.section3.tr2c3}</td>
                   </tr>
                   <tr>
-                    <td>Asiento</td>
-                    <td>100% reservado</td>
-                    <td>Sujeto a disponibilidad</td>
+                    <td>{t.section3.tr3c1}</td>
+                    <td>{t.section3.tr3c2}</td>
+                    <td>{t.section3.tr3c3}</td>
                   </tr>
                   <tr>
-                    <td>Paradas</td>
-                    <td>Esquinas iluminadas (OSRM)</td>
-                    <td>Puerta a puerta</td>
+                    <td>{t.section3.tr4c1}</td>
+                    <td>{t.section3.tr4c2}</td>
+                    <td>{t.section3.tr4c3}</td>
                   </tr>
                   <tr>
-                    <td>Seguimiento GPS</td>
-                    <td>En vivo desde la app</td>
-                    <td>Disponible</td>
+                    <td>{t.section3.tr5c1}</td>
+                    <td>{t.section3.tr5c2}</td>
+                    <td>{t.section3.tr5c3}</td>
                   </tr>
                   <tr>
-                    <td>Documentación del chofer</td>
-                    <td>Verificada y auditada</td>
-                    <td>Variable</td>
+                    <td>{t.section3.tr6c1}</td>
+                    <td>{t.section3.tr6c2}</td>
+                    <td>{t.section3.tr6c3}</td>
                   </tr>
                 </tbody>
               </table>
             </div>
 
-            <div className="lp-partners">
-              <span style={{ fontSize: '12px', color: '#475569', textTransform: 'uppercase', letterSpacing: '1px', marginRight: '12px' }}>Tecnologías & Partners:</span>
-              <span>Claro</span>
-              <span>OSRM</span>
-              <span>LinkedIn</span>
-              <span>Microsoft</span>
-              <span className="highlight">TP Circular</span>
-              <span>dhyason</span>
-            </div>
+
           </div>
         </section>
 
         {/* ——— SECTION 4: FAQ ——— */}
-        <section className="lp-section">
+        <section id="faq" className="lp-section">
           <div className="lp-video-bg">
             <video autoPlay loop muted playsInline><source src={videoRecorridoLineas} type="video/mp4" /></video>
           </div>
           <div className="lp-inner">
-            <span className="lp-badge">Soporte</span>
-            <h2 className="lp-h2" style={{ marginBottom: '40px' }}>Preguntas Frecuentes</h2>
+            <span className="lp-badge">{t.section4.badge}</span>
+            <h2 className="lp-h2" style={{ marginBottom: '40px' }}>{t.section4.title}</h2>
 
             <div className="lp-faq-container">
               {faqs.map((faq, idx) => (
@@ -765,13 +753,13 @@ export default function LandingPage({
         <footer className="lp-footer-container">
           <div className="lp-footer-inner">
             <div>
-              <a href="#inicio">Inicio</a>
-              <a href="#servicios">Servicios</a>
-              <a href="#faq">FAQ</a>
-              <a href="#">Recursos</a>
-              <a href="#">Políticas de Privacidad</a>
+              <a href="#inicio">{t.footer.home}</a>
+              <a href="#servicios">{t.footer.services}</a>
+              <a href="#faq">{t.footer.faq}</a>
+              <a href="#">{t.footer.resources}</a>
+              <a href="#">{t.footer.privacy}</a>
             </div>
-            <p style={{ margin: 0 }}>© 2026 TramoPoints. Movilidad inteligente para todos.</p>
+            <p style={{ margin: 0 }}>{t.footer.rights}</p>
           </div>
         </footer>
 
@@ -808,3 +796,39 @@ function ObserverLoader() {
 
   return null;
 }
+
+const TRANSLATIONS = {
+  es: {
+    nav: { inicio: 'Inicio', plataforma: 'Plataforma', comoFunciona: 'Cómo Funciona', precios: 'Precios', faq: 'FAQ' },
+    hero: { subtitle: 'Del mismo camino, un solo viaje.', stats1: 'Viajes Compartidos', stats2: 'Puntualidad', stats3: 'Ahorro Promedio', stats3Val: 'del 75%', cta: 'Empezar Solicitud de Viaje' },
+    section1: { badge: 'Plataforma', title: 'Todo lo que necesitás\npara viajar mejor', subtitle: 'TramoPoints combina inteligencia artificial, rutas OSRM y grupos inteligentes para ofrecerte viajes compartidos premium a una fracción del costo.', f1: 'Geocodificación en Tiempo Real', f1d: 'Ubicamos paradas seguras a menos de 300m de tu posición usando datos cartográficos vivos.', f2: 'Clustering Inteligente', f2d: 'Agrupamos pasajeros cercanos automáticamente para optimizar rutas y reducir costos.', f3: 'Rutas OSRM Optimizadas', f3d: 'Calculamos el trayecto más eficiente en milisegundos con el motor de ruteo OSRM.', f4: 'Choferes Verificados', f4d: 'Licencia D2, VTV al día, seguro obligatorio y documentación auditada.', f5: 'Paneles Multi-Rol', f5d: 'Dashboard dedicado para pasajeros, choferes y administradores con datos en tiempo real.', f6: 'Seguimiento GPS en Vivo', f6d: 'Rastreá tu combi en tiempo real desde la app. Sabé exactamente cuándo llega.'},
+    section2: { badge: 'Cómo Funciona', title: 'De la solicitud al viaje\nen 4 pasos', subtitle: 'Nuestro algoritmo procesa tu pedido y arma el grupo perfecto en segundos.', s1: 'Solicitás', s1d: 'Ingresás origen, destino y horario preferido desde la app.', s2: 'Agrupamos', s2d: 'El AI agrupa pasajeros cercanos con destinos similares.', s3: 'Optimizamos', s3d: 'OSRM calcula la ruta más eficiente y asigna paradas seguras.', s4: 'Viajás', s4d: 'Tu combi pasa por la esquina indicada. Seguimiento GPS en vivo.', cta: 'Solicitar Mi Viaje' },
+    section3: { badge: 'Precios', title: 'TramoPoints vs. Alternativas', subtitle: 'Comparación directa de costo, tiempo y confort para tus trayectos diarios.', th1: 'Atributo', th2: 'TramoPoints', th3: 'Uber / Taxi', tr1c1: 'Costo promedio', tr1c2: '$18 – $28', tr1c3: '$70 – $120', tr2c1: 'Tiempo de espera', tr2c2: 'Horarios fijos y puntuales', tr2c3: 'Variable por demanda', tr3c1: 'Asiento', tr3c2: '100% reservado', tr3c3: 'Sujeto a disponibilidad', tr4c1: 'Paradas', tr4c2: 'Esquinas iluminadas (OSRM)', tr4c3: 'Puerta a puerta', tr5c1: 'Seguimiento GPS', tr5c2: 'En vivo desde la app', tr5c3: 'Disponible', tr6c1: 'Documentación del chofer', tr6c2: 'Verificada y auditada', tr6c3: 'Variable' },
+    section4: { badge: 'Soporte', title: 'Preguntas Frecuentes' },
+    footer: { home: 'Inicio', services: 'Servicios', faq: 'FAQ', resources: 'Recursos', privacy: 'Políticas de Privacidad', rights: '© 2026 TramoPoints. Movilidad inteligente para todos.' }
+  },
+  en: {
+    nav: { inicio: 'Home', plataforma: 'Platform', comoFunciona: 'How it Works', precios: 'Pricing', faq: 'FAQ' },
+    hero: { subtitle: 'Same route, single journey.', stats1: 'Shared Rides', stats2: 'On Time', stats3: 'Average Savings', stats3Val: 'of 75%', cta: 'Start Ride Request' },
+    section1: { badge: 'Platform', title: 'Everything you need\nto travel better', subtitle: 'TramoPoints combines AI, OSRM routing, and smart clustering to offer premium shared rides at a fraction of the cost.', f1: 'Real-Time Geocoding', f1d: 'We locate safe stops within 300m of your location using live map data.', f2: 'Smart Clustering', f2d: 'We automatically group nearby passengers to optimize routes and reduce costs.', f3: 'Optimized OSRM Routes', f3d: 'We calculate the most efficient path in milliseconds using the OSRM routing engine.', f4: 'Verified Drivers', f4d: 'D2 License, up-to-date MOT, mandatory insurance, and audited documentation.', f5: 'Multi-Role Dashboards', f5d: 'Dedicated dashboard for passengers, drivers, and admins with real-time data.', f6: 'Live GPS Tracking', f6d: 'Track your shuttle in real-time from the app. Know exactly when it arrives.'},
+    section2: { badge: 'How it Works', title: 'From request to ride\nin 4 steps', subtitle: 'Our algorithm processes your request and builds the perfect group in seconds.', s1: 'Request', s1d: 'Enter origin, destination, and preferred time from the app.', s2: 'Group', s2d: 'The AI groups nearby passengers with similar destinations.', s3: 'Optimize', s3d: 'OSRM calculates the most efficient route and assigns safe stops.', s4: 'Ride', s4d: 'Your shuttle arrives at the designated corner. Live GPS tracking.', cta: 'Request My Ride' },
+    section3: { badge: 'Pricing', title: 'TramoPoints vs. Alternatives', subtitle: 'Direct comparison of cost, time, and comfort for your daily commutes.', th1: 'Attribute', th2: 'TramoPoints', th3: 'Uber / Taxi', tr1c1: 'Average Cost', tr1c2: '$18 – $28', tr1c3: '$70 – $120', tr2c1: 'Wait Time', tr2c2: 'Fixed and punctual schedules', tr2c3: 'Variable by demand', tr3c1: 'Seat', tr3c2: '100% reserved', tr3c3: 'Subject to availability', tr4c1: 'Stops', tr4c2: 'Illuminated corners (OSRM)', tr4c3: 'Door to door', tr5c1: 'GPS Tracking', tr5c2: 'Live from the app', tr5c3: 'Available', tr6c1: 'Driver Documentation', tr6c2: 'Verified and audited', tr6c3: 'Variable' },
+    section4: { badge: 'Support', title: 'Frequently Asked Questions' },
+    footer: { home: 'Home', services: 'Services', faq: 'FAQ', resources: 'Resources', privacy: 'Privacy Policies', rights: '© 2026 TramoPoints. Smart mobility for everyone.' }
+  }
+};
+
+const FAQS_DATA = {
+  es: [
+    { question: '¿Cómo se calcula el costo del viaje?', answer: 'El costo total trazado por OSRM se divide equitativamente entre los pasajeros del grupo (hasta 75% menos que Uber/Taxi).' },
+    { question: '¿El asiento está garantizado?', answer: 'Sí. Al confirmarse el grupo, tu lugar en la combi de 30 asientos queda 100% reservado.' },
+    { question: '¿Los choferes están verificados?', answer: 'Sí. Todos cuentan con licencia profesional D2, VTV, seguro y documentación auditada.' },
+    { question: '¿Dónde me subo a la combi?', answer: 'El algoritmo OSRM fija esquinas iluminadas a menos de 300m de tu origen.' }
+  ],
+  en: [
+    { question: 'How is the ride cost calculated?', answer: 'The total cost routed by OSRM is divided equally among the group passengers (up to 75% less than Uber/Taxi).' },
+    { question: 'Is the seat guaranteed?', answer: 'Yes. Once the group is confirmed, your seat in the 30-passenger shuttle is 100% reserved.' },
+    { question: 'Are the drivers verified?', answer: 'Yes. All have a professional D2 license, MOT, insurance, and audited documentation.' },
+    { question: 'Where do I board the shuttle?', answer: 'The OSRM algorithm sets illuminated corners within 300m of your origin.' }
+  ]
+};

@@ -52,9 +52,39 @@ export default function DriverProfile({ onUpdateSuccess }) {
 
   if (loading) {
     return (
-      <div className="driver-subpage-container flex-column gap-32">
-        <div className="skeleton-box shimmer-wave" style={{ height: '120px', borderRadius: '12px' }} />
-        <div className="skeleton-box shimmer-wave" style={{ height: '280px', borderRadius: '12px' }} />
+      <div className="driver-subpage-container" style={{ opacity: 0.7, pointerEvents: 'none' }}>
+        <header className="profile-hero-header flex-between align-center flex-wrap gap-24 margin-bottom-36">
+          <div className="flex-center gap-20">
+            <div className="skeleton-box shimmer-wave" style={{ width: '80px', height: '80px', borderRadius: '50%' }} />
+            <div className="flex-column gap-12">
+              <div className="skeleton-box shimmer-wave" style={{ width: '240px', height: '32px', borderRadius: '6px' }} />
+              <div className="skeleton-box shimmer-wave" style={{ width: '180px', height: '16px', borderRadius: '4px' }} />
+            </div>
+          </div>
+        </header>
+
+        <div className="profile-metrics-band flex-between align-center flex-wrap gap-24 margin-bottom-40">
+          <div className="skeleton-box shimmer-wave" style={{ width: '120px', height: '60px', borderRadius: '8px' }} />
+          <div className="metric-vertical-separator" />
+          <div className="skeleton-box shimmer-wave" style={{ width: '120px', height: '60px', borderRadius: '8px' }} />
+          <div className="metric-vertical-separator" />
+          <div className="skeleton-box shimmer-wave" style={{ width: '150px', height: '60px', borderRadius: '8px' }} />
+        </div>
+
+        <div className="hairline-divider margin-bottom-40" />
+
+        <div className="profile-clean-form flex-column gap-32">
+          <div className="flex-column gap-6">
+             <div className="skeleton-box shimmer-wave" style={{ width: '140px', height: '16px', borderRadius: '4px' }} />
+             <div className="skeleton-box shimmer-wave" style={{ width: '380px', height: '14px', borderRadius: '4px' }} />
+          </div>
+          <div className="form-grid-2cols">
+            <div className="skeleton-box shimmer-wave" style={{ width: '100%', height: '54px', borderRadius: '10px' }} />
+            <div className="skeleton-box shimmer-wave" style={{ width: '100%', height: '54px', borderRadius: '10px' }} />
+            <div className="skeleton-box shimmer-wave" style={{ width: '100%', height: '54px', borderRadius: '10px' }} />
+            <div className="skeleton-box shimmer-wave" style={{ width: '100%', height: '54px', borderRadius: '10px' }} />
+          </div>
+        </div>
       </div>
     );
   }
@@ -147,9 +177,11 @@ export default function DriverProfile({ onUpdateSuccess }) {
       <form onSubmit={handleSubmit} className="profile-clean-form flex-column gap-32">
         <div className="flex-column gap-6">
           <span className="section-eyebrow text-neon-green">Datos Personales</span>
+          <br></br>
           <p className="text-sm text-muted">
             Información de contacto utilizada para la coordinación de viajes y confirmación con pasajeros.
           </p>
+          <br></br>
         </div>
 
         <div className="form-grid-2cols">

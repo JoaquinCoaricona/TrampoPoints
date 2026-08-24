@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Bus, LogIn, LogOut, ShieldCheck, User, Sparkles } from 'lucide-react';
+import { LogIn, LogOut, ShieldCheck, User, Sparkles } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import LogoutConfirmModal from './LogoutConfirmModal';
 import { resolveUserRole } from '../services/authService';
+import MiniLogoTP from './MiniLogoTP';
 
 export default function Header() {
   const { user, isAuthenticated, logout } = useAuth();
@@ -35,8 +36,8 @@ export default function Header() {
         <div className="header-container">
           <Link to={isDriver ? '/driver' : '/'} className="brand-link flex-center gap-12" style={{ textDecoration: 'none' }}>
             <div className="brand-logo-only" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Bus size={24} style={{ color: '#ffffff' }} />
-              <span style={{ fontSize: '16px', fontWeight: '800', color: '#ffffff', letterSpacing: '-0.3px' }}>TP</span>
+              <MiniLogoTP size={24} />
+              <span style={{ fontSize: '16px', fontWeight: '800', color: '#ffffff', letterSpacing: '-0.3px' }}>TramoPoints</span>
             </div>
           </Link>
 
@@ -72,20 +73,22 @@ export default function Header() {
                   onClick={() => setShowLogoutModal(true)}
                   title="Cerrar sesión"
                   style={{
-                    background: 'transparent',
-                    border: '1px solid #1f1f23',
-                    padding: '6px 12px',
-                    borderRadius: '6px',
-                    color: '#a1a1aa',
-                    fontSize: '12px',
+                    background: 'rgba(255, 255, 255, 0.03)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    padding: '8px 16px',
+                    borderRadius: '8px',
+                    color: '#F8FAFC',
+                    fontSize: '14px',
+                    fontWeight: '600',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '6px'
+                    gap: '8px',
+                    transition: 'all 0.2s ease'
                   }}
                 >
-                  <LogOut size={13} />
-                  <span className="hide-mobile">Salir</span>
+                  <LogOut size={16} />
+                  <span className="hide-mobile">Cerrar sesión</span>
                 </button>
               </div>
             ) : (

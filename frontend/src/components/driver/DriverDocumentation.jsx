@@ -17,6 +17,7 @@ import {
   saveDocumentation,
   deleteDocumentation
 } from '../../services/driverService';
+import ConfirmModal from '../ConfirmModal';
 
 export default function DriverDocumentation({ onUpdateSuccess }) {
   const [docs, setDocs] = useState([]);
@@ -25,6 +26,9 @@ export default function DriverDocumentation({ onUpdateSuccess }) {
   const [showModal, setShowModal] = useState(false);
   const [editingDoc, setEditingDoc] = useState(null);
   const [error, setError] = useState(null);
+
+  const [docToDelete, setDocToDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   // Form State
   const [docType, setDocType] = useState('SEGURO');
@@ -106,14 +110,18 @@ export default function DriverDocumentation({ onUpdateSuccess }) {
     }
   };
 
-  const handleDeleteDoc = async (id) => {
-    if (!window.confirm('¿Estás seguro de que deseas eliminar este documento?')) return;
+  const handleDeleteDoc = async () => {
+    if (!docToDelete) return;
+    setDeleting(true);
     try {
-      await deleteDocumentation(id);
+      await deleteDocumentation(docToDelete);
       await loadDocs();
       if (onUpdateSuccess) onUpdateSuccess();
+      setDocToDelete(null);
     } catch (err) {
       setError('Error al eliminar el documento');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -144,9 +152,23 @@ export default function DriverDocumentation({ onUpdateSuccess }) {
 
   if (loading) {
     return (
-      <div className="driver-subpage-container flex-column gap-32">
-        <div className="skeleton-box shimmer-wave" style={{ height: '80px', borderRadius: '10px' }} />
-        <div className="skeleton-box shimmer-wave" style={{ height: '300px', borderRadius: '10px' }} />
+      <div className="driver-subpage-container" style={{ opacity: 0.7, pointerEvents: 'none' }}>
+        <header className="docs-summary-header flex-between align-center flex-wrap gap-24 margin-bottom-40">
+          <div className="flex-column gap-6">
+            <div className="skeleton-box shimmer-wave" style={{ width: '180px', height: '14px', borderRadius: '4px' }} />
+            <div className="skeleton-box shimmer-wave" style={{ width: '280px', height: '32px', borderRadius: '6px' }} />
+            <div className="skeleton-box shimmer-wave" style={{ width: '220px', height: '16px', borderRadius: '4px' }} />
+          </div>
+          <div className="skeleton-box shimmer-wave" style={{ width: '180px', height: '40px', borderRadius: '8px' }} />
+        </header>
+
+        <div className="hairline-divider margin-bottom-40" />
+
+        <div className="docs-structured-list flex-column gap-16">
+          <div className="skeleton-box shimmer-wave" style={{ width: '100%', height: '80px', borderRadius: '12px' }} />
+          <div className="skeleton-box shimmer-wave" style={{ width: '100%', height: '80px', borderRadius: '12px' }} />
+          <div className="skeleton-box shimmer-wave" style={{ width: '100%', height: '80px', borderRadius: '12px' }} />
+        </div>
       </div>
     );
   }
@@ -160,7 +182,9 @@ export default function DriverDocumentation({ onUpdateSuccess }) {
       <header className="docs-summary-header flex-between align-center flex-wrap gap-24 margin-bottom-40">
         <div className="flex-column gap-6">
           <span className="section-eyebrow text-neon-green">Habilitaciones & Cumplimiento</span>
+          <br></br>
           <h1 className="docs-page-title">Documentación del Chofer</h1>
+          <br></br>
           <div className="docs-counts-line text-sm text-muted">
             <strong className="text-main">{validCount}</strong> documentos al día ·{' '}
             <strong className={expiredCount > 0 ? 'text-rose' : 'text-muted'}>{expiredCount}</strong> vencidos · Unidad autorizada para circular
@@ -248,7 +272,7 @@ export default function DriverDocumentation({ onUpdateSuccess }) {
                   <button
                     type="button"
                     className="btn-icon-subtle btn-delete-subtle"
-                    onClick={() => handleDeleteDoc(doc.id)}
+                    onClick={() => setDocToDelete(doc.id)}
                     title="Eliminar documento"
                     aria-label="Eliminar documento"
                   >
@@ -396,6 +420,16 @@ export default function DriverDocumentation({ onUpdateSuccess }) {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={!!docToDelete}
+        onClose={() => setDocToDelete(null)}
+        onConfirm={handleDeleteDoc}
+        title="Eliminar Documento"
+        subtitle="¿Estás seguro de que deseas eliminar este documento de tu perfil? Esta acción no se puede deshacer."
+        confirmText="Eliminar"
+        isLoading={deleting}
+      />
     </div>
   );
 }

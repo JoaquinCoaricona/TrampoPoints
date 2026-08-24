@@ -24,9 +24,29 @@ export default function DriverRecommendations() {
 
   if (loading) {
     return (
-      <div className="driver-subpage-container flex-column gap-32">
-        <div className="skeleton-box shimmer-wave" style={{ height: '80px', borderRadius: '10px' }} />
-        <div className="skeleton-box shimmer-wave" style={{ height: '240px', borderRadius: '10px' }} />
+      <div className="driver-subpage-container" style={{ opacity: 0.7, pointerEvents: 'none' }}>
+        <header className="recs-header-block flex-between align-center flex-wrap gap-20 margin-bottom-40">
+          <div className="flex-column gap-6">
+            <div className="skeleton-box shimmer-wave" style={{ width: '180px', height: '14px', borderRadius: '4px' }} />
+            <div className="skeleton-box shimmer-wave" style={{ width: '220px', height: '32px', borderRadius: '6px' }} />
+          </div>
+          <div className="skeleton-box shimmer-wave" style={{ width: '150px', height: '28px', borderRadius: '20px' }} />
+        </header>
+
+        <div className="hairline-divider margin-bottom-40" />
+
+        <div className="recommendations-editorial-list flex-column gap-40">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="rec-editorial-item flex-column gap-14">
+              <div className="flex-between align-center flex-wrap gap-12">
+                <div className="skeleton-box shimmer-wave" style={{ width: '100px', height: '16px', borderRadius: '4px' }} />
+                <div className="skeleton-box shimmer-wave" style={{ width: '140px', height: '20px', borderRadius: '12px' }} />
+              </div>
+              <div className="skeleton-box shimmer-wave" style={{ width: '100%', height: '48px', borderRadius: '8px' }} />
+              <div className="skeleton-box shimmer-wave margin-top-4" style={{ width: '180px', height: '14px', borderRadius: '4px' }} />
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
@@ -37,6 +57,7 @@ export default function DriverRecommendations() {
       <header className="recs-header-block flex-between align-center flex-wrap gap-20 margin-bottom-40">
         <div className="flex-column gap-6">
           <span className="section-eyebrow text-electric-violet">Testimonios de Pasajeros</span>
+          <br></br>
           <h1 className="recs-page-title">Recomendaciones</h1>
         </div>
 

@@ -98,7 +98,7 @@ function createStopMarker(map, lat, lng, order, type) {
     iconAnchor: [14, 14],
   });
   const marker = L.marker([lat, lng], { icon }).addTo(map);
-  marker.bindPopup(`<div style="font-family:Inter,sans-serif;font-size:13px;padding:2px 4px"><strong style="color:${color}">${isPickup ? "🟢 Subida" : "🔴 Bajada"} #${order}</strong></div>`);
+  marker.bindPopup(`<div style="font-family:Inter,sans-serif;font-size:13px;padding:2px 4px"><strong style="color:${color}">${isPickup ? "Subida" : "Bajada"} #${order}</strong></div>`);
   return marker;
 }
 

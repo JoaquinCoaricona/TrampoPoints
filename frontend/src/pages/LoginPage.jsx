@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
-  Bus,
   User as UserIcon,
   Mail,
   Lock,
@@ -13,9 +12,11 @@ import {
   AlertCircle,
   Loader2,
   UserCheck,
-  ArrowLeft
+  ArrowLeft,
+  Bus
 } from 'lucide-react';
 import { resolveUserRole } from '../services/authService';
+import videoRecorridoLineas from '../assets/recorrido_lineas.mp4';
 
 export default function LoginPage() {
   const { login, register, error, setError } = useAuth();
@@ -91,23 +92,48 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="login-page-root">
-      {/* Background subtle ambient lighting */}
-      <div className="login-ambient-violet" />
-      <div className="login-ambient-green" />
+    <div className="login-page-root" style={{ position: 'relative', overflow: 'hidden', minHeight: '100vh' }}>
+      {/* Background Video */}
+      <video
+        autoPlay
+        loop
+        muted
+        playsInline
+        style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          minWidth: '100%',
+          minHeight: '100%',
+          width: 'auto',
+          height: 'auto',
+          zIndex: 0,
+          opacity: 0.15,
+          objectFit: 'cover'
+        }}
+      >
+        <source src={videoRecorridoLineas} type="video/mp4" />
+      </video>
 
-      {/* Top back button */}
-      <div className="login-top-bar">
-        <Link to="/" className="btn-back-landing">
-          <ArrowLeft size={15} /> Volver al Inicio
-        </Link>
-      </div>
+      {/* Wrap existing content to keep it above the video */}
+      <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+        {/* Background subtle ambient lighting */}
+        <div className="login-ambient-violet" />
+        <div className="login-ambient-green" />
+
+        {/* Top back button */}
+        <div className="login-top-bar">
+          <Link to="/" className="btn-back-landing">
+            <ArrowLeft size={15} /> Volver al Inicio
+          </Link>
+        </div>
 
       <div className="login-container">
         {/* Clean Header (Logo icon removed as requested) */}
         <div className="login-header text-center">
           <h1 className="login-title">
-            Trampo<span className="text-neon-green">Points</span>
+            Tramo<span className="text-neon-green">Points</span>
           </h1>
           <p className="login-subtitle">
             {isLogin
@@ -317,6 +343,7 @@ export default function LoginPage() {
             )}
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

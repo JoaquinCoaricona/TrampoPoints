@@ -10,7 +10,9 @@ import {
   ArrowRight,
   Radio,
   Layers,
-  Sparkles
+  Sparkles,
+  Lightbulb,
+  CheckCircle
 } from 'lucide-react';
 import L from 'leaflet';
 
@@ -671,8 +673,8 @@ export default function RequestConfirmation({
             lineHeight: 1.5
           }}>
             {isSearching
-              ? '💡 Tu solicitud se agrupará de forma inteligente con otras personas que viajen en la misma dirección para conseguirte la mejor tarifa compartida.'
-              : '✅ ¡Viaje confirmado! Tu parada ya fue integrada al recorrido optimizado de la combi.'}
+              ? <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Lightbulb size={16} /> Tu solicitud se agrupará de forma inteligente con otras personas que viajen en la misma dirección para conseguirte la mejor tarifa compartida.</div>
+              : <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={16} /> ¡Viaje confirmado! Tu parada ya fue integrada al recorrido optimizado de la combi.</div>}
           </div>
         </div>
       </div>

@@ -150,9 +150,9 @@ export default function LogoutConfirmModal({ isOpen, onClose, onConfirm, user })
 
         .logout-subtitle {
           max-width: 370px;
-          margin: 8px 0 0;
-          color: #71717a;
-          font-size: 13px;
+          margin: 10px 0 0;
+          color: #a1a1aa;
+          font-size: 15px;
           line-height: 1.6;
           font-weight: 400;
         }
@@ -212,10 +212,10 @@ export default function LogoutConfirmModal({ isOpen, onClose, onConfirm, user })
         .logout-user-name {
           display: block;
           overflow: hidden;
-          color: #d4d4d8;
-          font-size: 13px;
+          color: #ffffff;
+          font-size: 15px;
           line-height: 1.4;
-          font-weight: 500;
+          font-weight: 600;
           text-overflow: ellipsis;
           white-space: nowrap;
         }
@@ -225,8 +225,8 @@ export default function LogoutConfirmModal({ isOpen, onClose, onConfirm, user })
           max-width: 230px;
           margin-top: 2px;
           overflow: hidden;
-          color: #52525b;
-          font-size: 11px;
+          color: #a1a1aa;
+          font-size: 13px;
           line-height: 1.4;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -237,10 +237,10 @@ export default function LogoutConfirmModal({ isOpen, onClose, onConfirm, user })
           align-items: center;
           gap: 5px;
           flex: 0 0 auto;
-          color: #71717a;
-          font-size: 10px;
+          color: #a1a1aa;
+          font-size: 12px;
           line-height: 1.2;
-          font-weight: 500;
+          font-weight: 600;
           text-transform: uppercase;
           letter-spacing: 0.035em;
         }
@@ -269,20 +269,20 @@ export default function LogoutConfirmModal({ isOpen, onClose, onConfirm, user })
           align-items: center;
           justify-content: center;
           flex: 0 0 auto;
-          padding-top: 1px;
-          color: #a1a1aa;
+          padding-top: 2px;
+          color: #f59e0b;
         }
 
         .logout-notice-icon svg {
-          width: 16px;
-          height: 16px;
-          stroke-width: 1.7;
+          width: 18px;
+          height: 18px;
+          stroke-width: 2;
         }
 
         .logout-notice-text {
           margin: 0;
-          color: #71717a;
-          font-size: 11px;
+          color: #d4d4d8;
+          font-size: 14px;
           line-height: 1.6;
           font-weight: 400;
         }
@@ -295,16 +295,16 @@ export default function LogoutConfirmModal({ isOpen, onClose, onConfirm, user })
         }
 
         .logout-action {
-          min-height: 40px;
+          min-height: 44px;
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          gap: 7px;
-          padding: 9px 14px;
+          gap: 8px;
+          padding: 10px 18px;
           border-radius: 8px;
-          font-size: 12px;
+          font-size: 15px;
           line-height: 1.2;
-          font-weight: 500;
+          font-weight: 600;
           cursor: pointer;
           transition:
             background 0.18s ease,
@@ -313,33 +313,33 @@ export default function LogoutConfirmModal({ isOpen, onClose, onConfirm, user })
         }
 
         .logout-action svg {
-          width: 15px;
-          height: 15px;
-          stroke-width: 1.8;
+          width: 18px;
+          height: 18px;
+          stroke-width: 2;
         }
 
         .logout-cancel {
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          background: transparent;
-          color: #a1a1aa;
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          background: rgba(255, 255, 255, 0.05);
+          color: #f4f4f5;
         }
 
         .logout-cancel:hover:not(:disabled) {
-          background: rgba(255, 255, 255, 0.035);
-          border-color: rgba(255, 255, 255, 0.12);
-          color: #e4e4e7;
+          background: rgba(255, 255, 255, 0.1);
+          border-color: rgba(255, 255, 255, 0.25);
+          color: #ffffff;
         }
 
         .logout-confirm {
-          border: 1px solid rgba(248, 113, 113, 0.18);
-          background: rgba(248, 113, 113, 0.09);
-          color: #fca5a5;
+          border: 1px solid #ef4444;
+          background: #ef4444;
+          color: #ffffff;
         }
 
         .logout-confirm:hover:not(:disabled) {
-          background: rgba(248, 113, 113, 0.14);
-          border-color: rgba(248, 113, 113, 0.25);
-          color: #fecaca;
+          background: #dc2626;
+          border-color: #dc2626;
+          color: #ffffff;
         }
 
         .logout-action:disabled {

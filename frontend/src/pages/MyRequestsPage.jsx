@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PlusCircle, Clock, MapPin, Navigation, Map } from 'lucide-react';
+import { PlusCircle, Clock, MapPin, Navigation, Map, ListOrdered } from 'lucide-react';
 
 export default function MyRequestsPage({
   userRequests,
@@ -11,7 +11,78 @@ export default function MyRequestsPage({
   const navigate = useNavigate();
 
   if (userRequests.length === 0) {
-    return null;
+    return (
+      <div
+        className="card glass-card empty-requests-container"
+        style={{
+          padding: '48px 28px',
+          background: 'rgba(255,255,255,0.015)',
+          border: '1px solid rgba(255,255,255,0.06)',
+          borderRadius: '16px',
+          textAlign: 'center',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}
+      >
+        <div style={{
+          width: '64px',
+          height: '64px',
+          borderRadius: '50%',
+          background: 'rgba(255, 255, 255, 0.05)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginBottom: '20px'
+        }}>
+          <ListOrdered size={32} color="#71717a" />
+        </div>
+        <h2 style={{
+          margin: '0 0 12px',
+          color: '#f4f4f5',
+          fontSize: '22px',
+          fontWeight: '600'
+        }}>Aún no tenés solicitudes de viaje</h2>
+        <p style={{
+          margin: '0 0 32px',
+          color: '#a1a1aa',
+          fontSize: '15px',
+          maxWidth: '400px',
+          lineHeight: '1.6'
+        }}>
+          Todavía no has creado ninguna solicitud de viaje. Pedí una combi y empezá a viajar de forma rápida y segura.
+        </p>
+        <button
+          onClick={onNewRequest}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '8px',
+            background: '#ffffff',
+            color: '#000000',
+            padding: '12px 24px',
+            borderRadius: '12px',
+            fontSize: '15px',
+            fontWeight: '600',
+            border: 'none',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease'
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.background = '#e4e4e7';
+            e.target.style.transform = 'translateY(-2px)';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.background = '#ffffff';
+            e.target.style.transform = 'translateY(0)';
+          }}
+        >
+          <PlusCircle size={18} />
+          Pedir Viaje
+        </button>
+      </div>
+    );
   }
 
   return (

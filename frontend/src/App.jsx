@@ -40,6 +40,7 @@ import {
   ArrowLeft,
   Loader2
 } from 'lucide-react';
+import ConfirmModal from './components/ConfirmModal';
 import './App.css';
 
 // Landing Page Wrapper (Preserves Protected Landing without changes)
@@ -209,6 +210,10 @@ function PassengerApp() {
   const [allRequests, setAllRequests] = useState([]);
   const [availableCombisCount, setAvailableCombisCount] = useState(null);
 
+  const [requestToDelete, setRequestToDelete] = useState(null);
+  const [deletingType, setDeletingType] = useState(null); // 'ADMIN' or 'USER'
+  const [isDeleting, setIsDeleting] = useState(false);
+
   // Enforce authentication and role limits for the system flow
   useEffect(() => {
     if (!isAuthenticated) {
@@ -319,30 +324,33 @@ function PassengerApp() {
     setAllRequests(updated);
   };
 
-  const handleDeleteRequestByAdmin = async (requestId) => {
-    if (window.confirm(`¿Estás seguro de que querés eliminar la solicitud ${requestId}?`)) {
-      try {
-        await deleteTripRequest(requestId);
-        const updated = allRequests.filter(r => r.requestId !== requestId);
-        setAllRequests(updated);
-        await fetchAvailableCombis();
-      } catch (err) {
-        console.error('Error al eliminar la solicitud en el backend:', err);
-        alert('No se pudo eliminar la solicitud. Intente nuevamente.');
-      }
-    }
+  const handleDeleteRequestByAdmin = (requestId) => {
+    setRequestToDelete(requestId);
+    setDeletingType('ADMIN');
   };
 
-  const handleDeleteRequestByUser = async (requestId) => {
-    if (window.confirm('¿Estás seguro de que querés cancelar esta solicitud de viaje?')) {
-      try {
-        await deleteTripRequest(requestId);
-        const updated = allRequests.filter(r => r.requestId !== requestId);
-        setAllRequests(updated);
-      } catch (err) {
-        console.error('Error al cancelar la solicitud en el backend:', err);
-        alert('No se pudo cancelar la solicitud. Intente nuevamente.');
+  const handleDeleteRequestByUser = (requestId) => {
+    setRequestToDelete(requestId);
+    setDeletingType('USER');
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!requestToDelete) return;
+    setIsDeleting(true);
+    try {
+      await deleteTripRequest(requestToDelete);
+      const updated = allRequests.filter(r => r.requestId !== requestToDelete);
+      setAllRequests(updated);
+      if (deletingType === 'ADMIN') {
+        await fetchAvailableCombis();
       }
+    } catch (err) {
+      console.error('Error al cancelar la solicitud en el backend:', err);
+      alert('No se pudo cancelar la solicitud. Intente nuevamente.');
+    } finally {
+      setIsDeleting(false);
+      setRequestToDelete(null);
+      setDeletingType(null);
     }
   };
 
@@ -445,6 +453,23 @@ function PassengerApp() {
           <Route path="*" element={<Navigate to={isAdmin ? "/app/admin" : "/app"} replace />} />
         </Routes>
       </main>
+
+      <ConfirmModal
+        isOpen={!!requestToDelete}
+        onClose={() => {
+          setRequestToDelete(null);
+          setDeletingType(null);
+        }}
+        onConfirm={handleConfirmDelete}
+        title={deletingType === 'ADMIN' ? 'Eliminar Solicitud' : 'Cancelar Viaje'}
+        subtitle={
+          deletingType === 'ADMIN'
+            ? `¿Estás seguro de que querés eliminar la solicitud ${requestToDelete}?`
+            : '¿Estás seguro de que querés cancelar esta solicitud de viaje?'
+        }
+        confirmText={deletingType === 'ADMIN' ? 'Eliminar' : 'Cancelar Solicitud'}
+        isLoading={isDeleting}
+      />
     </div>
   );
 }

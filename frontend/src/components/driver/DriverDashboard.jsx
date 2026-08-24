@@ -15,7 +15,7 @@ import {
   X
 } from 'lucide-react';
 import { updateVehicleStatus, getDriverTrips, deleteDriverTrip } from '../../services/driverService';
-
+import ConfirmModal from '../ConfirmModal';
 
 export default function DriverDashboard({ dashboardData: propData, onRefresh: propRefresh }) {
   const navigate = useNavigate();
@@ -49,17 +49,23 @@ export default function DriverDashboard({ dashboardData: propData, onRefresh: pr
     }
   };
 
-  const handleDeleteTrip = async (tripId) => {
-    if (window.confirm('¿Deseás liberar y cancelar este viaje asignado? El chofer quedará libre para nuevos viajes.')) {
-      try {
-        await deleteDriverTrip(tripId);
-        setTrips(prev => prev.filter(t => t.tripId !== tripId));
-        handleDismissNotification(tripId);
-        if (onRefresh) onRefresh();
-      } catch (err) {
-        console.error('Error al cancelar viaje:', err);
-        alert('No se pudo cancelar el viaje.');
-      }
+  const [tripToDelete, setTripToDelete] = useState(null);
+  const [deletingTrip, setDeletingTrip] = useState(false);
+
+  const handleDeleteTrip = async () => {
+    if (!tripToDelete) return;
+    setDeletingTrip(true);
+    try {
+      await deleteDriverTrip(tripToDelete);
+      setTrips(prev => prev.filter(t => t.tripId !== tripToDelete));
+      handleDismissNotification(tripToDelete);
+      if (onRefresh) onRefresh();
+      setTripToDelete(null);
+    } catch (err) {
+      console.error('Error al cancelar viaje:', err);
+      alert('No se pudo cancelar el viaje.');
+    } finally {
+      setDeletingTrip(false);
     }
   };
 
@@ -82,10 +88,38 @@ export default function DriverDashboard({ dashboardData: propData, onRefresh: pr
 
   if (!dashboardData) {
     return (
-      <div className="driver-dashboard-skeleton flex-column gap-32">
-        <div className="skeleton-box shimmer-wave" style={{ height: '80px', borderRadius: '10px' }} />
-        <div className="skeleton-box shimmer-wave" style={{ height: '240px', borderRadius: '10px' }} />
-        <div className="skeleton-box shimmer-wave" style={{ height: '160px', borderRadius: '10px' }} />
+      <div className="driver-editorial-dashboard" style={{ opacity: 0.7, pointerEvents: 'none' }}>
+        <header className="driver-dash-header flex-between align-start flex-wrap gap-20 margin-bottom-32">
+          <div className="dash-greeting-area flex-column gap-12">
+            <div className="skeleton-box shimmer-wave" style={{ width: '220px', height: '36px', borderRadius: '6px' }} />
+            <div className="skeleton-box shimmer-wave" style={{ width: '140px', height: '28px', borderRadius: '20px' }} />
+          </div>
+          <div className="skeleton-box shimmer-wave" style={{ width: '280px', height: '44px', borderRadius: '12px' }} />
+        </header>
+
+        <div className="hairline-divider margin-bottom-48" />
+
+        <section className="dash-operation-spotlight margin-bottom-56">
+          <div className="operation-headline-wrap flex-column gap-16">
+            <div className="skeleton-box shimmer-wave" style={{ width: '120px', height: '14px', borderRadius: '4px' }} />
+            <div className="skeleton-box shimmer-wave" style={{ width: '340px', height: '40px', borderRadius: '8px' }} />
+            <div className="skeleton-box shimmer-wave" style={{ width: '260px', height: '20px', borderRadius: '4px' }} />
+          </div>
+          <div className="operation-integrated-metrics flex-center gap-32 flex-wrap margin-top-28">
+            <div className="skeleton-box shimmer-wave" style={{ width: '150px', height: '54px', borderRadius: '8px' }} />
+            <div className="metric-vertical-separator" />
+            <div className="skeleton-box shimmer-wave" style={{ width: '130px', height: '54px', borderRadius: '8px' }} />
+            <div className="metric-vertical-separator" />
+            <div className="skeleton-box shimmer-wave" style={{ width: '160px', height: '54px', borderRadius: '8px' }} />
+          </div>
+        </section>
+
+        <div className="hairline-divider margin-bottom-48" />
+
+        <section className="driver-trips-section">
+          <div className="skeleton-box shimmer-wave margin-bottom-16" style={{ width: '160px', height: '16px', borderRadius: '4px' }} />
+          <div className="skeleton-box shimmer-wave" style={{ width: '100%', height: '140px', borderRadius: '16px' }} />
+        </section>
       </div>
     );
   }
@@ -221,7 +255,9 @@ export default function DriverDashboard({ dashboardData: propData, onRefresh: pr
             <span className="text-main font-medium">Patente {vehicle?.licensePlate || 'AF 482 TP'}</span>
             <span className="meta-dot">·</span>
             <span>{vehicle?.color || 'Blanco Ártico'}</span>
+            
           </div>
+          <br></br>
         </div>
 
         {/* Integrated Metrics Row (Reputación, Viajes y Documentación integrados con la unidad) */}
@@ -316,7 +352,7 @@ export default function DriverDashboard({ dashboardData: propData, onRefresh: pr
                   <div className="flex-center gap-8 flex-wrap">
                     <button
                       type="button"
-                      onClick={() => handleDeleteTrip(trip.tripId)}
+                      onClick={() => setTripToDelete(trip.tripId)}
                       className="driver-trip-action"
                       style={{
                         borderColor: 'rgba(244, 63, 94, 0.25)',
@@ -418,6 +454,16 @@ export default function DriverDashboard({ dashboardData: propData, onRefresh: pr
           </div>
         </section>
       )}
+
+      <ConfirmModal
+        isOpen={!!tripToDelete}
+        onClose={() => setTripToDelete(null)}
+        onConfirm={handleDeleteTrip}
+        title="Cancelar Viaje"
+        subtitle="¿Deseás liberar y cancelar este viaje asignado? Quedarás libre para nuevos viajes."
+        confirmText="Liberar Viaje"
+        isLoading={deletingTrip}
+      />
     </div>
   );
 }

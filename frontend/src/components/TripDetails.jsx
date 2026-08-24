@@ -1,5 +1,5 @@
 import React from 'react';
-import { Users, DollarSign, TrendingDown, Clock, MapPin, Navigation, ArrowLeft, CheckCircle, User } from 'lucide-react';
+import { Users, DollarSign, TrendingDown, Clock, MapPin, Navigation, ArrowLeft, CheckCircle, User, Bus, CreditCard, Palette, Calendar } from 'lucide-react';
 import MapView from './MapView';
 
 export default function TripDetails({ tripData, onBack }) {
@@ -433,7 +433,7 @@ export default function TripDetails({ tripData, onBack }) {
                 onError={(e) => { e.target.style.display = 'none'; }}
               />
             ) : (
-              <span style={{ fontSize: 32 }}>🚌</span>
+              <Bus size={32} color="#71717a" />
             )}
           </div>
 
@@ -478,9 +478,9 @@ export default function TripDetails({ tripData, onBack }) {
                 {vehicle.brand} {vehicle.model}
               </div>
               <div style={{ fontSize: 12, color: '#a1a1aa', display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                {vehicle.licensePlate && <span>🔖 {vehicle.licensePlate}</span>}
-                {vehicle.color && <span>🎨 {vehicle.color}</span>}
-                {vehicle.year && <span>📅 {vehicle.year}</span>}
+                {vehicle.licensePlate && <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><CreditCard size={14} /> {vehicle.licensePlate}</span>}
+                {vehicle.color && <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Palette size={14} /> {vehicle.color}</span>}
+                {vehicle.year && <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Calendar size={14} /> {vehicle.year}</span>}
               </div>
             </div>
           )}

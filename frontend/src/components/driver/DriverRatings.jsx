@@ -24,9 +24,40 @@ export default function DriverRatings() {
 
   if (loading) {
     return (
-      <div className="driver-subpage-container flex-column gap-32">
-        <div className="skeleton-box shimmer-wave" style={{ height: '140px', borderRadius: '10px' }} />
-        <div className="skeleton-box shimmer-wave" style={{ height: '300px', borderRadius: '10px' }} />
+      <div className="driver-subpage-container" style={{ opacity: 0.7, pointerEvents: 'none' }}>
+        <section className="ratings-summary-section margin-bottom-48">
+          <div className="ratings-editorial-top flex-between align-center flex-wrap gap-48">
+            <div className="ratings-hero-col flex-column gap-12">
+              <div className="skeleton-box shimmer-wave" style={{ width: '180px', height: '14px', borderRadius: '4px' }} />
+              <div className="flex-center margin-top-12" style={{ gap: '72px' }}>
+                <div className="skeleton-box shimmer-wave" style={{ width: '100px', height: '80px', borderRadius: '8px' }} />
+                <div className="flex-column gap-12">
+                  <div className="skeleton-box shimmer-wave" style={{ width: '120px', height: '20px', borderRadius: '4px' }} />
+                  <div className="skeleton-box shimmer-wave" style={{ width: '200px', height: '16px', borderRadius: '4px' }} />
+                  <div className="skeleton-box shimmer-wave" style={{ width: '240px', height: '16px', borderRadius: '4px' }} />
+                </div>
+              </div>
+            </div>
+            <div className="ratings-bars-col flex-column gap-12">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="editorial-bar-row flex-center gap-16 text-sm">
+                  <div className="skeleton-box shimmer-wave" style={{ width: '60px', height: '14px', borderRadius: '4px' }} />
+                  <div className="skeleton-box shimmer-wave" style={{ width: '200px', height: '10px', borderRadius: '5px' }} />
+                  <div className="skeleton-box shimmer-wave" style={{ width: '30px', height: '14px', borderRadius: '4px' }} />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <div className="hairline-divider margin-bottom-40" />
+
+        <div className="skeleton-box shimmer-wave margin-bottom-24" style={{ width: '220px', height: '24px', borderRadius: '6px' }} />
+        <div className="flex-column gap-24">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="skeleton-box shimmer-wave" style={{ width: '100%', height: '100px', borderRadius: '12px' }} />
+          ))}
+        </div>
       </div>
     );
   }
